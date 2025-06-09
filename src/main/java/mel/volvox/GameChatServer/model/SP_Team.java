@@ -16,6 +16,6 @@ import lombok.NoArgsConstructor;
 @Table(name = "SP_League", schema = "test")
 public class SP_Team {
     @Id
-    int teamID;
+    String teamID;
     String displayName;
 }

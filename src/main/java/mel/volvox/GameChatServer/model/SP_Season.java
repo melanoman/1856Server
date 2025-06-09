@@ -1,5 +1,6 @@
 package mel.volvox.GameChatServer.model;
 
+import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
@@ -12,7 +13,7 @@ import lombok.NoArgsConstructor;
 @Data
 @Entity
 public class SP_Season {
-    @Id
-    String id;
+    @EmbeddedId
+    SP_SeasonID id;
     String displayName;
 }

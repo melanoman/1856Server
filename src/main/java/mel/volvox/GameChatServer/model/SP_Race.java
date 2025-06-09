@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @Entity
 public class SP_Race {
     @Id
-    String id;
+    int id;
     String leagueID;
     String displayName;
     String trackName;
