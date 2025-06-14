@@ -38,7 +38,7 @@ public class SPController {
     }
 
     private int calculateId(String league) {
-        return 1+seasonRepo.countByIdLeagueID(league); // TODO use count and add one
+        return 1+seasonRepo.countByIdLeagueID(league);
     }
 
     @GetMapping("/sp/new/season/{league}")
