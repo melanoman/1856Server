@@ -2,6 +2,7 @@ package mel.volvox.GameChatServer.controller;
 
 import mel.volvox.GameChatServer.model.SP_Race;
 import mel.volvox.GameChatServer.model.SP_Season;
+import mel.volvox.GameChatServer.model.SP_SeasonID;
 import mel.volvox.GameChatServer.model.sp.League;
 import mel.volvox.GameChatServer.repository.LeagueRepo;
 import mel.volvox.GameChatServer.repository.SeasonRepo;
@@ -36,12 +37,21 @@ public class SPController {
         return newLeague;
     }
 
-    @GetMapping("/sp/new/season/{league}/{id}")
-    @ResponseBody
-    SP_Season createSeason(@PathVariable String league, @PathVariable int id,
-                           @RequestParam(name="display") String displayName) {
-       return null; //TODO implement this
+    private int calculateId(String league) {
+        return 1+seasonRepo.countByIdLeagueID(league); // TODO use count and add one
     }
+
+    @GetMapping("/sp/new/season/{league}")
+    @ResponseBody
+    SP_Season createSeason(@PathVariable String league,
+                           @RequestParam(name="display") String displayName) {
+        //TODO make sure league exists
+        int seasonNumber = calculateId(league);
+        SP_SeasonID spSeasonID = new SP_SeasonID(league, seasonNumber);
+        SP_Season spSeason = new SP_Season(spSeasonID, displayName);
+        seasonRepo.save(spSeason);
+        return spSeason;
+    }  // TODO make UI and test
 
     @GetMapping("/sp/leagues")
     @ResponseBody
@@ -49,11 +59,9 @@ public class SPController {
         return leagueRepo.findAll();
     }
 
-
-    @GetMapping("/sp/season/{league}/races")
+    @GetMapping("/sp/seasons")
     @ResponseBody
-    List<SP_Race> getRacesForLeague() {
-        //TODO make a race repo
-        return new ArrayList<>();
+    List<SP_Season> listSeasons() {
+        return seasonRepo.findAll();
     }
 }
