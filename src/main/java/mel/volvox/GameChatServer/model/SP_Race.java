@@ -1,5 +1,6 @@
 package mel.volvox.GameChatServer.model;
 
+import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
@@ -12,11 +13,9 @@ import lombok.NoArgsConstructor;
 @Data
 @Entity
 public class SP_Race {
-    @Id
-    int id;
-    String leagueID;
+    @EmbeddedId
+    SP_RaceID id;
     String displayName;
     String trackName;
-    int season;
     int multiplier;
 }
