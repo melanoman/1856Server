@@ -1,5 +1,6 @@
 package mel.volvox.GameChatServer.model;
 
+import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -14,11 +15,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Data
 @Entity
-@Table(name = "SP_Driver", schema = "test")
 public class SP_Driver {
-    @Id
-    int driverID;
-    int teamID;
-    int leagueID;
+    @EmbeddedId
+    SP_DriverID id;
     String displayName;
+    int birthday;
 }

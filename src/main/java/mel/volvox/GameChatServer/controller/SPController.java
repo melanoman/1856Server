@@ -1,13 +1,8 @@
 package mel.volvox.GameChatServer.controller;
 
-import mel.volvox.GameChatServer.model.SP_Race;
-import mel.volvox.GameChatServer.model.SP_RaceID;
-import mel.volvox.GameChatServer.model.SP_Season;
-import mel.volvox.GameChatServer.model.SP_SeasonID;
+import mel.volvox.GameChatServer.model.*;
 import mel.volvox.GameChatServer.model.sp.League;
-import mel.volvox.GameChatServer.repository.LeagueRepo;
-import mel.volvox.GameChatServer.repository.RaceRepo;
-import mel.volvox.GameChatServer.repository.SeasonRepo;
+import mel.volvox.GameChatServer.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Controller;
@@ -26,6 +21,10 @@ public class SPController {
     private SeasonRepo seasonRepo;
     @Autowired
     private RaceRepo raceRepo;
+    @Autowired
+    private TeamRepo teamRepo;
+    @Autowired
+    private DriverRepo driverRepo;
 
     @GetMapping("/sp/new/league/{league}")
     @ResponseBody
@@ -48,6 +47,10 @@ public class SPController {
     private int calculateRaceNumber(String league, int seasonNumber) {
         //TODO make sure league and season exist, return -1 if not
         return 1+raceRepo.countByIdLeagueIDAndIdSeasonNumber(league, seasonNumber);
+    }
+
+    private int calcalculateDriverNumber(String league, String team) {
+        return 1+driverRepo.countByIdLeagueIDAndIdTeamID(league, team);
     }
 
     @GetMapping("/sp/new/season/{league}")
@@ -78,6 +81,30 @@ public class SPController {
         return race;
     }
 
+    @GetMapping("/sp/new/team/{league}/{team}")
+    @ResponseBody
+    SP_Team createTeam(@PathVariable String league,
+                       @PathVariable String team,
+                       @RequestParam(name="display") String display) {
+        SP_TeamID id = new SP_TeamID(league, team);
+        SP_Team out = new SP_Team(id, display);
+        teamRepo.save(out);
+        return out;
+    }
+
+    @GetMapping("/sp/new/driver/{league}/{team}")
+    @ResponseBody
+    SP_Driver createDriver(@PathVariable String league,
+                           @PathVariable String team,
+                           @RequestParam(name="season") int season,
+                           @RequestParam(name="display") String display) {
+        int driverNumber = calcalculateDriverNumber(league, team);
+        SP_DriverID id = new SP_DriverID(league, team, driverNumber);
+        SP_Driver out = new SP_Driver(id, display, season);
+        driverRepo.save(out);
+        return out;
+    }
+
     @GetMapping("/sp/leagues")
     @ResponseBody
     List<League> listLeagues() {
@@ -93,4 +120,16 @@ public class SPController {
     @GetMapping("/sp/races")
     @ResponseBody
     List<SP_Race> listRaces() { return raceRepo.findAll(); }
+
+    @GetMapping("/sp/teams")
+    @ResponseBody
+    List<SP_Team> listTeams() {
+        return teamRepo.findAll();
+    }
+
+    @GetMapping("/sp/drivers")
+    @ResponseBody
+    List<SP_Driver> listDrivers() {
+        return driverRepo.findAll();
+    }
 }
