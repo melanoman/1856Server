@@ -1,9 +1,12 @@
 package mel.volvox.GameChatServer.repository;
 
+import jakarta.transaction.Transactional;
 import mel.volvox.GameChatServer.model.SP_Season;
 import mel.volvox.GameChatServer.model.SP_SeasonID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface SeasonRepo extends JpaRepository<SP_Season, SP_SeasonID> {
     int countByIdLeagueID(String leagueID);
+    @Transactional
+    void deleteAllByIdLeagueID(String leagueID);
 }

@@ -105,6 +105,17 @@ public class SPController {
         return out;
     }
 
+    @GetMapping("/sp/delete/league/{league}")
+    @ResponseBody
+    String deleteLeague(@PathVariable String league) {
+        leagueRepo.deleteById(league);
+        teamRepo.deleteAllByIdLeagueID(league);
+        seasonRepo.deleteAllByIdLeagueID(league);
+        raceRepo.deleteAllByIdLeagueID(league);
+        driverRepo.deleteAllByIdLeagueID(league);
+        return league;
+    }
+
     @GetMapping("/sp/leagues")
     @ResponseBody
     List<League> listLeagues() {
