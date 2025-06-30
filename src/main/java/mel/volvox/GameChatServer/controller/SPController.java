@@ -1,5 +1,6 @@
 package mel.volvox.GameChatServer.controller;
 
+import jakarta.transaction.Transactional;
 import mel.volvox.GameChatServer.model.*;
 import mel.volvox.GameChatServer.model.sp.League;
 import mel.volvox.GameChatServer.repository.*;
@@ -87,6 +88,7 @@ public class SPController {
                        @PathVariable String team,
                        @RequestParam(name="display") String display) {
         SP_TeamID id = new SP_TeamID(league, team);
+        //TODO make sure not to overwrite
         SP_Team out = new SP_Team(id, display);
         teamRepo.save(out);
         return out;
@@ -114,6 +116,32 @@ public class SPController {
         raceRepo.deleteAllByIdLeagueID(league);
         driverRepo.deleteAllByIdLeagueID(league);
         return league;
+    }
+
+    @GetMapping("/sp/update/league/{league}")
+    @ResponseBody
+    @Transactional
+    League updateLeague(@PathVariable String league,
+                        @RequestParam(name="display") String displayName) {
+        League out = new League(league, displayName);
+        leagueRepo.save(out);
+        return out;
+    }
+
+    @GetMapping("/sp/update/team/{league}/{team}")
+    @ResponseBody
+    @Transactional
+    SP_Team updateTeam(@PathVariable String league,
+                    @PathVariable String team,
+                    @RequestParam(name="display") String displayName) {
+        SP_TeamID id = new SP_TeamID(league, team);
+        //TODO make sure already exists
+        SP_Team out = new SP_Team(id, displayName);
+        System.out.println("before");
+        teamRepo.save(out);
+        System.out.println("after");
+
+        return out;
     }
 
     @GetMapping("/sp/leagues")
