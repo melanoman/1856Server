@@ -128,6 +128,9 @@ public class SPController {
         return out;
     }
 
+    //TODO prevent overwrite for new
+    //TODO require overwrite for update
+
     @GetMapping("/sp/update/team/{league}/{team}")
     @ResponseBody
     @Transactional
@@ -135,10 +138,20 @@ public class SPController {
                     @PathVariable String team,
                     @RequestParam(name="display") String displayName) {
         SP_TeamID id = new SP_TeamID(league, team);
-        //TODO make sure already exists
         SP_Team out = new SP_Team(id, displayName);
         teamRepo.save(out);
+        return out;
+    }
 
+    @GetMapping("/sp/update/season/{league}/{num}")
+    @ResponseBody
+    @Transactional
+    SP_Season updateSeason(@PathVariable String league,
+                           @PathVariable int num,
+                           @RequestParam(name="display") String name) {
+        SP_SeasonID id = new SP_SeasonID(league, num);
+        SP_Season out = new SP_Season(id, name);
+        seasonRepo.save(out);
         return out;
     }
 
