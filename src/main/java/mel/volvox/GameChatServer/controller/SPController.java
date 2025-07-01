@@ -109,6 +109,7 @@ public class SPController {
 
     @GetMapping("/sp/delete/league/{league}")
     @ResponseBody
+    @Transactional
     String deleteLeague(@PathVariable String league) {
         leagueRepo.deleteById(league);
         teamRepo.deleteAllByIdLeagueID(league);
@@ -116,6 +117,16 @@ public class SPController {
         raceRepo.deleteAllByIdLeagueID(league);
         driverRepo.deleteAllByIdLeagueID(league);
         return league;
+    }
+
+    @GetMapping("/sp/delete/team/{league}/{team}")
+    @ResponseBody
+    @Transactional
+    String deleteTeam(@PathVariable String league,
+                      @PathVariable String team) {
+        teamRepo.deleteAllByIdLeagueIDAndIdTeamID(league, team);
+        driverRepo.deleteAllByIdLeagueIDAndIdTeamID(league, team);
+        return team;
     }
 
     @GetMapping("/sp/update/league/{league}")
