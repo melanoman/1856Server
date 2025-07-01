@@ -166,6 +166,21 @@ public class SPController {
         return out;
     }
 
+    @GetMapping("/sp/update/race/{league}/{seasonNumber}/{raceNumber}")
+    @ResponseBody
+    @Transactional
+    SP_Race updateRace(@PathVariable String league,
+                       @PathVariable int seasonNumber,
+                       @PathVariable int raceNumber,
+                       @RequestParam(name="display") String displayName,
+                       @RequestParam(name="multiplier") int multiplier,
+                       @RequestParam(name="track") String trackName) {
+        SP_RaceID raceID = new SP_RaceID(league, seasonNumber, raceNumber);
+        SP_Race race = new SP_Race(raceID, displayName, trackName, multiplier);
+        raceRepo.save(race);
+        return race;
+    }
+
     @GetMapping("/sp/update/driver/{league}/{team}/{num}")
     @ResponseBody
     @Transactional
