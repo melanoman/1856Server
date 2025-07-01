@@ -137,10 +137,22 @@ public class SPController {
         SP_TeamID id = new SP_TeamID(league, team);
         //TODO make sure already exists
         SP_Team out = new SP_Team(id, displayName);
-        System.out.println("before");
         teamRepo.save(out);
-        System.out.println("after");
 
+        return out;
+    }
+
+    @GetMapping("/sp/update/driver/{league}/{team}/{num}")
+    @ResponseBody
+    @Transactional
+    SP_Driver updateDriver(@PathVariable String league,
+                           @PathVariable String team,
+                           @PathVariable int num,
+                           @RequestParam(name="display")String driverName,
+                           @RequestParam(name="birth") int birthday) {
+        SP_DriverID id = new SP_DriverID(league, team, num);
+        SP_Driver out = new SP_Driver(id, driverName, birthday);
+        driverRepo.save(out);
         return out;
     }
 
