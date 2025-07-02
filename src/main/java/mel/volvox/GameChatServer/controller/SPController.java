@@ -66,6 +66,35 @@ public class SPController {
         return spSeason;
     }
 
+    @GetMapping("/sp/clone/schedule/{from}/{to}")
+    @ResponseBody
+    String clone(@PathVariable String from,
+                 @PathVariable String to) {
+        for(SP_Season season:seasonRepo.findAllByIdLeagueID(from)) {
+            SP_SeasonID cloneID = new SP_SeasonID(to, season.getId().getSeasonNumber());
+            SP_Season clone = new SP_Season(cloneID, season.getDisplayName());
+            seasonRepo.save(clone);
+        }
+        int count = 0;
+        for(SP_Race race:raceRepo.findAllByIdLeagueID(from)) {
+            count++;
+            SP_RaceID cloneID = new SP_RaceID(
+                    to,
+                    race.getId().getSeasonNumber(),
+                    race.getId().getRaceNumber()
+            );
+            SP_Race clone = new SP_Race(
+                    cloneID,
+                    race.getDisplayName(),
+                    race.getTrackName(),
+                    race.getMultiplier()
+            );
+            raceRepo.save(clone);
+        }
+        String msg = "copied "+count+" races";
+        return msg;
+    }
+
     @GetMapping("/sp/new/race/{league}/{seasonNumber}")
     @ResponseBody
     SP_Race createRace(@PathVariable String league,
