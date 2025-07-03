@@ -26,6 +26,8 @@ public class SPController {
     private TeamRepo teamRepo;
     @Autowired
     private DriverRepo driverRepo;
+    @Autowired
+    private ResultRepo resultRepo;
 
     @GetMapping("/sp/new/league/{league}")
     @ResponseBody
@@ -222,6 +224,37 @@ public class SPController {
         SP_Driver out = new SP_Driver(id, driverName, birthday);
         driverRepo.save(out);
         return out;
+    }
+
+    @PostMapping("/sp/replace/results/{league}/{season}/{race}")
+    @ResponseBody
+    @Transactional
+    String replaceOrCreateRaceResults(
+        @PathVariable String league,
+        @PathVariable int season,
+        @PathVariable int race,
+        @RequestBody List<SP_Result> newResults
+    ) {
+        List<SP_Result> oldResults = resultRepo.findAllByIdLeagueIDAndIdSeasonNumberAndIdRaceNumber(
+                league, season, race
+        );
+        for(SP_Result result: oldResults) {
+            resultRepo.delete(result);
+        }
+        for(SP_Result result: newResults) {
+            resultRepo.save(result);
+        }
+        return "done";
+    }
+
+    @GetMapping("/sp/results/{league}/{season}/{race}")
+    @ResponseBody
+    List<SP_Result> replaceOrCreateRaceResults(
+            @PathVariable String league,
+            @PathVariable int season,
+            @PathVariable int race
+    ) {
+        return resultRepo.findAllByIdLeagueIDAndIdSeasonNumberAndIdRaceNumber(league, season, race);
     }
 
     @GetMapping("/sp/leagues")
