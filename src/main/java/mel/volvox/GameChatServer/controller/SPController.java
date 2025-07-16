@@ -119,12 +119,25 @@ public class SPController {
             @NonNull SP_Driver driver,
             @NonNull SP_Race race,
             @NonNull Map<String, Integer> race2bonus,
-            @NonNull Map<Integer,Integer> season2length
+            @NonNull Map<Integer,Integer> season2length,
+            int serialNumber
     ) {
         SP_DriverStatus out = new SP_DriverStatus();
         out.setDriver(driver);
+        out.setSerialNumber(serialNumber);
         return out;//TODO populate DriverStatus
     }
+
+    static class DriverComparator implements Comparator<SP_Driver> {
+        @Override
+        public int compare(SP_Driver o1, SP_Driver o2) {
+            int compare = o1.getId().getTeamID().compareTo(o2.getId().getTeamID());
+            if (compare != 0) return compare;
+            return o1.getId().getDriverNumber() - o2.getId().getDriverNumber();
+        }
+    }
+
+    static DriverComparator compareDrivers = new DriverComparator();
 
     @GetMapping("/sp/preview/{league}")
     @ResponseBody
@@ -169,8 +182,13 @@ public class SPController {
                     race.getMultiplier()
             );
         }
+        int serialNumber = 0;
+        drivers.sort(compareDrivers);
         for(SP_Driver driver: drivers) {
-            statuses.add(calculateDriverStatus(driver, currentRace.get(), race2bonus, season2length));
+            serialNumber++;
+            statuses.add(calculateDriverStatus(
+                driver, currentRace.get(), race2bonus, season2length, serialNumber
+            ));
         }
         //TODO populate this properly
         out.setDrivers(statuses);

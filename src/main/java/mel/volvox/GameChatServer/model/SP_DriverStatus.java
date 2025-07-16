@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Data
 public class SP_DriverStatus {
+    int serialNumber;
     SP_Driver driver;
     int remainingInjury; // number of race left in hospital
     int seasonPoints;
