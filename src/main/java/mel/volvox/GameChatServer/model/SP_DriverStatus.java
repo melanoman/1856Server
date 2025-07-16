@@ -17,4 +17,5 @@ public class SP_DriverStatus {
     int remainingInjury; // number of race left in hospital
     int seasonPoints;
     int allTimePoints;
+    int experience;
 }

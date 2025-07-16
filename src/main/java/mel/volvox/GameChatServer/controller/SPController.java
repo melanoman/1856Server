@@ -4,6 +4,7 @@ import jakarta.transaction.Transactional;
 import mel.volvox.GameChatServer.model.*;
 import mel.volvox.GameChatServer.model.sp.League;
 import mel.volvox.GameChatServer.repository.*;
+import mel.volvox.GameChatServer.util.RaceCounter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
@@ -11,6 +12,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 @CrossOrigin
 @Controller
@@ -120,12 +123,33 @@ public class SPController {
             @NonNull SP_Race race,
             @NonNull Map<String, Integer> race2bonus,
             @NonNull Map<Integer,Integer> season2length,
+            @NonNull List<SP_Result> results,
             int serialNumber
     ) {
         SP_DriverStatus out = new SP_DriverStatus();
         out.setDriver(driver);
         out.setSerialNumber(serialNumber);
-        return out;//TODO populate DriverStatus
+        int experience = 0;
+        int hospital = 0;
+        RaceCounter counter = new RaceCounter(season2length);
+        for(SP_Result result: results) {
+            int lag = counter.skipTo(result.getId().getSeasonNumber(), result.getId().getRaceNumber());
+            if (hospital > lag) {
+                // THIS ONLY HAPPENS IF AN ELIGIBLE DRIVER WAS ENTERED INTO A RACE
+                //TODO prevent results like this from being saved
+                experience -= lag;
+                hospital -= lag;
+            } else if (hospital > 0) {
+                experience -= hospital;
+                hospital = 0;
+            }
+            experience += result.isFinished() ? 2: 1;
+            hospital += result.getInjuryDuration();
+        }
+        out.setExperience(experience);
+        out.setRemainingInjury(hospital);
+        //TODO calculate standings
+        return out;
     }
 
     static class DriverComparator implements Comparator<SP_Driver> {
@@ -138,6 +162,24 @@ public class SPController {
     }
 
     static DriverComparator compareDrivers = new DriverComparator();
+
+    static class ResultByScheduleComparator implements Comparator<SP_Result> {
+        @Override
+        public int compare(SP_Result o1, SP_Result o2) {
+            int compare = o1.getId().getSeasonNumber() - o2.getId().getSeasonNumber();
+            if (compare != 0) return compare;
+            return o1.getId().getRaceNumber() - o2.getId().getRaceNumber();
+        }
+    }
+
+    static Comparator<SP_Result> compareResultsBySchedule = new ResultByScheduleComparator();
+
+    static boolean filterMatchesDriver(@NonNull SP_Result result, @NonNull SP_Driver driver) {
+        return (
+            result.getTeamID().equals(driver.getId().getTeamID()) &&
+            result.getDriverNumber() == driver.getId().getDriverNumber()
+        );
+    }
 
     @GetMapping("/sp/preview/{league}")
     @ResponseBody
@@ -186,11 +228,14 @@ public class SPController {
         drivers.sort(compareDrivers);
         for(SP_Driver driver: drivers) {
             serialNumber++;
+            List<SP_Result> nut = results.stream()
+                    .filter(p -> filterMatchesDriver(p, driver))
+                    .sorted(compareResultsBySchedule)
+                    .toList();
             statuses.add(calculateDriverStatus(
-                driver, currentRace.get(), race2bonus, season2length, serialNumber
+                driver, currentRace.get(), race2bonus, season2length, nut, serialNumber
             ));
         }
-        //TODO populate this properly
         out.setDrivers(statuses);
         return out;
     }
