@@ -118,6 +118,16 @@ public class SPController {
         return nextRace(prior.get(), season2length, races);
     }
 
+    private static final int triangle(int n) {
+        return n*(n+1)/2;
+    }
+
+    private int ageLoss(SP_Race race, int birthday) {
+        int age = race.getId().getSeasonNumber() - birthday;
+        int loss = triangle(2*age);
+        return triangle((race.getId().getRaceNumber() > 5) ? age*2+1 : age*2);
+    }
+
     private SP_DriverStatus calculateDriverStatus(
             @NonNull SP_Driver driver,
             @NonNull SP_Race race,
@@ -151,6 +161,7 @@ public class SPController {
             experience -= lag;
             hospital -= lag;
         }
+        experience -= ageLoss(race, driver.getBirthday());
         out.setExperience(experience);
         out.setRemainingInjury(Math.max(hospital, 0));
         //TODO calculate standings
