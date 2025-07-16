@@ -330,10 +330,11 @@ public class SPController {
     SP_Driver createDriver(@PathVariable String league,
                            @PathVariable String team,
                            @RequestParam(name="season") int season,
+                           @RequestParam(name="late") boolean late, // created after race 5
                            @RequestParam(name="display") String display) {
         int driverNumber = calculateNewDriverNumber(league, team);
         SP_DriverID id = new SP_DriverID(league, team, driverNumber);
-        SP_Driver out = new SP_Driver(id, display, season);
+        SP_Driver out = new SP_Driver(id, display, season, late);
         driverRepo.save(out);
         return out;
     }
@@ -419,9 +420,10 @@ public class SPController {
                            @PathVariable String team,
                            @PathVariable int num,
                            @RequestParam(name="display")String driverName,
-                           @RequestParam(name="birth") int birthday) {
+                           @RequestParam(name="birth") int birthday,
+                           @RequestParam(name="late") boolean late) {
         SP_DriverID id = new SP_DriverID(league, team, num);
-        SP_Driver out = new SP_Driver(id, driverName, birthday);
+        SP_Driver out = new SP_Driver(id, driverName, birthday, late);
         driverRepo.save(out);
         return out;
     }

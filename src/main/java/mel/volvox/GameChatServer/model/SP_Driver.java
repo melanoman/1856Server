@@ -18,4 +18,5 @@ public class SP_Driver {
     SP_DriverID id;
     String displayName;
     int birthday;
+    boolean lateBirth;
 }
