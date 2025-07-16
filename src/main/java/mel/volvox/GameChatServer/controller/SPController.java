@@ -146,8 +146,13 @@ public class SPController {
             experience += result.isFinished() ? 2: 1;
             hospital += result.getInjuryDuration();
         }
+        if (hospital > 0) {
+            int lag = counter.skipTo(race.getId().getSeasonNumber(), race.getId().getRaceNumber());
+            experience -= lag;
+            hospital -= lag;
+        }
         out.setExperience(experience);
-        out.setRemainingInjury(hospital);
+        out.setRemainingInjury(Math.max(hospital, 0));
         //TODO calculate standings
         return out;
     }
