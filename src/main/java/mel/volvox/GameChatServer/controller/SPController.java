@@ -5,12 +5,12 @@ import mel.volvox.GameChatServer.model.*;
 import mel.volvox.GameChatServer.model.sp.League;
 import mel.volvox.GameChatServer.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @CrossOrigin
 @Controller
@@ -42,25 +42,146 @@ public class SPController {
         return newLeague;
     }
 
-    private int calculateSeasonNumber(String league) {
+    private int calculateNewSeasonNumber(@NonNull String league) {
         //TODO make sure league exists, return -1 if not
         return 1+seasonRepo.countByIdLeagueID(league);
     }
 
-    private int calculateRaceNumber(String league, int seasonNumber) {
+    private int calculateNewRaceNumber(@NonNull String league, int seasonNumber) {
         //TODO make sure league and season exist, return -1 if not
         return 1+raceRepo.countByIdLeagueIDAndIdSeasonNumber(league, seasonNumber);
     }
 
-    private int calcalculateDriverNumber(String league, String team) {
+    private int calculateNewDriverNumber(@NonNull String league, @NonNull String team) {
         return 1+driverRepo.countByIdLeagueIDAndIdTeamID(league, team);
+    }
+
+    private Optional<SP_Race> scanRace(
+            int seasonNumber, int raceNumber, @NonNull List<SP_Race> races
+    ) {
+        for (SP_Race race: races) {
+            if(race.getId().getSeasonNumber() == seasonNumber &&
+                    race.getId().getRaceNumber() == raceNumber
+            ) {
+                return Optional.of(race);
+            }
+        }
+        return Optional.empty();
+    }
+
+    private Optional<SP_Race> calculatePriorRace(
+            @NonNull List<SP_Race> races,
+            @NonNull List<SP_Result> results
+    ) {
+        if (races.isEmpty()) return Optional.empty();
+
+        int raceNumber = 1;
+        int seasonNumber = 1;
+        for(SP_Result result: results) {
+            if (result.getId().getSeasonNumber() > seasonNumber  ||
+                (result.getId().getSeasonNumber() == seasonNumber &&
+                 result.getId().getRaceNumber() > raceNumber)
+            ) {
+                raceNumber = result.getId().getRaceNumber();
+                seasonNumber = result.getId().getSeasonNumber();
+            }
+        }
+        return scanRace(seasonNumber, raceNumber, races);
+    }
+
+    private Optional<SP_Race>nextRace(
+            @NonNull SP_Race race,
+            @NonNull Map<Integer, Integer> season2length,
+            @NonNull List<SP_Race> races) {
+        int raceNumber = race.getId().getRaceNumber();
+        int seasonNumber = race.getId().getSeasonNumber();
+        if (raceNumber < season2length.get(seasonNumber)) {
+            raceNumber++;
+        } else {
+            raceNumber = 1;
+            seasonNumber++;
+        }
+        return scanRace(seasonNumber, raceNumber, races);
+    }
+
+    private Optional<SP_Race> calculateCurrentRace(
+            List<SP_Race> races,
+            List<SP_Result> results,
+            Map<Integer, Integer> season2length
+    ) {
+        if (races.isEmpty()) return Optional.empty();
+        Optional<SP_Race> prior = calculatePriorRace(races, results);
+        if(prior.isEmpty()) return scanRace(1, 1, races);
+        return nextRace(prior.get(), season2length, races);
+    }
+
+    private SP_DriverStatus calculateDriverStatus(
+            @NonNull SP_Driver driver,
+            @NonNull SP_Race race,
+            @NonNull Map<String, Integer> race2bonus,
+            @NonNull Map<Integer,Integer> season2length
+    ) {
+        SP_DriverStatus out = new SP_DriverStatus();
+        out.setDriver(driver);
+        return out;//TODO populate DriverStatus
+    }
+
+    @GetMapping("/sp/preview/{league}")
+    @ResponseBody
+    SP_Preview getPreview(@PathVariable String league) {
+        SP_Preview preview = new SP_Preview();
+        List<SP_Race> races = raceRepo.findAllByIdLeagueID(league);
+        if (races.isEmpty()) return SP_Preview.NULL;
+
+        SP_Preview out = new SP_Preview();
+        Map<Integer, Integer> season2length = new HashMap<>();
+        for(SP_Race race: races) {
+            Integer oldMax = season2length.get(race.getId().getSeasonNumber());
+            if(oldMax == null || race.getId().getRaceNumber() > oldMax) {
+                season2length.put(race.getId().getSeasonNumber(), race.getId().getRaceNumber());
+            }
+        }
+        List<SP_Result> results = resultRepo.findAllByIdLeagueID(league);
+
+        //find the next race, abort if end of schedule
+        Optional<SP_Race> currentRace = calculateCurrentRace(races, results, season2length);
+        out.setRace(currentRace.orElse(SP_Race.NULL));
+        if (currentRace.isEmpty()) return out;
+
+        // calculate the driver statuses for that race
+        List<SP_Driver> drivers = driverRepo.findAllByIdLeagueID(league);
+        List<SP_DriverStatus> statuses = new ArrayList<>(drivers.size());
+
+        Map<SP_Driver, List<SP_Result>> driver2results = new HashMap<>();
+        Map<String, SP_Driver> id2Driver = new HashMap<>();
+        for(SP_Driver driver: drivers) {
+            driver2results.put(driver, new ArrayList<>());
+            id2Driver.put(driver.getId().getDriverNumber()+":"+driver.getId().getTeamID(),driver);
+        }
+        for(SP_Result result: results) {
+            SP_Driver driver = id2Driver.get(result.getDriverNumber() + ":" + result.getTeamID());
+            driver2results.get(driver).add(result);
+        }
+        Map<String,Integer> race2bonus = new HashMap<>();
+        for(SP_Race race: races) {
+            race2bonus.put(
+                    race.getId().getSeasonNumber()+":"+race.getId().getRaceNumber(),
+                    race.getMultiplier()
+            );
+        }
+        for(SP_Driver driver: drivers) {
+            statuses.add(calculateDriverStatus(driver, currentRace.get(), race2bonus, season2length));
+        }
+        //TODO populate this properly
+        out.setDrivers(statuses);
+        return out;
     }
 
     @GetMapping("/sp/new/season/{league}")
     @ResponseBody
     SP_Season createSeason(@PathVariable String league,
                            @RequestParam(name="display") String displayName) {
-        int seasonNumber = calculateSeasonNumber(league);
+        int seasonNumber = calculateNewSeasonNumber(league);
         if (seasonNumber == -1) return null; //TODO better error
         SP_SeasonID spSeasonID = new SP_SeasonID(league, seasonNumber);
         SP_Season spSeason = new SP_Season(spSeasonID, displayName);
@@ -105,7 +226,7 @@ public class SPController {
                        @RequestParam(name="multiplier") int multiplier,
                        @RequestParam(name="track") String trackName) {
 
-        int raceNumber = calculateRaceNumber(league, seasonNumber);
+        int raceNumber = calculateNewRaceNumber(league, seasonNumber);
         if (raceNumber == -1) return null; //TODO better error
         SP_RaceID raceID = new SP_RaceID(league, seasonNumber, raceNumber);
         SP_Race race = new SP_Race(raceID, displayName, trackName, multiplier);
@@ -131,7 +252,7 @@ public class SPController {
                            @PathVariable String team,
                            @RequestParam(name="season") int season,
                            @RequestParam(name="display") String display) {
-        int driverNumber = calcalculateDriverNumber(league, team);
+        int driverNumber = calculateNewDriverNumber(league, team);
         SP_DriverID id = new SP_DriverID(league, team, driverNumber);
         SP_Driver out = new SP_Driver(id, display, season);
         driverRepo.save(out);

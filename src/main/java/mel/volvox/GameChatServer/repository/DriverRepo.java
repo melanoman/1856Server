@@ -5,6 +5,8 @@ import mel.volvox.GameChatServer.model.SP_Driver;
 import mel.volvox.GameChatServer.model.SP_DriverID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
+
 public interface DriverRepo extends JpaRepository<SP_Driver, SP_DriverID> {
 
     int countByIdLeagueIDAndIdTeamID(String leagueID, String teamID);
@@ -12,4 +14,6 @@ public interface DriverRepo extends JpaRepository<SP_Driver, SP_DriverID> {
     void deleteAllByIdLeagueID(String leagueID);
     @Transactional
     void deleteAllByIdLeagueIDAndIdTeamID(String leagueID, String teamID);
+
+    List<SP_Driver> findAllByIdLeagueID(String league);
 }

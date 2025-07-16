@@ -15,4 +15,6 @@ public class SP_RaceID implements Serializable {
     String leagueID;
     int seasonNumber;
     int raceNumber;
+
+    public static SP_RaceID NULL = new SP_RaceID("", -1, -1);
 }

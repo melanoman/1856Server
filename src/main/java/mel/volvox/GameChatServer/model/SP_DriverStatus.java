@@ -1,0 +1,19 @@
+package mel.volvox.GameChatServer.model;
+
+import jakarta.persistence.Entity;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+/**
+ * An entity class represents a table in a relational database
+ */
+@NoArgsConstructor
+@AllArgsConstructor
+@Data
+public class SP_DriverStatus {
+    SP_Driver driver;
+    int remainingInjury; // number of race left in hospital
+    int seasonPoints;
+    int allTimePoints;
+}

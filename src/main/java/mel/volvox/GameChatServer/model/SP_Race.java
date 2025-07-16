@@ -17,4 +17,6 @@ public class SP_Race {
     String displayName;
     String trackName;
     int multiplier;
+
+    public static SP_Race NULL = new SP_Race(SP_RaceID.NULL, "Not Found", "Not Found", 0);
 }
