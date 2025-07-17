@@ -157,7 +157,7 @@ public class SPController {
             hospital += result.getInjuryDuration();
         }
         if (hospital > 0) {
-            int lag = counter.skipTo(race.getId().getSeasonNumber(), race.getId().getRaceNumber());
+            int lag = counter.skipTo(race.getId().getSeasonNumber(), race.getId().getRaceNumber())-1;
             experience -= lag;
             hospital -= lag;
         }
