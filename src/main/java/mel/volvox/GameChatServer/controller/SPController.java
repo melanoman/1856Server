@@ -76,7 +76,7 @@ public class SPController {
             @NonNull List<SP_Race> races,
             @NonNull List<SP_Result> results
     ) {
-        if (races.isEmpty()) return Optional.empty();
+        if (results.isEmpty()) return Optional.empty();
 
         int raceNumber = 1;
         int seasonNumber = 1;
