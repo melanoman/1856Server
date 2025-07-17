@@ -13,4 +13,7 @@ public interface RaceRepo extends JpaRepository<SP_Race, SP_RaceID> {
     @Transactional
     void deleteAllByIdLeagueID(String leagueID);
     List<SP_Race> findAllByIdLeagueID(String leagueID);
+
+    Optional<SP_Race> findByIdLeagueIDAndIdSeasonNumberAndIdRaceNumber(
+            String leagueID, int seasonNumber, int raceNumber);
 }

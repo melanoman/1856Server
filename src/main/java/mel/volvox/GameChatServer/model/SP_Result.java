@@ -18,4 +18,5 @@ public class SP_Result {
     String driverName;
     boolean finished;
     int injuryDuration;
+    int points;
 }

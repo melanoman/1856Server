@@ -12,8 +12,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 @CrossOrigin
 @Controller
@@ -142,7 +140,13 @@ public class SPController {
         int experience = 0;
         int hospital = 0;
         RaceCounter counter = new RaceCounter(season2length);
+        int totalPoints = 0;
+        int seasonPoints = 0;
         for(SP_Result result: results) {
+            totalPoints += result.getPoints();
+            if (result.getId().getSeasonNumber() == race.getId().getSeasonNumber()) {
+                seasonPoints += result.getPoints();
+            }
             int lag = counter.skipTo(result.getId().getSeasonNumber(), result.getId().getRaceNumber());
             if (hospital > lag) {
                 // THIS ONLY HAPPENS IF AN ELIGIBLE DRIVER WAS ENTERED INTO A RACE
@@ -164,6 +168,8 @@ public class SPController {
         experience -= ageLoss(race, driver.getBirthday());
         out.setExperience(experience);
         out.setRemainingInjury(Math.max(hospital, 0));
+        out.setSeasonPoints(seasonPoints);
+        out.setAllTimePoints(totalPoints);
         //TODO calculate standings
         return out;
     }
@@ -428,6 +434,23 @@ public class SPController {
         return out;
     }
 
+    static int points8[] = { 100, 75, 55, 40, 25, 15, 10, 5 };
+    static int points9[] = { 100, 80, 60, 45, 30, 20, 15, 10, 5 };
+    static int points10[] = { 100, 80, 65, 50, 35, 25, 20, 15, 10, 5 };
+
+    static int points(int size, int place) {
+        try {
+            switch (size) {
+                case 8: return points8[place-1];
+                case 9: return points9[place-1];
+                case 10: return points10[place-1];
+                default: return 0;
+            }
+        } catch(ArrayIndexOutOfBoundsException e) {
+            return 0;
+        }
+    }
+
     @PostMapping("/sp/replace/results/{league}/{season}/{race}")
     @ResponseBody
     @Transactional
@@ -440,10 +463,16 @@ public class SPController {
         List<SP_Result> oldResults = resultRepo.findAllByIdLeagueIDAndIdSeasonNumberAndIdRaceNumber(
                 league, season, race
         );
+        Optional<SP_Race> raceOp = raceRepo.findByIdLeagueIDAndIdSeasonNumberAndIdRaceNumber(
+          league, season, race
+        );
+        int bonus = raceOp.orElseThrow(() -> new IllegalStateException("No such race")).getMultiplier();
         for(SP_Result result: oldResults) {
             resultRepo.delete(result);
         }
+        int size = newResults.size();
         for(SP_Result result: newResults) {
+            result.setPoints(bonus * points(size, result.getId().getPlace()));
             resultRepo.save(result);
         }
         return "done";
