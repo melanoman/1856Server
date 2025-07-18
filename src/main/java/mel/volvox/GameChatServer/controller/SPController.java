@@ -478,6 +478,74 @@ public class SPController {
         return "done";
     }
 
+    static String resultKey(SP_Result result, boolean isTeam) {
+        if(isTeam) {
+            return result.getTeamID();
+        } else {
+            return result.getTeamID()+":$FKDJ)"+result.getDriverName();
+        }
+    }
+
+    static class PointsComp implements Comparator<SP_Standing> {
+        @Override
+        public int compare(SP_Standing o1, SP_Standing o2) {
+            if(o1==null && o2==null) return 0;
+            if(o1==null) return 1;
+            if(o2==null) return -1;
+            return o2.getPoints() - o1.getPoints();
+        }
+    }
+
+    static PointsComp pointsComp = new PointsComp();
+
+    @GetMapping("/sp/standings/{league}/{type}/{scope}")
+    @ResponseBody
+    SP_Standings getDriverStandings(
+            @PathVariable String league,
+            @PathVariable String type,
+            @PathVariable String scope
+    ) {
+        SP_Standings out = new SP_Standings();
+        Map<String, SP_Standing> map = new HashMap<>();
+        List<SP_Result> results;
+        boolean isTeam = "team".equals(type);
+
+        if("all".equals(scope)) results = resultRepo.findAllByIdLeagueID(league);
+        else throw new IllegalArgumentException("Unknown scope: "+scope); //TODO season filters
+
+        for(SP_Result result: results) {
+            String key = resultKey(result, isTeam);
+            if(map.containsKey(key)) {
+                SP_Standing standing = map.get(key);
+                standing.setPoints(standing.getPoints()+result.getPoints());
+            } else {
+                map.put(key, new SP_Standing(
+                    0, result.getPoints(), result.getTeamID(), result.getDriverName()
+                ));
+            }
+        }
+
+        //TODO sort and set places
+        //TODO populate standings from map
+        List<SP_Standing> standings = map.values().stream().sorted(pointsComp).toList();
+        int tiePoints = 0;
+        int nextPlace = 0;
+        int rowCount = 0;
+        for(SP_Standing standing: standings) {
+            rowCount++;
+            if(standing.getPoints() != tiePoints) {
+                tiePoints = standing.getPoints();
+                nextPlace = rowCount;
+            }
+            standing.setPlace(nextPlace);
+        }
+
+        out.setStandings(standings);
+        out.setScope(scope);
+        out.setType(type);
+        return out;
+    }
+
     @GetMapping("/sp/results/{league}/{season}/{race}")
     @ResponseBody
     List<SP_Result> replaceOrCreateRaceResults(

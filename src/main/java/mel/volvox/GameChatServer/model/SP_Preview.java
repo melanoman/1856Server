@@ -10,9 +10,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * An entity class represents a table in a relational database
- */
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
