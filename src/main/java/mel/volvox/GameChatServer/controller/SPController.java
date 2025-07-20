@@ -498,6 +498,16 @@ public class SPController {
 
     static PointsComp pointsComp = new PointsComp();
 
+    List<SP_Result> getCurrentSeasonResults(String league) {
+        List<SP_Result> all = resultRepo.findAllByIdLeagueID(league);
+        int s = 0;
+        for(SP_Result result: all) {
+            if(result.getId().getSeasonNumber() > s) s = result.getId().getSeasonNumber();
+        }
+        final int season = s;
+        return all.stream().filter((x)->(x.getId().getSeasonNumber()==season)).toList();
+    }
+
     @GetMapping("/sp/standings/{league}/{type}/{scope}")
     @ResponseBody
     SP_Standings getDriverStandings(
@@ -511,7 +521,9 @@ public class SPController {
         boolean isTeam = "team".equals(type);
 
         if("all".equals(scope)) results = resultRepo.findAllByIdLeagueID(league);
-        else throw new IllegalArgumentException("Unknown scope: "+scope); //TODO season filters
+        else if("season".equals(scope)) {
+            results = getCurrentSeasonResults(league);
+        } else throw new IllegalArgumentException("Unknown scope: "+scope); //TODO old season filters
 
         for(SP_Result result: results) {
             String key = resultKey(result, isTeam);
