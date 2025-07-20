@@ -12,5 +12,7 @@ public interface ResultRepo extends JpaRepository<SP_Result, SP_ResultID> {
     );
 
     List<SP_Result> findAllByIdLeagueID(String league);
+
+    List<SP_Result> findAllByIdLeagueIDAndIdSeasonNumber(String league, int seasonNumber);
 }
 

@@ -508,6 +508,16 @@ public class SPController {
         return all.stream().filter((x)->(x.getId().getSeasonNumber()==season)).toList();
     }
 
+    List<SP_Result> getOldSeasonResults(String league, String scope) {
+        int seasonNumber;
+        try {
+            seasonNumber = Integer.parseInt(scope);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Unknown scope:" +scope);
+        }
+        return resultRepo.findAllByIdLeagueIDAndIdSeasonNumber(league, seasonNumber);
+    }
+
     @GetMapping("/sp/standings/{league}/{type}/{scope}")
     @ResponseBody
     SP_Standings getDriverStandings(
@@ -523,7 +533,7 @@ public class SPController {
         if("all".equals(scope)) results = resultRepo.findAllByIdLeagueID(league);
         else if("season".equals(scope)) {
             results = getCurrentSeasonResults(league);
-        } else throw new IllegalArgumentException("Unknown scope: "+scope); //TODO old season filters
+        } else results = getOldSeasonResults(league, scope);
 
         for(SP_Result result: results) {
             String key = resultKey(result, isTeam);
