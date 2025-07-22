@@ -336,11 +336,10 @@ public class SPController {
     SP_Driver createDriver(@PathVariable String league,
                            @PathVariable String team,
                            @RequestParam(name="season") int season,
-                           @RequestParam(name="late") boolean late, // created after race 5
                            @RequestParam(name="display") String display) {
         int driverNumber = calculateNewDriverNumber(league, team);
         SP_DriverID id = new SP_DriverID(league, team, driverNumber);
-        SP_Driver out = new SP_Driver(id, display, season, late);
+        SP_Driver out = new SP_Driver(id, display, season);
         driverRepo.save(out);
         return out;
     }
@@ -426,10 +425,9 @@ public class SPController {
                            @PathVariable String team,
                            @PathVariable int num,
                            @RequestParam(name="display")String driverName,
-                           @RequestParam(name="birth") int birthday,
-                           @RequestParam(name="late") boolean late) {
+                           @RequestParam(name="birth") int birthday) {
         SP_DriverID id = new SP_DriverID(league, team, num);
-        SP_Driver out = new SP_Driver(id, driverName, birthday, late);
+        SP_Driver out = new SP_Driver(id, driverName, birthday);
         driverRepo.save(out);
         return out;
     }
@@ -523,7 +521,7 @@ public class SPController {
     SP_Standings getDriverStandings(
             @PathVariable String league,
             @PathVariable String type,
-            @PathVariable String scope
+            @PathVariable String scope // all=All TIME, season=current season, number=prior season
     ) {
         SP_Standings out = new SP_Standings();
         Map<String, SP_Standing> map = new HashMap<>();
