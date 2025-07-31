@@ -1,8 +1,8 @@
 package mel.volvox.GameChatServer.repository;
 
 import jakarta.transaction.Transactional;
-import mel.volvox.GameChatServer.model.mod18xx.SP_Driver;
-import mel.volvox.GameChatServer.model.mod18xx.SP_DriverID;
+import mel.volvox.GameChatServer.model.sp.SP_Driver;
+import mel.volvox.GameChatServer.model.sp.SP_DriverID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

@@ -1,8 +1,8 @@
 package mel.volvox.GameChatServer.repository;
 
 import jakarta.transaction.Transactional;
-import mel.volvox.GameChatServer.model.mod18xx.SP_Team;
-import mel.volvox.GameChatServer.model.mod18xx.SP_TeamID;
+import mel.volvox.GameChatServer.model.sp.SP_Team;
+import mel.volvox.GameChatServer.model.sp.SP_TeamID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface TeamRepo extends JpaRepository<SP_Team, SP_TeamID> {

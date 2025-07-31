@@ -1,17 +1,15 @@
-package mel.volvox.GameChatServer.model.mod18xx;
+package mel.volvox.GameChatServer.model.sp;
 
 import jakarta.persistence.Embeddable;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.io.Serializable;
-
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
 @Embeddable
-public class SP_SeasonID implements Serializable {
+public class SP_TeamID {
     String leagueID;
-    int seasonNumber;
+    String teamID;
 }

@@ -1,4 +1,4 @@
-package mel.volvox.GameChatServer.model.mod18xx;
+package mel.volvox.GameChatServer.model.sp;
 
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
@@ -11,8 +11,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Data
 @Entity
-public class SP_Season {
+public class SP_Race {
     @EmbeddedId
-    SP_SeasonID id;
+    SP_RaceID id;
     String displayName;
+    String trackName;
+    int multiplier;
+
+    public static SP_Race NULL = new SP_Race(SP_RaceID.NULL, "Not Found", "Not Found", 0);
 }

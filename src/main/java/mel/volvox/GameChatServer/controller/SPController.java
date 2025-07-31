@@ -1,8 +1,7 @@
 package mel.volvox.GameChatServer.controller;
 
 import jakarta.transaction.Transactional;
-import mel.volvox.GameChatServer.model.mod18xx.*;
-import mel.volvox.GameChatServer.model.sp.League;
+import mel.volvox.GameChatServer.model.sp.*;
 import mel.volvox.GameChatServer.repository.*;
 import mel.volvox.GameChatServer.util.RaceCounter;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,8 +1,8 @@
 package mel.volvox.GameChatServer.repository;
 
 import jakarta.transaction.Transactional;
-import mel.volvox.GameChatServer.model.mod18xx.SP_Race;
-import mel.volvox.GameChatServer.model.mod18xx.SP_RaceID;
+import mel.volvox.GameChatServer.model.sp.SP_Race;
+import mel.volvox.GameChatServer.model.sp.SP_RaceID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
