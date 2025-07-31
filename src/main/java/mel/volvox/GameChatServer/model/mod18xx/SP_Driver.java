@@ -1,4 +1,4 @@
-package mel.volvox.GameChatServer.model;
+package mel.volvox.GameChatServer.model.mod18xx;
 
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
@@ -6,17 +6,16 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * An entity class represents a table in a relational database
+ */
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
 @Entity
-public class SP_Result {
+public class SP_Driver {
     @EmbeddedId
-    SP_ResultID id;
-    String teamID;
-    int driverNumber;
-    String driverName;
-    boolean finished;
-    int injuryDuration;
-    int points;
+    SP_DriverID id;
+    String displayName;
+    int birthday;
 }

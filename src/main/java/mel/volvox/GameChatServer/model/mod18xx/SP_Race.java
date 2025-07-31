@@ -1,4 +1,4 @@
-package mel.volvox.GameChatServer.model;
+package mel.volvox.GameChatServer.model.mod18xx;
 
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;

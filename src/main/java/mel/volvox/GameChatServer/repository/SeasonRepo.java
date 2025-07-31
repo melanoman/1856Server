@@ -1,8 +1,8 @@
 package mel.volvox.GameChatServer.repository;
 
 import jakarta.transaction.Transactional;
-import mel.volvox.GameChatServer.model.SP_Season;
-import mel.volvox.GameChatServer.model.SP_SeasonID;
+import mel.volvox.GameChatServer.model.mod18xx.SP_Season;
+import mel.volvox.GameChatServer.model.mod18xx.SP_SeasonID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

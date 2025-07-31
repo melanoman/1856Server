@@ -1,18 +1,15 @@
-package mel.volvox.GameChatServer.model;
+package mel.volvox.GameChatServer.model.mod18xx;
 
 import jakarta.persistence.Embeddable;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.io.Serializable;
-
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
 @Embeddable
-public class SP_DriverID implements Serializable {
+public class SP_TeamID {
     String leagueID;
     String teamID;
-    int driverNumber;
 }
