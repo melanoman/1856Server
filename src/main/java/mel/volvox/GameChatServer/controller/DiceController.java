@@ -27,12 +27,12 @@ public class DiceController {
     @ResponseBody
     String getGear(@PathVariable int gear) {
         switch(gear) {
-            case 1: return "Formula De Gear 1 roll: "+DiceService.Roll(2);
-            case 2: return "Formula De Gear 2 roll: "+GEAR2[DiceService.Roll(6)-1];
-            case 3: return "Formula De Gear 3 roll: "+GEAR3[DiceService.Roll(8)-1];
-            case 4: return "Formula De Gear 4 roll: "+(6+DiceService.Roll(6));
-            case 5: return "Formula De Gear 5 roll: "+(10+DiceService.Roll(10));
-            case 6: return "Formula De Gear 6 roll: "+(20+DiceService.Roll(10));
+            case 1: return "Formula De Gear 1\t\tThe roll is "+DiceService.Roll(2);
+            case 2: return "Formula De Gear 2\t\tThe roll is "+GEAR2[DiceService.Roll(6)-1];
+            case 3: return "Formula De Gear 3\t\tThe roll is "+GEAR3[DiceService.Roll(8)-1];
+            case 4: return "Formula De Gear 4\t\tThe roll is "+(6+DiceService.Roll(6));
+            case 5: return "Formula De Gear 5\t\tThe roll is "+(10+DiceService.Roll(10));
+            case 6: return "Formula De Gear 6\t\tThe roll is "+(20+DiceService.Roll(10));
             default: return "Unknown Formula De Gear number";
         }
     }
