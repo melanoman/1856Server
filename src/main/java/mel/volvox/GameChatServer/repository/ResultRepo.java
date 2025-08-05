@@ -10,9 +10,8 @@ public interface ResultRepo extends JpaRepository<SP_Result, SP_ResultID> {
     List<SP_Result> findAllByIdLeagueIDAndIdSeasonNumberAndIdRaceNumber(
         String leagueID, int seasonNumber, int raceNumber
     );
-
     List<SP_Result> findAllByIdLeagueID(String league);
-
     List<SP_Result> findAllByIdLeagueIDAndIdSeasonNumber(String league, int seasonNumber);
+    void deleteAllByIdLeagueID(String league);
 }
 

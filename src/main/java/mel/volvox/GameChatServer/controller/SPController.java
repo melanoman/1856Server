@@ -352,6 +352,7 @@ public class SPController {
         seasonRepo.deleteAllByIdLeagueID(league);
         raceRepo.deleteAllByIdLeagueID(league);
         driverRepo.deleteAllByIdLeagueID(league);
+        resultRepo.deleteAllByIdLeagueID(league);
         return league;
     }
 
