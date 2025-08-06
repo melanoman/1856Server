@@ -73,7 +73,7 @@ public class TableController {
 
     int calculateInitialChatNumber(String name) {
         Message m = messageRepo.findFirstByOrderByIdSerialNumberDesc();
-        return m == null ? 1 : m.getId().getSerialNumber();
+        return m == null ? 0 : m.getId().getSerialNumber();
     }
 
     synchronized private TableView createView(String name, String type) {
@@ -127,24 +127,12 @@ public class TableController {
         return tv == null ? "" : tv.requestSeat(seat); //TODO pass the seatRepo so they can approve
     }
 
-    private MessageID nextMessageID(String table) {
-        TableView tv = loadTable(table);
-        if (tv == null) throw new IllegalStateException("Table not found");
-        return tv.nextMessageId();
-    }
-
-    private int currentMoveNumber(String table) {
-        TableView tv = loadTable(table);
-        if (tv == null) throw new IllegalStateException("Table not found");
-        return tv.currentMoveNumber();
-    }
-
     @PutMapping("message/send/{table}")
     @ResponseBody
     public int newMessage(@PathVariable String table,
                           @RequestBody String text) {
-        int out = currentMoveNumber(table);
-        messageRepo.save(new Message(nextMessageID(table), text, out));
-        return out;
+        TableView tv = loadTable(table);
+        if (tv == null) throw new IllegalStateException("Table not found");
+        return tv.addMessage(messageRepo, text);
     }
 }

@@ -1,9 +1,11 @@
 package mel.volvox.GameChatServer.seating;
 
 import mel.volvox.GameChatServer.game.Game;
+import mel.volvox.GameChatServer.model.seating.Message;
 import mel.volvox.GameChatServer.model.seating.MessageID;
 import mel.volvox.GameChatServer.model.seating.Move;
 import mel.volvox.GameChatServer.model.seating.Seat;
+import mel.volvox.GameChatServer.repository.MessageRepo;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
@@ -15,7 +17,6 @@ public class TableView {
 
     private String name;
     private Game game;
-    private int moveCount = 0;
 
     public TableView(String name, Class<? extends Game> gc)
             throws NoSuchMethodException, InvocationTargetException,
@@ -23,6 +24,13 @@ public class TableView {
         this.name = name;
         this.game = gc.getConstructor().newInstance();
     }
+
+    // passthru section
+    public List<String> getSeatOptions() { return game.getSeatOptions(); }
+    public String requestSeat(String seat) { return game.requestSeat(seat); }
+    public int currentMoveNumber() { return game.lastMoveNumber(); }
+    public MessageID nextMessageId() { return new MessageID(name, game.nextChatNumber()); }
+    public void setChatNumber(int serialNumber) { game.setChatNumber(serialNumber); }
 
     /**
      * called when loading seating after quit and restart of server
@@ -38,10 +46,10 @@ public class TableView {
         }
     }
 
-    // passthru section
-    public List<String> getSeatOptions() { return game.getSeatOptions(); }
-    public String requestSeat(String seat) { return game.requestSeat(seat); }
-    public int currentMoveNumber() { return game.lastMoveNumber(); }
-    public MessageID nextMessageId() { return new MessageID(name, game.nextChatNumber()); }
-    public void setChatNumber(int serialNumber) { game.setChatNumber(serialNumber); }
+    public synchronized int addMessage(MessageRepo messageRepo, String text) {
+        int move = currentMoveNumber();
+        MessageID id = nextMessageId();
+        messageRepo.save(new Message(id, text, move));
+        return id.getSerialNumber();
+    }
 }
