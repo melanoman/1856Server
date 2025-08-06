@@ -94,13 +94,14 @@ public class TableController {
         return name;
     }
 
-    @GetMapping("/tables/all")
+    @GetMapping("/tables")
     @ResponseBody
     public List<GameTable> getTables() {
         return tableRepo.findAll();
     }
 
     @GetMapping("/tables/{type}")
+    @ResponseBody
     public List<GameTable> getTableForType(@PathVariable String type) {
         return tableRepo.findByType(type);
     }
