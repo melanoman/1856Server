@@ -8,5 +8,8 @@ public interface Game {
     List<String> getSeatOptions();
     void initMove(Move move);
     String requestSeat(String seat);
-    int lastMove();
+    int lastMoveNumber();
+    int lastChatNumber();
+    int nextChatNumber();
+    void setChatNumber(int serialNumber);
 }

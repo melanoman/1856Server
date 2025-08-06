@@ -38,16 +38,10 @@ public class TableView {
         }
     }
 
-    private int calculateNextMessageNumber() {
-        //TODO really calculate
-        return 23;
-    }
-
-    public MessageID nextMessageId() {
-        return new MessageID(name, calculateNextMessageNumber());
-    }
-
     // passthru section
     public List<String> getSeatOptions() { return game.getSeatOptions(); }
     public String requestSeat(String seat) { return game.requestSeat(seat); }
+    public int currentMoveNumber() { return game.lastMoveNumber(); }
+    public MessageID nextMessageId() { return new MessageID(name, game.nextChatNumber()); }
+    public void setChatNumber(int serialNumber) { game.setChatNumber(serialNumber); }
 }

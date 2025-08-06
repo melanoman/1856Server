@@ -7,5 +7,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface MessageRepo extends JpaRepository<Message, MessageID> {
-    List<Message> findAllByIdTableNameOrderByIdSerialNumber(String tableName);
+    Message findFirstByOrderByIdSerialNumberDesc();
 }
