@@ -6,19 +6,18 @@ import mel.volvox.GameChatServer.game.Game1856;
 import mel.volvox.GameChatServer.game.GameRPS;
 import mel.volvox.GameChatServer.model.seating.GameTable;
 import mel.volvox.GameChatServer.model.seating.Message;
-import mel.volvox.GameChatServer.model.seating.MessageID;
 import mel.volvox.GameChatServer.repository.MessageRepo;
 import mel.volvox.GameChatServer.repository.MoveRepo;
 import mel.volvox.GameChatServer.repository.SeatRepo;
 import mel.volvox.GameChatServer.repository.TableRepo;
 import mel.volvox.GameChatServer.seating.TableView;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Limit;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
-
 
 @CrossOrigin
 @Controller
@@ -134,5 +133,14 @@ public class TableController {
         TableView tv = loadTable(table);
         if (tv == null) throw new IllegalStateException("Table not found");
         return tv.addMessage(messageRepo, text);
+    }
+
+    @GetMapping("message/get/{table}/{limit}")
+    @ResponseBody
+    public List<Message> recentMessages(@PathVariable String table,
+                                        @PathVariable int limit) {
+        TableView tv = loadTable(table);
+        if (tv == null) throw new IllegalStateException("Table not found");
+        return messageRepo.findByIdTableNameOrderByIdSerialNumberDesc(table, Limit.of(limit));
     }
 }
