@@ -14,5 +14,6 @@ public class Message {
     @EmbeddedId
     MessageID id;
     String text;
-    int lastMove; //at time of chat
+    int lastMove;
+    String author;
 }

@@ -46,10 +46,10 @@ public class TableView {
         }
     }
 
-    public synchronized int addMessage(MessageRepo messageRepo, String text) {
+    public synchronized int addMessage(MessageRepo messageRepo, String text, String author) {
         int move = currentMoveNumber();
         MessageID id = nextMessageId();
-        messageRepo.save(new Message(id, text, move));
+        messageRepo.save(new Message(id, text, move, author));
         return id.getSerialNumber();
     }
 }

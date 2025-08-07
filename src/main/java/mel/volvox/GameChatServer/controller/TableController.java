@@ -126,13 +126,14 @@ public class TableController {
         return tv == null ? "" : tv.requestSeat(seat); //TODO pass the seatRepo so they can approve
     }
 
-    @PutMapping("message/send/{table}")
+    @PutMapping("message/send/{table}/{author}")
     @ResponseBody
     public int newMessage(@PathVariable String table,
+                          @PathVariable String author, //TODO check for forgery
                           @RequestBody String text) {
         TableView tv = loadTable(table);
         if (tv == null) throw new IllegalStateException("Table not found");
-        return tv.addMessage(messageRepo, text);
+        return tv.addMessage(messageRepo, text, author);
     }
 
     @GetMapping("message/get/{table}/{limit}")
