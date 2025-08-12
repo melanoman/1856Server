@@ -183,4 +183,13 @@ public class TableController {
 
         return tv.getRPSGame().pause(moveRepo);
     }
+
+    @PutMapping("rps/resume/{table}")
+    @ResponseBody
+    public RPSBoard requestResume(@PathVariable String table) {
+        TableView tv = loadTable(table);
+        if (tv == null) throw new IllegalStateException("Table not found");
+
+        return tv.getRPSGame().resume(moveRepo);
+    }
 }

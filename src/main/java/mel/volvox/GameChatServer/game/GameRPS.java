@@ -65,4 +65,23 @@ public class GameRPS extends AbstractGame {
         }
         return board;
     }
+
+    public RPSBoard resume(MoveRepo moveRepo) {
+        switch (board.getState()) {
+            case RPSBoard.PAUSED:
+                board.setState(RPSBoard.MOVING);
+                board.setTimeStart(System.currentTimeMillis());
+                break;
+            case RPSBoard.MOVING:
+                break;
+            case RPSBoard.ANNOUNCING:
+                break;
+            case RPSBoard.STOPPED:
+                board.setState(RPSBoard.ANNOUNCING);
+                board.setTimeStart(System.currentTimeMillis());
+                break;
+            default: break;
+        }
+        return board;
+    }
 }
