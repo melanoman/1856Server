@@ -1,5 +1,9 @@
 package mel.volvox.GameChatServer.game;
 
+import mel.volvox.GameChatServer.comm.Board;
+import mel.volvox.GameChatServer.model.seating.Move;
+import mel.volvox.GameChatServer.repository.MoveRepo;
+
 import java.util.List;
 
 public abstract class AbstractGame implements Game {
@@ -13,7 +17,12 @@ public abstract class AbstractGame implements Game {
     @Override public List<String> getSeatOptions() { return seatTypes; }
     @Override public String requestSeat(String seat, String user) { throw new IllegalStateException("Denied"); }
     @Override public int lastMoveNumber() { return currentMoveNumber; }
+    @Override public int nextMoveNumber() { return 1+currentMoveNumber; }
     @Override public int lastChatNumber() { return currentChatNumber; }
     @Override public int nextChatNumber() { currentChatNumber++; return currentChatNumber; }
     @Override public void setChatNumber(int serialNumber) { currentChatNumber = serialNumber; }
+    @Override public Move processMove(Move move, MoveRepo repo) { return null; }
+    @Override public void initMove(Move move) { }
+    @Override public void abandonSeat(String user) { }
+    @Override public String changeSeats(String user, String newSeat) { return null; }
 }

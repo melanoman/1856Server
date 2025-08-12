@@ -3,6 +3,7 @@ package mel.volvox.GameChatServer.game;
 import mel.volvox.GameChatServer.comm.Board;
 import mel.volvox.GameChatServer.comm.RPSBoard;
 import mel.volvox.GameChatServer.model.seating.Move;
+import mel.volvox.GameChatServer.repository.MoveRepo;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -38,6 +39,30 @@ public class GameRPS extends AbstractGame {
     }
 
     @Override public void initMove(Move move) { } //TODO
-    @Override public Move processMove(Move move) { return null; } //TODO
-    @Override public Board getBoard() { return board; }
+    public RPSBoard getStatus() { return board; } //TODO update timer
+
+    private void freeze() {
+        long now = System.currentTimeMillis();
+        long delta = now - board.getTimeStart();
+        board.setTime(board.getTime() - (int)(delta/1000));
+        board.setTimeStart(now);
+    }
+
+    public RPSBoard pause(MoveRepo moveRepo) {
+        //TODO permission check
+        switch (board.getState()) {
+            case RPSBoard.PAUSED: break;
+            case RPSBoard.MOVING:
+                board.setState(RPSBoard.PAUSED);
+                freeze();
+                break;
+            case RPSBoard.ANNOUNCING:
+                board.setState(RPSBoard.STOPPED);
+                freeze();
+                break;
+            case RPSBoard.STOPPED: break;
+            default: break;
+        }
+        return board;
+    }
 }

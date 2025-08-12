@@ -21,8 +21,8 @@ public class LoginController {
     @GetMapping("/login")
     @ResponseBody
     public HumanComm login(@RequestParam(name="user")String userName,
-                        @RequestParam(name="pass")String password,
-                        HttpServletResponse out) {
+                           @RequestParam(name="pass")String password,
+                           HttpServletResponse out) {
         Optional<Human> h = humanRepo.findById(userName);
         if(h.isPresent()  && h.get().getPass().equals(password)) {
             out.addCookie(new Cookie("user", userName));
@@ -51,6 +51,7 @@ public class LoginController {
         } else {
             Human human = new Human(userName, userName, password, "");
             humanRepo.save(human);
+            out.addCookie(new Cookie("user", userName));
             return new HumanComm(human);
         }
     }

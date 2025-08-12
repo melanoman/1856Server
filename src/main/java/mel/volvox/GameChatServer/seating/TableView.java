@@ -2,11 +2,10 @@ package mel.volvox.GameChatServer.seating;
 
 import mel.volvox.GameChatServer.comm.Board;
 import mel.volvox.GameChatServer.game.Game;
-import mel.volvox.GameChatServer.model.seating.Message;
-import mel.volvox.GameChatServer.model.seating.MessageID;
-import mel.volvox.GameChatServer.model.seating.Move;
-import mel.volvox.GameChatServer.model.seating.Seat;
+import mel.volvox.GameChatServer.game.GameRPS;
+import mel.volvox.GameChatServer.model.seating.*;
 import mel.volvox.GameChatServer.repository.MessageRepo;
+import mel.volvox.GameChatServer.repository.MoveRepo;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
@@ -34,7 +33,8 @@ public class TableView {
     public int currentMoveNumber() { return game.lastMoveNumber(); }
     public MessageID nextMessageId() { return new MessageID(name, game.nextChatNumber()); }
     public void setChatNumber(int serialNumber) { game.setChatNumber(serialNumber); }
-
+    public Move processMove(Move move, MoveRepo repo) { return game.processMove(move, repo); }
+    public MoveID nextMoveId() { return new MoveID(name, game.nextMoveNumber()); }
     /**
      * called when loading seating after quit and restart of server
      */
@@ -56,7 +56,5 @@ public class TableView {
         return id.getSerialNumber();
     }
 
-    public Board getBoard() {
-        return game.getBoard();
-    }
+    public GameRPS getRPSGame() { return (GameRPS)game; }
 }

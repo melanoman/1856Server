@@ -7,6 +7,8 @@ import mel.volvox.GameChatServer.game.Game1856;
 import mel.volvox.GameChatServer.game.GameRPS;
 import mel.volvox.GameChatServer.model.seating.GameTable;
 import mel.volvox.GameChatServer.model.seating.Message;
+import mel.volvox.GameChatServer.model.seating.Move;
+import mel.volvox.GameChatServer.model.seating.MoveID;
 import mel.volvox.GameChatServer.repository.MessageRepo;
 import mel.volvox.GameChatServer.repository.MoveRepo;
 import mel.volvox.GameChatServer.repository.SeatRepo;
@@ -140,7 +142,7 @@ public class TableController {
     @PutMapping("/table/unsit/{table}")
     @ResponseBody
     public void abandonSeat(@PathVariable String table,
-                              @CookieValue("user") String accountName) {
+                            @CookieValue("user") String accountName) {
         TableView tv = loadTable(table);
         if (tv != null) tv.abandonSeat(accountName);
     }
@@ -170,6 +172,15 @@ public class TableController {
     public RPSBoard getRPSstatus(@PathVariable String table) {
         TableView tv = loadTable(table);
         if (tv == null) throw new IllegalStateException("Table not found");
-        return (RPSBoard)tv.getBoard();
+        return tv.getRPSGame().getStatus();
+    }
+
+    @PutMapping("rps/pause/{table}")
+    @ResponseBody
+    public RPSBoard requestPause(@PathVariable String table) {
+        TableView tv = loadTable(table);
+        if (tv == null) throw new IllegalStateException("Table not found");
+
+        return tv.getRPSGame().pause(moveRepo);
     }
 }
