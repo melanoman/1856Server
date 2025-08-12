@@ -1,5 +1,6 @@
 package mel.volvox.GameChatServer.seating;
 
+import mel.volvox.GameChatServer.comm.Board;
 import mel.volvox.GameChatServer.game.Game;
 import mel.volvox.GameChatServer.model.seating.Message;
 import mel.volvox.GameChatServer.model.seating.MessageID;
@@ -27,7 +28,9 @@ public class TableView {
 
     // passthru section
     public List<String> getSeatOptions() { return game.getSeatOptions(); }
-    public String requestSeat(String seat) { return game.requestSeat(seat); }
+    public String requestSeat(String seat, String user) { return game.requestSeat(seat, user); }
+    public void abandonSeat(String user) { game.abandonSeat(user); }
+    public String changeSeats(String user, String newSeat) { return game.changeSeats(user, newSeat); }
     public int currentMoveNumber() { return game.lastMoveNumber(); }
     public MessageID nextMessageId() { return new MessageID(name, game.nextChatNumber()); }
     public void setChatNumber(int serialNumber) { game.setChatNumber(serialNumber); }
@@ -51,5 +54,9 @@ public class TableView {
         MessageID id = nextMessageId();
         messageRepo.save(new Message(id, text, move, author));
         return id.getSerialNumber();
+    }
+
+    public Board getBoard() {
+        return game.getBoard();
     }
 }

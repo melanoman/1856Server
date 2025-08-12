@@ -1,5 +1,6 @@
 package mel.volvox.GameChatServer.controller;
 
+import mel.volvox.GameChatServer.comm.RPSBoard;
 import mel.volvox.GameChatServer.game.Chat;
 import mel.volvox.GameChatServer.game.Game;
 import mel.volvox.GameChatServer.game.Game1856;
@@ -35,7 +36,7 @@ public class TableController {
     private static final Map<String, TableView> name2view = new HashMap<>();
     private static final Map<String,Class<? extends Game>> type2class = new HashMap<>();
     static {
-        type2class.put("RPS", GameRPS.class);
+        type2class.put("rps", GameRPS.class);
         type2class.put("1856", Game1856.class);
         type2class.put("chat", Chat.class);
     }
@@ -121,9 +122,27 @@ public class TableController {
     @PutMapping("/table/sit/{table}/{seat}")
     @ResponseBody
     public String requestSeat(@PathVariable String table,
-                              @PathVariable String seat) {
+                              @PathVariable String seat,
+                              @CookieValue("user") String accountName) {
         TableView tv = loadTable(table);
-        return tv == null ? "" : tv.requestSeat(seat); //TODO pass the seatRepo so they can approve
+        return tv == null ? "" : tv.requestSeat(seat, accountName);
+    }
+
+    @PutMapping("/table/resit/{table}/{seat}")
+    @ResponseBody
+    public String changeSeats(@PathVariable String table,
+                              @PathVariable String seat,
+                              @CookieValue("user") String accountName) {
+        TableView tv = loadTable(table);
+        return tv == null ? "" : tv.changeSeats(accountName, seat);
+    }
+
+    @PutMapping("/table/unsit/{table}")
+    @ResponseBody
+    public void abandonSeat(@PathVariable String table,
+                              @CookieValue("user") String accountName) {
+        TableView tv = loadTable(table);
+        if (tv != null) tv.abandonSeat(accountName);
     }
 
     @PutMapping("message/send/{table}/{author}")
@@ -143,5 +162,14 @@ public class TableController {
         TableView tv = loadTable(table);
         if (tv == null) throw new IllegalStateException("Table not found");
         return messageRepo.findByIdTableNameOrderByIdSerialNumberDesc(table, Limit.of(limit));
+    }
+
+    //TODO move this to a utility file
+    @GetMapping("rps/status/{table}")
+    @ResponseBody
+    public RPSBoard getRPSstatus(@PathVariable String table) {
+        TableView tv = loadTable(table);
+        if (tv == null) throw new IllegalStateException("Table not found");
+        return (RPSBoard)tv.getBoard();
     }
 }

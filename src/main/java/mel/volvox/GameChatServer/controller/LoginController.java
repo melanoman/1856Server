@@ -25,6 +25,7 @@ public class LoginController {
                         HttpServletResponse out) {
         Optional<Human> h = humanRepo.findById(userName);
         if(h.isPresent()  && h.get().getPass().equals(password)) {
+            out.addCookie(new Cookie("user", userName));
             return new HumanComm(h.get());
         }
         return HumanComm.NOBODY;
