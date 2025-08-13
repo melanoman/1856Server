@@ -97,7 +97,6 @@ public class GameRPS extends AbstractGame {
 
     synchronized public String chooseThrow(String user, String choice) {
         pendingMoves.put(user, choice);
-        System.out.println(user+" chose "+ nameOf(choice)); //TODO delete
         return choice;
     }
 }
