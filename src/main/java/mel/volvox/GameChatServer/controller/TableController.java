@@ -121,30 +121,22 @@ public class TableController {
         return tv == null ? new ArrayList<>() : tv.getSeatOptions();
     }
 
-    @PutMapping("/table/sit/{table}/{seat}")
+    @PutMapping("/table/sit/{table}/{seat}/{user}")
     @ResponseBody
     public String requestSeat(@PathVariable String table,
                               @PathVariable String seat,
-                              @CookieValue("user") String accountName) {
+                              @PathVariable String user) {
         TableView tv = loadTable(table);
-        return tv == null ? "" : tv.requestSeat(seat, accountName);
+        return tv == null ? "" : tv.requestSeat(seat, user);
     }
 
-    @PutMapping("/table/resit/{table}/{seat}")
+    @PutMapping("/table/resit/{table}/{seat}/{user}")
     @ResponseBody
     public String changeSeats(@PathVariable String table,
                               @PathVariable String seat,
-                              @CookieValue("user") String accountName) {
+                              @PathVariable String user) {
         TableView tv = loadTable(table);
-        return tv == null ? "" : tv.changeSeats(accountName, seat);
-    }
-
-    @PutMapping("/table/unsit/{table}")
-    @ResponseBody
-    public void abandonSeat(@PathVariable String table,
-                            @CookieValue("user") String accountName) {
-        TableView tv = loadTable(table);
-        if (tv != null) tv.abandonSeat(accountName);
+        return tv == null ? "" : tv.changeSeats(seat, user);
     }
 
     @PutMapping("message/send/{table}/{author}")
@@ -191,5 +183,16 @@ public class TableController {
         if (tv == null) throw new IllegalStateException("Table not found");
 
         return tv.getRPSGame().resume(moveRepo);
+    }
+
+    @PutMapping("rps/move/{table}/{user}/{move}")
+    @ResponseBody
+    public String submitMove(@PathVariable String table,
+                               @PathVariable String user,
+                               @PathVariable String move) {
+        TableView tv = loadTable(table);
+        if (tv == null) throw new IllegalStateException("Table not found");
+
+        return tv.getRPSGame().chooseThrow(user, move);
     }
 }

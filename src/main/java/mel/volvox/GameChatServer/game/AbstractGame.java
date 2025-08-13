@@ -24,5 +24,5 @@ public abstract class AbstractGame implements Game {
     @Override public Move processMove(Move move, MoveRepo repo) { return null; }
     @Override public void initMove(Move move) { }
     @Override public void abandonSeat(String user) { }
-    @Override public String changeSeats(String user, String newSeat) { return null; }
+    @Override public String changeSeats(String seat, String user) { return null; }
 }

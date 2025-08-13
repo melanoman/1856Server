@@ -15,6 +15,10 @@ public class RPSBoard {
     public static final int ANNOUNCING = 2;
     public static final int STOPPED = 3;
 
+    public static final String ROCK = "rock";
+    public static final String PAPER = "paper";
+    public static final String SCISSORS = "scissors";
+
     private int state = MOVING;
     private int time = 2000; //TODO get from admin
     private long timeStart = System.currentTimeMillis();

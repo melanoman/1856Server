@@ -29,7 +29,7 @@ public class TableView {
     public List<String> getSeatOptions() { return game.getSeatOptions(); }
     public String requestSeat(String seat, String user) { return game.requestSeat(seat, user); }
     public void abandonSeat(String user) { game.abandonSeat(user); }
-    public String changeSeats(String user, String newSeat) { return game.changeSeats(user, newSeat); }
+    public String changeSeats(String newSeat, String user) { return game.changeSeats(newSeat, user); }
     public int currentMoveNumber() { return game.lastMoveNumber(); }
     public MessageID nextMessageId() { return new MessageID(name, game.nextChatNumber()); }
     public void setChatNumber(int serialNumber) { game.setChatNumber(serialNumber); }

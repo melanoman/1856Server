@@ -1,6 +1,5 @@
 package mel.volvox.GameChatServer.game;
 
-import mel.volvox.GameChatServer.comm.Board;
 import mel.volvox.GameChatServer.comm.RPSBoard;
 import mel.volvox.GameChatServer.model.seating.Move;
 import mel.volvox.GameChatServer.repository.MoveRepo;
@@ -10,11 +9,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import static mel.volvox.GameChatServer.comm.RPSBoard.*;
+
 public class GameRPS extends AbstractGame {
     RPSBoard board = new RPSBoard();
 
     //private items (not part of board, which goes to players)
-    Map<String, Integer> pendingMoves = new HashMap<>();
+    Map<String, String> pendingMoves = new HashMap<>();
     List<String> departingUsers = new ArrayList<>();
 
     @Override
@@ -24,14 +25,14 @@ public class GameRPS extends AbstractGame {
 
     @Override
     public String requestSeat(String seat, String user) {
-        if (PLAYER.equals(seat)) board.getNoobs().add(user);
-        return user;
+        if (PLAYER.equals(seat) && !board.getNoobs().contains(user)) board.getNoobs().add(user);
+        return seat;
     }
 
     @Override
-    public String changeSeats(String user, String newSeat) {
+    public String changeSeats(String newSeat, String user) {
         if(PLAYER.equals(newSeat)) {
-            board.getNoobs().add(user);
+            if (!board.getNoobs().contains(user)) board.getNoobs().add(user);
         } else {
             board.getNoobs().remove(user);
         }
@@ -83,5 +84,20 @@ public class GameRPS extends AbstractGame {
             default: break;
         }
         return board;
+    }
+
+    static String nameOf(String choice) {
+        return switch (choice) {
+            case ROCK -> "rock";
+            case PAPER -> "paper";
+            case SCISSORS -> "scissors";
+            default -> "garbage";
+        };
+    }
+
+    synchronized public String chooseThrow(String user, String choice) {
+        pendingMoves.put(user, choice);
+        System.out.println(user+" chose "+ nameOf(choice)); //TODO delete
+        return choice;
     }
 }
