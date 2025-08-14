@@ -10,6 +10,7 @@ import java.util.List;
 @Data
 public class RPSBoard {
     // STATE int-as-enum
+    public static final int VIRGIN = -1;
     public static final int PAUSED = 0;
     public static final int MOVING = 1;
     public static final int ANNOUNCING = 2;
@@ -19,8 +20,8 @@ public class RPSBoard {
     public static final String PAPER = "paper";
     public static final String SCISSORS = "scissors";
 
-    private int state = MOVING;
-    private int time = 2000; //TODO get from admin
+    private int state = VIRGIN;
+    private int time = 0;
     private long timeStart = System.currentTimeMillis();
 
     List<String> noobs = new ArrayList<>();

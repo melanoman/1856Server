@@ -195,4 +195,14 @@ public class TableController {
 
         return tv.getRPSGame().chooseThrow(user, move);
     }
+
+    @PutMapping("rps/start/{table}/{time}")
+    @ResponseBody
+    synchronized public RPSBoard startRPS(@PathVariable String table,
+             @PathVariable int time) {
+        TableView tv = loadTable(table);
+        if (tv == null) throw new IllegalStateException("Table not found");
+
+        return tv.getRPSGame().startGame(time);
+    }
 }
