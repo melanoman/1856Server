@@ -4,10 +4,7 @@ import mel.volvox.GameChatServer.comm.RPSBoard;
 import mel.volvox.GameChatServer.model.seating.Move;
 import mel.volvox.GameChatServer.repository.MoveRepo;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -30,23 +27,18 @@ public class GameRPS extends AbstractGame {
     }
 
     @Override
-    synchronized public String requestSeat(String seat, String user) {
-        if (PLAYER.equals(seat) && !board.getNoobs().contains(user)) board.getNoobs().add(user);
-        return seat;
-    }
-
-    @Override
     synchronized public String changeSeats(String newSeat, String user) {
         if(PLAYER.equals(newSeat)) {
             if (!board.getNoobs().contains(user)) board.getNoobs().add(user);
         } else {
-            board.getNoobs().remove(user);
+            //System.out.println("Ladder remove:"+user); //TODO fix remove
+            //board.getNoobs().remove(user);
         }
         return newSeat;
     }
 
     @Override public void initMove(Move move) { } //TODO
-    public RPSBoard getStatus() { return board; } //TODO update timer
+    public RPSBoard getStatus() { return board; }
 
     private void unfreeeze() {
         board.setTimeStart(System.currentTimeMillis());
@@ -114,22 +106,65 @@ public class GameRPS extends AbstractGame {
         return board;
     }
 
-    static String nameOf(String choice) {
-        return switch (choice) {
-            case ROCK -> "rock";
-            case PAPER -> "paper";
-            case SCISSORS -> "scissors";
-            default -> "garbage";
-        };
-    }
-
     synchronized public String chooseThrow(String user, String choice) {
         pendingMoves.put(user, choice);
         return choice;
     }
 
-    private void makeResults() {
-        //TODO adjust the ladder, store the results
+    final private int NOMOVE = 0;
+    final private int ROCKVAL = 1;
+    final private int PAPERVAL = 2;
+    final private int SCISSORVAL =3;
+
+    private int moveValue(String move) {
+        if (move == null) return NOMOVE;  //TODO can this be deleted? (is string switch null safe?)
+        return switch (move) {
+            case RPSBoard.ROCK -> 3;
+            case RPSBoard.PAPER -> 2;
+            case RPSBoard.SCISSORS -> 1;
+            default -> NOMOVE;
+        };
+    }
+
+    private boolean upsetWin(String firstPlayer, String secondPlayer) {
+        int secondMove = moveValue(pendingMoves.get(secondPlayer));
+        if (secondMove == NOMOVE) return false;
+        int firstMove = moveValue(pendingMoves.get(firstPlayer));
+        if (firstMove == NOMOVE) return true;
+        if (firstMove == secondMove) return false;
+        return  (secondMove == ROCKVAL && firstMove == SCISSORVAL)  ||
+                (secondMove == PAPERVAL && firstMove == ROCKVAL) ||
+                (secondMove == SCISSORVAL && firstMove == PAPERVAL);
+    }
+
+    synchronized private void makeResults() {
+        if (board.getLadder().isEmpty()) {
+            board.setState(STOPPED);
+            return;
+        }
+        List<String> newResults = new ArrayList<>();
+        Iterator<String> iter = board.getLadder().iterator();
+        if (board.isOddRound()) {
+            newResults.add(iter.next());
+        }
+        while(iter.hasNext()) {
+            String firstPlayer = iter.next();
+            if(iter.hasNext()) {
+                String secondPlayer = iter.next();
+                if(upsetWin(firstPlayer, secondPlayer)) {
+                    newResults.add(secondPlayer);
+                    newResults.add(firstPlayer);
+                } else {
+                    newResults.add(firstPlayer);
+                    newResults.add(secondPlayer);
+                }
+                //TODO keep idle player counter
+            } else {
+                newResults.add(firstPlayer);
+            }
+        }
+        board.setLadder(newResults);
+        board.setOddRound(!board.isOddRound());
         board.setState(ANNOUNCING);
         board.setTime(ROUND_INTERVAL);
         unfreeeze();
@@ -153,9 +188,18 @@ public class GameRPS extends AbstractGame {
         }
     };
 
+    synchronized public RPSBoard firstGame(int time) {
+        board.setOddRound(false);
+        return startGame(time);
+    }
+
     synchronized public RPSBoard startGame(int time) {
         //TODO evict overly idle players
-        board.getLadder().addAll(board.getNoobs());
+        //TODO make sure game state is startable (concurrency protection)
+        for (String user: board.getNoobs()) {
+            if (!board.getLadder().contains(user)) board.getLadder().add(user);
+        }
+        board.setNoobs(new ArrayList<>());
         pendingMoves = new HashMap<>(); //wipe out old moves
         board.setTime(time);
         board.setTimeStart(System.currentTimeMillis());

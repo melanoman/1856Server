@@ -23,6 +23,7 @@ public class RPSBoard {
     private int state = VIRGIN;
     private int time = 0;
     private long timeStart = System.currentTimeMillis();
+    private boolean oddRound;
 
     List<String> noobs = new ArrayList<>();
     List<String> leaving = new ArrayList<>();
