@@ -27,5 +27,5 @@ public class RPSBoard {
 
     List<String> noobs = new ArrayList<>();
     List<String> leaving = new ArrayList<>();
-    List<String> ladder = new ArrayList<>();
+    List<RPSResult> results = new ArrayList<>();
 }
