@@ -233,6 +233,7 @@ public class GameRPS extends AbstractGame {
         board.setResults(newResults);
         if (board.getResults().size() == 2) {
             board.setOddRound(false);
+            board.getResults().get(1).setParity(true);
         } else if (board.getResults().size() < 2) {
             board.setState(STOPPED);
         }
