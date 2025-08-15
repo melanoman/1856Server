@@ -10,5 +10,10 @@ import lombok.NoArgsConstructor;
 public class RPSResult {
     int position;
     boolean parity;
-    String name;
+    String player;
+    int delta;
+    String type;
+    String opponent;
+    String choice;
+    String oChoice;
 }

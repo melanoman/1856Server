@@ -127,20 +127,58 @@ public class GameRPS extends AbstractGame {
         };
     }
 
-    private boolean upsetWin(String firstPlayer, String secondPlayer) {
-        int secondMove = moveValue(pendingMoves.get(secondPlayer));
-        if (secondMove == NOMOVE) return false;
-        int firstMove = moveValue(pendingMoves.get(firstPlayer));
-        if (firstMove == NOMOVE) return true;
-        if (firstMove == secondMove) return false;
-        return  (secondMove == ROCKVAL && firstMove == SCISSORVAL)  ||
-                (secondMove == PAPERVAL && firstMove == ROCKVAL) ||
-                (secondMove == SCISSORVAL && firstMove == PAPERVAL);
+    private String moveName(int move) {
+        return switch (move) {
+            case ROCKVAL -> ROCK;
+            case PAPERVAL -> PAPER;
+            case SCISSORVAL -> SCISSORS;
+            default -> "";
+        };
     }
 
-    void addResult(String name, int count, List<RPSResult> results) {
-        int tmp = count + (board.isOddRound()?0:-1);
-        results.add(new RPSResult(count+1, 0 == ((tmp%4)/2), name));
+    private boolean calculateParity(int position, boolean odd) {
+        int offset = odd ? position+1 : position;
+        return 0 == (offset%4)/2;
+    }
+
+    private void addResult(
+               List<RPSResult>list, boolean odd,
+               String self, String opponent,
+               String choice, String oChoice,
+               String type, int delta
+    ) {
+        RPSResult out = new RPSResult();
+        out.setPosition(list.size());
+        out.setParity(calculateParity(list.size(), odd));
+        out.setPlayer(self);
+        out.setOpponent(opponent);
+        out.setChoice(choice);
+        out.setOChoice(oChoice);
+        out.setType(type);
+        out.setDelta(delta);
+
+        list.add(out);
+    }
+
+    private void addResultPair(
+            List<RPSResult>list, boolean odd, boolean upset, boolean forfeit, boolean draw,
+            String p1, String p2, int c1, int c2
+    ) {
+        int delta = upset ? 1 : 0;
+        String winner = upset ? p2 : p1;
+        String loser = upset ? p1 : p2;
+        String winMove = moveName(upset ? c2 : c1);
+        String loseMove = moveName(upset ? c1 : c2);
+        String winText, loseText;
+        if (forfeit) {
+            winText = draw ? "2xforfeit" : "forfeitee";
+            loseText = draw ? "2xforfeit" : "forfeiter";
+        } else {
+            winText = draw ? "draw" : "win";
+            loseText = draw ? "draw" : "lose";
+        }
+        addResult(list, odd, winner, loser, winMove, loseMove, winText, delta);
+        addResult(list, odd, loser, winner, loseMove, winMove, loseText, -delta);
     }
 
     synchronized private void makeResults() {
@@ -153,26 +191,41 @@ public class GameRPS extends AbstractGame {
         int count = -1;
         if (board.isOddRound()) {
             count = 0;
-            addResult(iter.next().getName(), 0, newResults);
+            String player = iter.next().getPlayer();
+            addResult(newResults, false, player, "",
+                    pendingMoves.get(player), "", "Bye", 0);
         }
         while (iter.hasNext()) {
             count++;
-            String firstPlayer = iter.next().getName();
+            String firstPlayer = iter.next().getPlayer();
             if (iter.hasNext()) {
-                String secondPlayer = iter.next().getName();
-                if (upsetWin(firstPlayer, secondPlayer)) {
-                    addResult(secondPlayer, count, newResults);
-                    addResult(firstPlayer, count, newResults);
+                count++;
+                String secondPlayer = iter.next().getPlayer();
+                int firstMove = moveValue(pendingMoves.get(firstPlayer));
+                int secondMove = moveValue(pendingMoves.get(secondPlayer));
+                boolean upset;
+                boolean forfeit = false;
+                if(secondMove == NOMOVE) {
+                    upset = false;
+                    forfeit = true;
+                } else if(firstMove == NOMOVE) {
+                    upset = true;
+                    forfeit = true;
                 } else {
-                    addResult(firstPlayer, count, newResults);
-                    addResult(secondPlayer, count, newResults);
+                    upset = (secondMove == ROCKVAL && firstMove == SCISSORVAL)  ||
+                            (secondMove == PAPERVAL && firstMove == ROCKVAL) ||
+                            (secondMove == SCISSORVAL && firstMove == PAPERVAL);
                 }
+                addResultPair(newResults, !board.isOddRound(), upset, forfeit, firstMove == secondMove,
+                        firstPlayer, secondPlayer, firstMove, secondMove);
                 //TODO keep idle player counter
+                //TODO keep stats
             } else {
-                addResult(firstPlayer, count, newResults);
+                addResult(newResults, !board.isOddRound(), firstPlayer, "",
+                        pendingMoves.get(firstPlayer), "", "Bye", 0);
             }
         }
-        addNoobs();
+        addNoobs(newResults);
         pendingMoves = new HashMap<>();
         board.setTime(ROUND_INTERVAL);
         board.setOddRound(!board.isOddRound());
@@ -209,17 +262,18 @@ public class GameRPS extends AbstractGame {
         return startGame(time);
     }
 
-    private void addNoob(String noob) {
+    private void addNoob(List<RPSResult> results, String noob) {
         int count = board.getResults().size();
-        addResult(noob, count, board.getResults());
+        addResult(results, board.isOddRound(), noob,
+                "", "", "", "New", 0);
     }
 
-    private void addNoobs() {
+    private void addNoobs(List<RPSResult> results) {
         Set<String> players = new HashSet<>();
-        for(RPSResult result: board.getResults()) players.add(result.getName());
+        for(RPSResult result: board.getResults()) players.add(result.getPlayer());
         for(String noob: board.getNoobs()) {
             if (players.contains(noob)) continue;
-            addNoob(noob);
+            addNoob(results, noob);
         }
         board.setNoobs(new ArrayList<>());
     }
@@ -228,7 +282,7 @@ public class GameRPS extends AbstractGame {
         //TODO evict overly idle players
         //TODO make sure game state is startable (concurrency protection)
 
-        addNoobs();
+        addNoobs(board.getResults());
         board.setTime(time);
         board.setTimeStart(System.currentTimeMillis());
         scheduler.schedule(updater, time+1, TimeUnit.SECONDS);
