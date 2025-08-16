@@ -25,7 +25,7 @@ public class LoginController {
                            HttpServletResponse out) {
         Optional<Human> h = humanRepo.findById(userName);
         if(h.isPresent()  && h.get().getPass().equals(password)) {
-            out.addCookie(new Cookie("user", userName));
+            //TODO add session token
             return new HumanComm(h.get());
         }
         return HumanComm.NOBODY;
@@ -34,9 +34,7 @@ public class LoginController {
     @GetMapping("/logout")
     @ResponseBody
     public String logout(HttpServletResponse out) {
-        Cookie cookie = new Cookie("user", null);
-        cookie.setMaxAge(0);
-        out.addCookie(cookie);
+        //TODO clear session token
         return "Bye";
     }
 
@@ -45,13 +43,14 @@ public class LoginController {
     public HumanComm createAccount(@RequestParam(name="user")String userName,
                                    @RequestParam(name="pass")String password,
                                    HttpServletResponse out) {
-        Optional<Human> h = humanRepo.findById(userName);
+        String userNameS = userName.strip();
+        Optional<Human> h = humanRepo.findById(userNameS);
         if(h.isPresent()) {
             return HumanComm.NOBODY;
         } else {
-            Human human = new Human(userName, userName, password, "");
+            Human human = new Human(userNameS, userNameS, password, "");
             humanRepo.save(human);
-            out.addCookie(new Cookie("user", userName));
+            //TODO add session token
             return new HumanComm(human);
         }
     }
