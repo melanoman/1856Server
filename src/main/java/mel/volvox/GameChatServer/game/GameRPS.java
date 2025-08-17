@@ -264,7 +264,6 @@ public class GameRPS extends AbstractGame {
     }
 
     private void addNoob(List<RPSResult> results, String noob) {
-        int count = board.getResults().size();
         addResult(results, board.isOddRound(), noob,
                 "", "", "", "New", 0);
     }
@@ -277,6 +276,7 @@ public class GameRPS extends AbstractGame {
             addNoob(results, noob);
         }
         board.setNoobs(new ArrayList<>());
+        if (results.size() > 2) results.get(2).setParity(!results.get(0).isParity());
     }
 
     synchronized public RPSBoard startGame(int time) {
