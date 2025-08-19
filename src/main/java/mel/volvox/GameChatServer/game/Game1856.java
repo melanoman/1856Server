@@ -29,8 +29,7 @@ public class Game1856 extends AbstractGame {
 
     private int nextMove = 1;
 
-    private enum Era { GATHER, AUCTION, STOCK, OP, DONE };
-    private Era era = Era.GATHER;
+    public enum Era { GATHER, AUCTION, STOCK, OP, DONE };
 
     public void loadMove(TrainMove move) {
         doMove(move);
@@ -39,7 +38,7 @@ public class Game1856 extends AbstractGame {
 
     private void doStart(boolean shuffle) {
         if (shuffle) doShuffle();
-        era = Era.AUCTION;
+        board.setPhase(Era.AUCTION.name());
         for (int i=0; i<board.getPlayers().size(); i++) {
             TrainWallet wallet= new TrainWallet();
             wallet.setCash(START_CASH[i]);
@@ -69,7 +68,11 @@ public class Game1856 extends AbstractGame {
     }
 
     public boolean addPlayer(String name) {
-        if (era != Era.GATHER || board.getPlayers().size() >= 6 || board.getPlayers().contains(name)) return false;
+        if (!Era.GATHER.name().equals(board.getPhase()) ||
+                board.getPlayers().size() >= 6 ||
+                board.getPlayers().contains(name)) {
+            return false;
+        }
         makeMove(ADD_PLAYER, name, "", 0);
         return true;
     }
@@ -90,9 +93,10 @@ public class Game1856 extends AbstractGame {
         board.setPlayers(newOrder);
     }
 
-    //TODO make this undo-able
     synchronized public Board1856 startGame(String table, boolean shuffle) {
-        if (era != Era.GATHER || board.getPlayers().size() < 3 || board.getPlayers().size() > 6) {
+        if (!Era.GATHER.name().equals(board.getPhase()) ||
+                board.getPlayers().size() < 3 ||
+                board.getPlayers().size() > 6) {
             throw new IllegalStateException("Game is not startable");
         }
         makeMove("start", shuffle ? SHUFFLE : NO_SHUFFLE, "", 0);
