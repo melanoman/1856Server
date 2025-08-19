@@ -25,15 +25,14 @@ public class GameRPS extends AbstractGame {
         departingUsers.add(user);
     }
 
-    @Override
-    synchronized public String changeSeats(String newSeat, String user) {
-        if(PLAYER.equals(newSeat)) {
-            if (!board.getNoobs().contains(user)) board.getNoobs().add(user);
-        } else {
-            //System.out.println("Ladder remove:"+user); //TODO fix remove
-            //board.getNoobs().remove(user);
-        }
-        return newSeat;
+    synchronized public boolean join(String user) {
+        if (!board.getNoobs().contains(user)) board.getNoobs().add(user);
+        return true;
+    }
+
+    synchronized public boolean leave(String user) {
+        if (!departingUsers.contains(user)) departingUsers.add(user);
+        return false;
     }
 
     public RPSBoard getStatus() { return board; }
