@@ -1,23 +1,90 @@
 package mel.volvox.GameChatServer.controller;
 
+import mel.volvox.GameChatServer.comm.Board1856;
+import mel.volvox.GameChatServer.game.Game1856;
+import mel.volvox.GameChatServer.model.seating.Channel;
+import mel.volvox.GameChatServer.model.train.TrainMove;
+import mel.volvox.GameChatServer.repository.ChannelRepo;
 import mel.volvox.GameChatServer.repository.TrainRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 @CrossOrigin
 @Controller
 @Component
 public class TrainController {
     @Autowired
+    ChannelRepo channelRepo;
+    @Autowired
     TrainRepo trainRepo;
 
-    @PutMapping ("/1856/create/{table}")
+    static public final String TRAIN_TYPE="1856";
+    Map<String, Game1856> name2game = new HashMap<>();
+
+    private Game1856 makeGame(String name) {
+        Game1856 out = new Game1856();
+        out.setRepo(trainRepo);
+        out.setName(name);
+        return out;
+    }
+
+    synchronized Game1856 loadGame(String table) {
+        if(name2game.containsKey(table)) return name2game.get(table);
+        Game1856 out = makeGame(table);
+        for(TrainMove move: trainRepo.findByIdTableName(table)) {
+            out.loadMove(move);
+        }
+        name2game.put(table, out);
+        return out;
+    }
+
+    @GetMapping("/1856/list")
     @ResponseBody
-    String create1856(@PathVariable String table) {
+    List<Channel> listTables() {
+        return channelRepo.findByType(TRAIN_TYPE);
+    }
 
-        throw new Error("Not implemented");
+    @PutMapping("/1856/create/{table}")
+    @ResponseBody
+    synchronized String create1856(@PathVariable String table) {
+        if (!channelRepo.existsByNameAndType(table, TRAIN_TYPE)) {
+            name2game.put(table, makeGame(table));
+            channelRepo.save(new Channel(table, TRAIN_TYPE));
+        }
+        return table;
+    }
 
+    @PutMapping("/1856/player/new/{table}/{name}")
+    @ResponseBody
+    synchronized boolean addPlayer(@PathVariable String table,
+                                   @PathVariable String name) {
+        return loadGame(table).addPlayer(name);
+    }
+
+    @PutMapping("/1856/player/rename/{table}/{seat}/{name}")
+    @ResponseBody
+    synchronized boolean renamePlayer(@PathVariable String table,
+                                      @PathVariable int seat,
+                                      @PathVariable String name) {
+        return loadGame(table).renamePlayer(seat, name);
+    }
+
+    @PutMapping("/1856/status/{table}")
+    @ResponseBody
+    synchronized Board1856 getStatus(@PathVariable String table) {
+       return loadGame(table).getBoard();
+    }
+
+    @PutMapping("1856/start/{table}")
+    @ResponseBody
+    synchronized Board1856 startGame(@PathVariable String table,
+                                     @RequestParam("shuffle") boolean shuffle) {
+        return loadGame(table).startGame(table, shuffle);
     }
 }
