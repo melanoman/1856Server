@@ -85,6 +85,6 @@ public class TrainController {
     @ResponseBody
     synchronized Board1856 startGame(@PathVariable String table,
                                      @RequestParam("shuffle") boolean shuffle) {
-        return loadGame(table).startGame(table, shuffle);
+        return loadGame(table).startGame(shuffle);
     }
 }

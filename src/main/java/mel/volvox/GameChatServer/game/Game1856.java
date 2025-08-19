@@ -29,7 +29,7 @@ public class Game1856 extends AbstractGame {
 
     private int nextMove = 1;
 
-    public enum Era { GATHER, AUCTION, STOCK, OP, DONE };
+    public enum Era { GATHER, AUCTION, STOCK, OP, DONE }
 
     public void loadMove(TrainMove move) {
         doMove(move);
@@ -93,7 +93,7 @@ public class Game1856 extends AbstractGame {
         board.setPlayers(newOrder);
     }
 
-    synchronized public Board1856 startGame(String table, boolean shuffle) {
+    synchronized public Board1856 startGame(boolean shuffle) {
         if (!Era.GATHER.name().equals(board.getPhase()) ||
                 board.getPlayers().size() < 3 ||
                 board.getPlayers().size() > 6) {
