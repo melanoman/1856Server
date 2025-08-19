@@ -14,6 +14,5 @@ public class Message {
     @EmbeddedId
     MessageID id;
     String text;
-    int lastMove;
     String author;
 }

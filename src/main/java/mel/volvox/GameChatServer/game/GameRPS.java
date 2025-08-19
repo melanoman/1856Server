@@ -2,7 +2,6 @@ package mel.volvox.GameChatServer.game;
 
 import mel.volvox.GameChatServer.comm.RPSBoard;
 import mel.volvox.GameChatServer.comm.RPSResult;
-import mel.volvox.GameChatServer.model.seating.Move;
 
 import java.util.*;
 import java.util.concurrent.Executors;

@@ -8,6 +8,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface MessageRepo extends JpaRepository<Message, MessageID> {
-    Message findFirstByOrderByIdSerialNumberDesc();
-    List<Message> findByIdTableNameOrderByIdSerialNumberDesc(String name, Limit limit);
+    Message findFirstByIdChannelOrderByIdSerialNumberDesc(String channel);
+    List<Message> findByIdChannelOrderByIdSerialNumberDesc(String name, Limit limit);
 }

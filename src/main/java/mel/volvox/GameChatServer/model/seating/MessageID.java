@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 @Data
 @Embeddable
 public class MessageID {
-    String tableName;
+    String channel;
     int serialNumber;
 }

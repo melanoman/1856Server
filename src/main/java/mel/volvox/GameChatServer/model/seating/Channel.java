@@ -1,7 +1,7 @@
 package mel.volvox.GameChatServer.model.seating;
 
-import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.Entity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,8 +10,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Data
 @Entity
-public class Subscription {
+public class Channel {
     @Id
-    String tableName;
-    String accountName;
+    String name;
+    String type;
 }

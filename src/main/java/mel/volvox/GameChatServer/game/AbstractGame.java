@@ -1,7 +1,5 @@
 package mel.volvox.GameChatServer.game;
 
-import mel.volvox.GameChatServer.model.seating.Move;
-
 import java.util.List;
 
 public abstract class AbstractGame implements Game {
