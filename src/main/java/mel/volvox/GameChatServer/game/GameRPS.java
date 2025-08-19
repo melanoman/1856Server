@@ -276,9 +276,7 @@ public class GameRPS extends AbstractGame {
     }
 
     synchronized public RPSBoard startGame(int time) {
-        //TODO evict overly idle players
-        //TODO make sure game state is startable (concurrency protection)
-
+        //TODO evict overly idle players and players who click leave
         addNoobs(board.getResults());
         board.setTime(time);
         board.setTimeStart(System.currentTimeMillis());
