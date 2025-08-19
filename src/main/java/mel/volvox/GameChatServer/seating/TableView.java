@@ -1,11 +1,9 @@
 package mel.volvox.GameChatServer.seating;
 
-import mel.volvox.GameChatServer.comm.Board;
 import mel.volvox.GameChatServer.game.Game;
 import mel.volvox.GameChatServer.game.GameRPS;
 import mel.volvox.GameChatServer.model.seating.*;
 import mel.volvox.GameChatServer.repository.MessageRepo;
-import mel.volvox.GameChatServer.repository.MoveRepo;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
@@ -30,11 +28,8 @@ public class TableView {
     public String requestSeat(String seat, String user) { return game.requestSeat(seat, user); }
     public void abandonSeat(String user) { game.abandonSeat(user); }
     public String changeSeats(String newSeat, String user) { return game.changeSeats(newSeat, user); }
-    public int currentMoveNumber() { return game.lastMoveNumber(); }
     public MessageID nextMessageId() { return new MessageID(name, game.nextChatNumber()); }
     public void setChatNumber(int serialNumber) { game.setChatNumber(serialNumber); }
-    public Move processMove(Move move, MoveRepo repo) { return game.processMove(move, repo); }
-    public MoveID nextMoveId() { return new MoveID(name, game.nextMoveNumber()); }
     /**
      * called when loading seating after quit and restart of server
      */
@@ -42,17 +37,9 @@ public class TableView {
         for(Seat seat:seats) account2chair.put(seat.getAccount(), seat);
     }
 
-    //Input list is all the moves sorted by serial number
-    public void initMoves(List<Move> moves) {
-        for(Move move: moves) {
-            game.initMove(move);
-        }
-    }
-
     public synchronized int addMessage(MessageRepo messageRepo, String text, String author) {
-        int move = currentMoveNumber();
         MessageID id = nextMessageId();
-        messageRepo.save(new Message(id, text, move, author));
+        messageRepo.save(new Message(id, text, 0, author)); // TODO remove move references
         return id.getSerialNumber();
     }
 

@@ -3,7 +3,6 @@ package mel.volvox.GameChatServer.game;
 import mel.volvox.GameChatServer.comm.RPSBoard;
 import mel.volvox.GameChatServer.comm.RPSResult;
 import mel.volvox.GameChatServer.model.seating.Move;
-import mel.volvox.GameChatServer.repository.MoveRepo;
 
 import java.util.*;
 import java.util.concurrent.Executors;
@@ -38,7 +37,6 @@ public class GameRPS extends AbstractGame {
         return newSeat;
     }
 
-    @Override public void initMove(Move move) { } //TODO
     public RPSBoard getStatus() { return board; }
 
     private void unfreeeze() {
@@ -62,7 +60,7 @@ public class GameRPS extends AbstractGame {
         }
     }
 
-    synchronized public RPSBoard pause(MoveRepo moveRepo) {
+    synchronized public RPSBoard pause() {
         //TODO permission check
         switch (board.getState()) {
             case RPSBoard.VIRGIN:
@@ -85,7 +83,7 @@ public class GameRPS extends AbstractGame {
         return board;
     }
 
-    synchronized public RPSBoard resume(MoveRepo moveRepo) {
+    synchronized public RPSBoard resume() {
         switch (board.getState()) {
             case RPSBoard.VIRGIN:
                 startGame(GAME_LENGTH);

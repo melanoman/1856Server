@@ -31,8 +31,6 @@ public class TableController {
     @Autowired
     private SeatRepo seatRepo;
     @Autowired
-    private MoveRepo moveRepo;
-    @Autowired
     private MessageRepo messageRepo;
 
     private static final Map<String, TableView> name2view = new HashMap<>();
@@ -62,7 +60,6 @@ public class TableController {
         try {
             out = new TableView(name, type2class.get(table.get().getType()));
             out.initSeats(seatRepo.findByIdTableName(name));
-            out.initMoves(moveRepo.findAllByIdTableNameOrderByIdSerialNumber(name));
             out.setChatNumber(calculateInitialChatNumber(name));
         } catch(Exception e) {
             System.out.println("UNEXPECTED ERROR loading "+name);
@@ -173,7 +170,7 @@ public class TableController {
         TableView tv = loadTable(table);
         if (tv == null) throw new IllegalStateException("Table not found");
 
-        return tv.getRPSGame().pause(moveRepo);
+        return tv.getRPSGame().pause();
     }
 
     @PutMapping("rps/resume/{table}")
@@ -182,7 +179,7 @@ public class TableController {
         TableView tv = loadTable(table);
         if (tv == null) throw new IllegalStateException("Table not found");
 
-        return tv.getRPSGame().resume(moveRepo);
+        return tv.getRPSGame().resume();
     }
 
     @PutMapping("rps/move/{table}/{user}/{move}")

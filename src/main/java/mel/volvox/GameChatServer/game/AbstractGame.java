@@ -1,8 +1,6 @@
 package mel.volvox.GameChatServer.game;
 
-import mel.volvox.GameChatServer.comm.Board;
 import mel.volvox.GameChatServer.model.seating.Move;
-import mel.volvox.GameChatServer.repository.MoveRepo;
 
 import java.util.List;
 
@@ -21,8 +19,6 @@ public abstract class AbstractGame implements Game {
     @Override public int lastChatNumber() { return currentChatNumber; }
     @Override public int nextChatNumber() { currentChatNumber++; return currentChatNumber; }
     @Override public void setChatNumber(int serialNumber) { currentChatNumber = serialNumber; }
-    @Override public Move processMove(Move move, MoveRepo repo) { return null; }
-    @Override public void initMove(Move move) { }
     @Override public void abandonSeat(String user) { }
     @Override public String changeSeats(String seat, String user) { return null; }
 }
