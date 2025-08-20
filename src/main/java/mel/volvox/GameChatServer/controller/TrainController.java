@@ -37,7 +37,7 @@ public class TrainController {
     synchronized Game1856 loadGame(String table) {
         if(name2game.containsKey(table)) return name2game.get(table);
         Game1856 out = makeGame(table);
-        for(TrainMove move: trainRepo.findByIdTableName(table)) {
+        for(TrainMove move: trainRepo.findByIdChannelOrderByIdSerialNumberAsc(table)) {
             out.loadMove(move);
         }
         name2game.put(table, out);
@@ -78,8 +78,7 @@ public class TrainController {
     @GetMapping("/1856/status/{table}")
     @ResponseBody
     synchronized Board1856 getStatus(@PathVariable String table) {
-        System.out.println("getBoard "+table);
-       return loadGame(table).getBoard();
+        return loadGame(table).getBoard();
     }
 
     @PutMapping("1856/start/{table}")

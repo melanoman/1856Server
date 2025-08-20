@@ -11,6 +11,6 @@ import lombok.NoArgsConstructor;
 @Data
 @Embeddable
 public class TrainMoveID {
-    String tableName;
+    String channel;
     int serialNumber;
 }

@@ -50,10 +50,13 @@ public class Game1856 extends AbstractGame {
         switch (move.getAction()) {
             case ADD_PLAYER:
                 board.getPlayers().add(move.getPlayer());
+                break;
             case RENAME_PLAYER:
                 board.getPlayers().set(move.getAmount(), move.getPlayer());
+                break;
             case START_GAME:
                 doStart(SHUFFLE.equals(move.getPlayer()));
+                break;
             default:
                 throw new IllegalStateException("unknown move action: "+move.getAction());
         }
