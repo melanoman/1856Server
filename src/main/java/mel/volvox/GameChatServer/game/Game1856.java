@@ -82,7 +82,9 @@ public class Game1856 extends AbstractGame {
 
     private void lockUndo() {
         while(board.getUndoCount() > 0) {
-            history.remove(board.getMoveNumber()-1);
+            TrainMove out = history.get(board.getMoveNumber()-1);
+            repo.delete(out);
+            history.remove(out);
             board.setUndoCount(board.getUndoCount()-1);
             board.setMoveNumber(board.getMoveNumber()-1);
         }
