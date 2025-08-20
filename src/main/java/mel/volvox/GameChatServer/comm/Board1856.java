@@ -13,6 +13,8 @@ import java.util.List;
 public class Board1856 {
    List<String> players = new ArrayList<>();
    List<TrainWallet> wallets = new ArrayList<>();
-
+   String name;
    String phase = Game1856.Era.GATHER.name();
+   int moveNumber;
+   int undoCount;
 }

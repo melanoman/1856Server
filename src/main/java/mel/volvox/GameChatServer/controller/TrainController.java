@@ -30,7 +30,7 @@ public class TrainController {
     private Game1856 makeGame(String name) {
         Game1856 out = new Game1856();
         out.setRepo(trainRepo);
-        out.setName(name);
+        out.getBoard().setName(name);
         return out;
     }
 
@@ -77,6 +77,24 @@ public class TrainController {
     @ResponseBody
     synchronized Board1856 getStatus(@PathVariable String table) {
         return loadGame(table).getBoard();
+    }
+
+    @PutMapping("/1856/undo/{table}")
+    @ResponseBody
+    synchronized Board1856 undo(@PathVariable String table) {
+        return loadGame(table).undo();
+    }
+
+    @PutMapping("/1856/redo/{table}")
+    @ResponseBody
+    synchronized Board1856 redo(@PathVariable String table) {
+        return loadGame(table).redo();
+    }
+
+    @PutMapping("/1856/redoAll/{table}")
+    @ResponseBody
+    synchronized Board1856 redoAll(@PathVariable String table) {
+        return loadGame(table).redoAll();
     }
 
     @PutMapping("1856/start/{table}")

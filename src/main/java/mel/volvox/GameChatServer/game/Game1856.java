@@ -14,7 +14,6 @@ import java.util.List;
 
 public class Game1856 extends AbstractGame {
     @Setter TrainRepo repo; // set by controller
-    @Setter String name; // set by controller
     @Getter private final Board1856 board = new Board1856();
     public static final int[] START_CASH = { 0, 0, 0, 500, 375, 300, 250 };
 
@@ -27,7 +26,6 @@ public class Game1856 extends AbstractGame {
     public static final String SHUFFLE = "shuffle";
     public static final String NO_SHUFFLE = "noShuffle";
 
-    private int nextMove = 1;
     private List<TrainMove> history;
 
     public enum Era { GATHER, AUCTION, STOCK, OP, DONE }
@@ -41,7 +39,7 @@ public class Game1856 extends AbstractGame {
 
     public void loadMove(TrainMove move) {
         doMove(move);
-        nextMove++;
+        board.setMoveNumber(board.getMoveNumber()+1);
     }
 
     private void doStart(boolean shuffle) {
@@ -70,13 +68,58 @@ public class Game1856 extends AbstractGame {
         }
     }
 
+    public boolean undoMove(TrainMove move) {
+        switch (move.getAction()) {
+            case ADD_PLAYER:
+                board.getPlayers().remove(board.getPlayers().size()-1);
+                return true;
+            case RENAME_PLAYER:
+                board.getPlayers().set(move.getAmount(), move.getCorp());
+            default:
+                return false;
+        }
+    }
+
+    private void lockUndo() {
+        while(board.getUndoCount() > 0) {
+            history.remove(board.getMoveNumber()-1);
+            board.setUndoCount(board.getUndoCount()-1);
+            board.setMoveNumber(board.getMoveNumber()-1);
+        }
+    }
+
     private void makeMove(String action, String player, String corp, int amount) {
-        TrainMoveID id = new TrainMoveID(name, nextMove);
+        if(board.getUndoCount() > 0) {
+            lockUndo();
+        }
+        TrainMoveID id = new TrainMoveID(board.getName(), board.getMoveNumber()+1);
         TrainMove out = new TrainMove(id, action, player, corp, amount);
         repo.save(out);
         doMove(out);
         history.add(out);
-        nextMove++;
+        board.setMoveNumber(id.getSerialNumber());
+    }
+
+    public Board1856 undo() {
+        if (board.getUndoCount() == board.getMoveNumber()) return board;
+        if (undoMove(history.get(board.getMoveNumber()-board.getUndoCount()-1))) {
+            board.setUndoCount(board.getUndoCount()+1);
+        }
+        return board;
+    }
+
+    public Board1856 redo() {
+        if (board.getUndoCount() < 1) return board;
+        doMove(history.get(board.getMoveNumber()-board.getUndoCount()));
+        board.setUndoCount(board.getUndoCount()-1);
+        return board;
+    }
+
+    public Board1856 redoAll() {
+        while (board.getUndoCount() > 0) {
+            redo();
+        }
+        return board;
     }
 
     public boolean addPlayer(String name) {
@@ -91,7 +134,7 @@ public class Game1856 extends AbstractGame {
 
     public boolean renamePlayer(int seat, String name) {
         if(seat < 0 || seat >= board.getPlayers().size() || board.getPlayers().contains(name)) return false;
-        makeMove(RENAME_PLAYER, name, "", seat);
+        makeMove(RENAME_PLAYER, name, board.getPlayers().get(seat), seat);
         return true;
     }
 
