@@ -28,8 +28,16 @@ public class Game1856 extends AbstractGame {
     public static final String NO_SHUFFLE = "noShuffle";
 
     private int nextMove = 1;
+    private List<TrainMove> history;
 
     public enum Era { GATHER, AUCTION, STOCK, OP, DONE }
+
+    public void loadMoves(List<TrainMove> moves) {
+        history = moves;
+        for(TrainMove move: moves) {
+            loadMove(move);
+        }
+    }
 
     public void loadMove(TrainMove move) {
         doMove(move);
@@ -67,6 +75,7 @@ public class Game1856 extends AbstractGame {
         TrainMove out = new TrainMove(id, action, player, corp, amount);
         repo.save(out);
         doMove(out);
+        history.add(out);
         nextMove++;
     }
 

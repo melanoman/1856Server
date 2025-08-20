@@ -37,9 +37,7 @@ public class TrainController {
     synchronized Game1856 loadGame(String table) {
         if(name2game.containsKey(table)) return name2game.get(table);
         Game1856 out = makeGame(table);
-        for(TrainMove move: trainRepo.findByIdChannelOrderByIdSerialNumberAsc(table)) {
-            out.loadMove(move);
-        }
+        out.loadMoves(trainRepo.findByIdChannelOrderByIdSerialNumberAsc(table));
         name2game.put(table, out);
         return out;
     }
