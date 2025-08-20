@@ -75,9 +75,10 @@ public class TrainController {
         return loadGame(table).renamePlayer(seat, name);
     }
 
-    @PutMapping("/1856/status/{table}")
+    @GetMapping("/1856/status/{table}")
     @ResponseBody
     synchronized Board1856 getStatus(@PathVariable String table) {
+        System.out.println("getBoard "+table);
        return loadGame(table).getBoard();
     }
 
