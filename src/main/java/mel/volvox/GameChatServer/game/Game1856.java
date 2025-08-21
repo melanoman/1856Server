@@ -2,14 +2,13 @@ package mel.volvox.GameChatServer.game;
 
 import lombok.Getter;
 import lombok.Setter;
-import mel.volvox.GameChatServer.comm.Board1856;
+import mel.volvox.GameChatServer.comm.train.Board1856;
 import mel.volvox.GameChatServer.model.train.TrainMove;
 import mel.volvox.GameChatServer.model.train.TrainMoveID;
-import mel.volvox.GameChatServer.model.train.TrainWallet;
+import mel.volvox.GameChatServer.comm.train.Wallet;
 import mel.volvox.GameChatServer.repository.TrainRepo;
 import mel.volvox.GameChatServer.service.DiceService;
 
-import javax.print.DocFlavor;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -61,6 +60,7 @@ public class Game1856 extends AbstractGame {
         }
         board.setPlayers(newPlayers);
         board.setPhase(Era.GATHER.name());
+        board.setWallets(new ArrayList<>());
     }
 
     private void doStart(String order) {
@@ -70,8 +70,9 @@ public class Game1856 extends AbstractGame {
         }
         board.setPlayers(newPlayers);
         board.setPhase(Era.AUCTION.name());
-        for (int i=0; i<board.getPlayers().size(); i++) {
-            TrainWallet wallet= new TrainWallet();
+        for (String player: board.getPlayers()) {
+            Wallet wallet= new Wallet();
+            wallet.setName(player);
             wallet.setCash(START_CASH[board.getPlayers().size()]);
             board.getWallets().add(wallet);
         }

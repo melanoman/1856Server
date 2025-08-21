@@ -1,9 +1,8 @@
 package mel.volvox.GameChatServer.controller;
 
-import mel.volvox.GameChatServer.comm.Board1856;
+import mel.volvox.GameChatServer.comm.train.Board1856;
 import mel.volvox.GameChatServer.game.Game1856;
 import mel.volvox.GameChatServer.model.seating.Channel;
-import mel.volvox.GameChatServer.model.train.TrainMove;
 import mel.volvox.GameChatServer.repository.ChannelRepo;
 import mel.volvox.GameChatServer.repository.TrainRepo;
 import org.springframework.beans.factory.annotation.Autowired;
