@@ -75,6 +75,7 @@ public class Game1856 extends AbstractGame {
                 return true;
             case RENAME_PLAYER:
                 board.getPlayers().set(move.getAmount(), move.getCorp());
+                return true;
             default:
                 return false;
         }
@@ -134,10 +135,11 @@ public class Game1856 extends AbstractGame {
         return true;
     }
 
-    public boolean renamePlayer(int seat, String name) {
-        if(seat < 0 || seat >= board.getPlayers().size() || board.getPlayers().contains(name)) return false;
-        makeMove(RENAME_PLAYER, name, board.getPlayers().get(seat), seat);
-        return true;
+    public Board1856 renamePlayer(String oldName, String newName) {
+        int seat = board.getPlayers().indexOf(oldName);
+        if(seat < 0 || board.getPlayers().contains(newName)) return board;
+        makeMove(RENAME_PLAYER, newName, oldName, seat);
+        return board;
     }
 
     public void doShuffle() {

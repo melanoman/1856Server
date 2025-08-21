@@ -65,12 +65,12 @@ public class TrainController {
         return loadGame(table).addPlayer(name);
     }
 
-    @PutMapping("/1856/player/rename/{table}/{seat}/{name}")
+    @PutMapping("/1856/player/rename/{table}/{oldName}/{newName}")
     @ResponseBody
-    synchronized boolean renamePlayer(@PathVariable String table,
-                                      @PathVariable int seat,
-                                      @PathVariable String name) {
-        return loadGame(table).renamePlayer(seat, name);
+    synchronized Board1856 renamePlayer(@PathVariable String table,
+                                        @PathVariable String oldName,
+                                        @PathVariable String newName) {
+        return loadGame(table).renamePlayer(oldName, newName);
     }
 
     @GetMapping("/1856/status/{table}")
