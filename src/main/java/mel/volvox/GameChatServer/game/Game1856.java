@@ -72,7 +72,7 @@ public class Game1856 extends AbstractGame {
         board.setPhase(Era.AUCTION.name());
         for (int i=0; i<board.getPlayers().size(); i++) {
             TrainWallet wallet= new TrainWallet();
-            wallet.setCash(START_CASH[i]);
+            wallet.setCash(START_CASH[board.getPlayers().size()]);
             board.getWallets().add(wallet);
         }
     }
