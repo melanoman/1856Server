@@ -9,6 +9,7 @@ import mel.volvox.GameChatServer.model.train.TrainWallet;
 import mel.volvox.GameChatServer.repository.TrainRepo;
 import mel.volvox.GameChatServer.service.DiceService;
 
+import javax.print.DocFlavor;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,10 +22,6 @@ public class Game1856 extends AbstractGame {
     public static final String ADD_PLAYER = "addPlayer";
     public static final String RENAME_PLAYER = "renamePlayer";
     public static final String START_GAME = "startGame";
-
-    // sub-action constants
-    public static final String SHUFFLE = "shuffle";
-    public static final String NO_SHUFFLE = "noShuffle";
 
     private List<TrainMove> history;
 
@@ -42,8 +39,36 @@ public class Game1856 extends AbstractGame {
         board.setMoveNumber(board.getMoveNumber()+1);
     }
 
-    private void doStart(boolean shuffle) {
-        if (shuffle) doShuffle();
+    final private static String SHUFFLE_STOCK = "123456";
+
+    static String makeShuffle(boolean shuffle, int size) {
+        StringBuffer buf = new StringBuffer(SHUFFLE_STOCK.substring(0, size));
+        if(shuffle) {
+            for (int i = size; i > 0; i--) {
+                int j = DiceService.Roll(i);
+                char tmp = buf.charAt(i - 1);
+                buf.setCharAt(i - 1, buf.charAt(j - 1));
+                buf.setCharAt(j - 1, tmp);
+            }
+        }
+        return buf.toString();
+    }
+
+    private void undoStart(String order) {
+        List<String> newPlayers = new ArrayList<>();
+        for(char c='1'; c-'1'<order.length(); c++) {
+            newPlayers.add(board.getPlayers().get(order.indexOf(c)));
+        }
+        board.setPlayers(newPlayers);
+        board.setPhase(Era.GATHER.name());
+    }
+
+    private void doStart(String order) {
+        List<String> newPlayers = new ArrayList<>();
+        for(int i=0; i<order.length(); i++) {
+            newPlayers.add(board.getPlayers().get(order.charAt(i)-'1'));
+        }
+        board.setPlayers(newPlayers);
         board.setPhase(Era.AUCTION.name());
         for (int i=0; i<board.getPlayers().size(); i++) {
             TrainWallet wallet= new TrainWallet();
@@ -61,7 +86,7 @@ public class Game1856 extends AbstractGame {
                 board.getPlayers().set(move.getAmount(), move.getPlayer());
                 break;
             case START_GAME:
-                doStart(SHUFFLE.equals(move.getPlayer()));
+                doStart(move.getCorp());
                 break;
             default:
                 throw new IllegalStateException("unknown move action: "+move.getAction());
@@ -75,6 +100,9 @@ public class Game1856 extends AbstractGame {
                 return true;
             case RENAME_PLAYER:
                 board.getPlayers().set(move.getAmount(), move.getCorp());
+                return true;
+            case START_GAME:
+                undoStart(move.getCorp());
                 return true;
             default:
                 return false;
@@ -142,23 +170,13 @@ public class Game1856 extends AbstractGame {
         return board;
     }
 
-    public void doShuffle() {
-        List<String> newOrder = new ArrayList<>();
-        for(int i=board.getPlayers().size(); i>0; i--) {
-            String name = board.getPlayers().get(DiceService.Roll(i)-1);
-            newOrder.add(name);
-            board.getPlayers().remove(name);
-        }
-        board.setPlayers(newOrder);
-    }
-
     synchronized public Board1856 startGame(boolean shuffle) {
         if (!Era.GATHER.name().equals(board.getPhase()) ||
                 board.getPlayers().size() < 3 ||
                 board.getPlayers().size() > 6) {
             throw new IllegalStateException("Game is not startable");
         }
-        makeMove("start", shuffle ? SHUFFLE : NO_SHUFFLE, "", 0);
+        makeMove(START_GAME, "", makeShuffle(shuffle, board.getPlayers().size()), 0);
         return board;
     }
 }
