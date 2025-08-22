@@ -25,6 +25,7 @@ public class Game1856 extends AbstractGame {
     public static final String RENAME_PLAYER = "renamePlayer";
     public static final String START_GAME = "startGame";
     public static final String AUCTION_BUY = "auctionBuy";
+    public static final String AUCTION_PASS = "auctionPass";
 
     // action constants
     public static final String NORMAL_EVENT = "";
@@ -60,7 +61,7 @@ public class Game1856 extends AbstractGame {
 
     public enum Era { GATHER, AUCTION, STOCK, OP, DONE }
 
-    public void loadMoves(List<TrainMove> moves) {
+    synchronized public void loadMoves(List<TrainMove> moves) {
         history = moves;
         for(TrainMove move: moves) {
             loadMove(move);
@@ -188,27 +189,46 @@ public class Game1856 extends AbstractGame {
         }
     }
 
+    // not for use in final pass
     private void incrementPlayer(boolean actionTaken) {
         if(actionTaken) board.setPassCount(0);
         else board.setPassCount(board.getPassCount()+1);
-        if(board.getPassCount() == board.getPlayers().size()) {
-            endAuctionRound();
-        }
         int index = board.getPlayers().indexOf(board.getCurrentPlayer()) + 1;
         if (index >= board.getPlayers().size()) index = 0;
         board.setCurrentPlayer(board.getPlayers().get(index));
+        if (actionTaken) board.setPriorityHolder(board.getPlayers().get(index));
     }
 
     private void doAuctionBuy(TrainMove move) {
         Wallet wallet = getCurrentWallet();
         wallet.setCash(wallet.getCash() - move.getAmount());
-        Priv bid = new Priv(move.getCorp(), 0);
         wallet.getPrivates().add(new Priv(move.getCorp(), 3));
         incrementPlayer(true);
         incrementPrivate();
     }
 
-    public boolean undoMove(TrainMove move) {
+
+    private void undoAuctionBuy(TrainMove move) {
+        // TODO restore pass count
+        board.setPhase(Era.AUCTION.name());
+        board.setCurrentPlayer(move.getPlayer());
+        board.setCurrentCorp(move.getCorp());
+        //TODO remove lonebuys
+        for(Wallet wallet: board.getWallets()) {
+            if (wallet.getName().equals(move.getPlayer())) {
+                wallet.setCash(wallet.getCash() + move.getAmount());
+                Priv doomed = null;
+                for (Priv priv: wallet.getPrivates()) {
+                    if (move.getCorp().equals(priv.getCorp())) doomed = priv;
+                }
+                if (doomed != null) {
+                   wallet.getPrivates().remove(doomed);
+                }
+            }
+        }
+    }
+
+    synchronized public boolean undoMove(TrainMove move) {
         switch (move.getAction()) {
             case ADD_PLAYER:
                 board.getPlayers().remove(board.getPlayers().size()-1);
@@ -218,6 +238,9 @@ public class Game1856 extends AbstractGame {
                 return true;
             case START_GAME:
                 undoStart(move.getCorp());
+                return true;
+            case AUCTION_BUY:
+                undoAuctionBuy(move);
                 return true;
             default:
                 return false;
@@ -246,7 +269,7 @@ public class Game1856 extends AbstractGame {
         board.setMoveNumber(id.getSerialNumber());
     }
 
-    public Board1856 undo() {
+    synchronized public Board1856 undo() {
         if (board.getUndoCount() == board.getMoveNumber()) return board;
         if (undoMove(history.get(board.getMoveNumber()-board.getUndoCount()-1))) {
             board.setUndoCount(board.getUndoCount()+1);
@@ -254,21 +277,21 @@ public class Game1856 extends AbstractGame {
         return board;
     }
 
-    public Board1856 redo() {
+    synchronized public Board1856 redo() {
         if (board.getUndoCount() < 1) return board;
         doMove(history.get(board.getMoveNumber()-board.getUndoCount()));
         board.setUndoCount(board.getUndoCount()-1);
         return board;
     }
 
-    public Board1856 redoAll() {
+    synchronized public Board1856 redoAll() {
         while (board.getUndoCount() > 0) {
             redo();
         }
         return board;
     }
 
-    public boolean addPlayer(String name) {
+    synchronized public boolean addPlayer(String name) {
         if (!Era.GATHER.name().equals(board.getPhase()) ||
                 board.getPlayers().size() >= 6 ||
                 board.getPlayers().contains(name)) {
@@ -278,7 +301,7 @@ public class Game1856 extends AbstractGame {
         return true;
     }
 
-    public Board1856 renamePlayer(String oldName, String newName) {
+    synchronized public Board1856 renamePlayer(String oldName, String newName) {
         int seat = board.getPlayers().indexOf(oldName);
         if(seat < 0 || board.getPlayers().contains(newName)) return board;
         makeMove(RENAME_PLAYER, newName, oldName, seat);
@@ -307,5 +330,15 @@ public class Game1856 extends AbstractGame {
         if( price > cash) throw new IllegalStateException(("not enough cash"));
         makeMove(AUCTION_BUY, board.getCurrentPlayer(), board.getCurrentCorp(), price);
         return board;
+    }
+
+    public Board1856 pass() {
+        if (    board.getPhase() == Era.AUCTION.name() &&
+                Game1856.NORMAL_EVENT.equals(board.getEvent())
+        ) {
+            makeMove(AUCTION_PASS, board.getCurrentPlayer(), "", 1);
+            return board;
+        }
+        throw new IllegalStateException("Pass not allowed here");
     }
 }

@@ -108,4 +108,9 @@ public class TrainController {
     synchronized Board1856 auctionBuy(@PathVariable String table) {
         return loadGame(table).auctionBuy();
     }
+
+    @PutMapping("1856/pass/{table}")
+    synchronized Board1856 pass(@PathVariable String table) {
+        return loadGame(table).pass();
+    }
 }
