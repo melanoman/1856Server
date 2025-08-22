@@ -11,5 +11,5 @@ import java.util.List;
 public class Wallet {
     String name;
     int cash;
-    List<Bid> privates = new ArrayList<>();
+    List<Priv> privates = new ArrayList<>();
 }

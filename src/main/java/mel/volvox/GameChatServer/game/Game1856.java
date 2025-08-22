@@ -2,6 +2,7 @@ package mel.volvox.GameChatServer.game;
 
 import lombok.Getter;
 import lombok.Setter;
+import mel.volvox.GameChatServer.comm.train.Priv;
 import mel.volvox.GameChatServer.comm.train.Board1856;
 import mel.volvox.GameChatServer.model.train.TrainMove;
 import mel.volvox.GameChatServer.model.train.TrainMoveID;
@@ -11,16 +12,49 @@ import mel.volvox.GameChatServer.service.DiceService;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class Game1856 extends AbstractGame {
     @Setter TrainRepo repo; // set by controller
     @Getter private final Board1856 board = new Board1856();
     public static final int[] START_CASH = { 0, 0, 0, 500, 375, 300, 250 };
+    public static final String NONE = "";
 
-    // action constants
+    // phase constants
     public static final String ADD_PLAYER = "addPlayer";
     public static final String RENAME_PLAYER = "renamePlayer";
     public static final String START_GAME = "startGame";
+    public static final String AUCTION_BUY = "auctionBuy";
+
+    // action constants
+    public static final String NORMAL_EVENT = "";
+    public static final String AUCTION_BIDOFF = "bidoff";
+
+    // private companies
+    public static final String PRIVATE_FLOS = "flos";
+    public static final String PRIVATE_WS = "ws";
+    public static final String PRIVATE_CAN = "can";
+    public static final String PRIVATE_GLS = "gls";
+    public static final String PRIVATE_NIAG = "niag";
+    public static final String PRIVATE_STC = "stc";
+
+    public static final Map<String, Integer> priv2price = Map.of(
+            PRIVATE_FLOS, 20,
+            PRIVATE_WS,   40,
+            PRIVATE_CAN,  50,
+            PRIVATE_GLS,  70,
+            PRIVATE_NIAG,100,
+            PRIVATE_STC, 100
+    );
+
+    public static final Map<String, String> priv2next = Map.of(
+            PRIVATE_FLOS, PRIVATE_WS,
+            PRIVATE_WS, PRIVATE_CAN,
+            PRIVATE_CAN, PRIVATE_GLS,
+            PRIVATE_GLS, PRIVATE_NIAG,
+            PRIVATE_NIAG, PRIVATE_STC,
+            PRIVATE_STC, NONE
+    );
 
     private List<TrainMove> history;
 
@@ -70,6 +104,11 @@ public class Game1856 extends AbstractGame {
         }
         board.setPlayers(newPlayers);
         board.setPhase(Era.AUCTION.name());
+        board.setCurrentPlayer(newPlayers.get(0));
+        board.setPassCount(0);
+        board.setCurrentCorp(PRIVATE_FLOS);
+        board.setPriorityHolder("");
+        board.setEvent(NORMAL_EVENT);
         for (String player: board.getPlayers()) {
             Wallet wallet= new Wallet();
             wallet.setName(player);
@@ -89,9 +128,84 @@ public class Game1856 extends AbstractGame {
             case START_GAME:
                 doStart(move.getCorp());
                 break;
+            case AUCTION_BUY:
+                doAuctionBuy(move);
+                break;
             default:
                 throw new IllegalStateException("unknown move action: "+move.getAction());
         }
+    }
+
+    private void endAuctionRound() {
+        board.setPassCount(0);
+        board.setAuctionDiscount(board.getAuctionDiscount()+5);
+        if (priv2price.get(board.getCurrentCorp()) == board.getAuctionDiscount()) {
+            //TODO auction giveaway
+        }
+    }
+
+    private void endAuctionPhase() {
+        // TODO start first stock round
+    }
+
+    private int countBids(String privName) {
+        int out = 0;
+        for(Wallet w: board.getWallets()) {
+            for(Priv priv: w.getPrivates()) {
+                if(privName.equals(priv.getCorp())) {
+                    out++;
+                    break;
+                }
+            }
+        }
+        return out;
+    }
+
+    private void loneBuy(String privName) {
+        for(Wallet w: board.getWallets()) {
+            for (Priv priv : w.getPrivates()) {
+                if (privName.equals(priv.getCorp())) {
+                    priv.setAmount(3);
+                }
+            }
+        }
+    }
+
+    private void incrementPrivate() {
+        String next = priv2next.get(board.getCurrentCorp());
+        int numBids = countBids(next);
+        while (numBids == 1) {
+            loneBuy(next);
+            next = priv2next.get(board.getCurrentCorp());
+            numBids = countBids(next);
+        }
+        if(numBids > 1) {
+            board.setEvent(AUCTION_BIDOFF);
+        }
+        board.setCurrentCorp(next);
+        if(NONE.equals(next)) {
+            endAuctionPhase();
+        }
+    }
+
+    private void incrementPlayer(boolean actionTaken) {
+        if(actionTaken) board.setPassCount(0);
+        else board.setPassCount(board.getPassCount()+1);
+        if(board.getPassCount() == board.getPlayers().size()) {
+            endAuctionRound();
+        }
+        int index = board.getPlayers().indexOf(board.getCurrentPlayer()) + 1;
+        if (index >= board.getPlayers().size()) index = 0;
+        board.setCurrentPlayer(board.getPlayers().get(index));
+    }
+
+    private void doAuctionBuy(TrainMove move) {
+        Wallet wallet = getCurrentWallet();
+        wallet.setCash(wallet.getCash() - move.getAmount());
+        Priv bid = new Priv(move.getCorp(), 0);
+        wallet.getPrivates().add(new Priv(move.getCorp(), 3));
+        incrementPlayer(true);
+        incrementPrivate();
     }
 
     public boolean undoMove(TrainMove move) {
@@ -178,6 +292,20 @@ public class Game1856 extends AbstractGame {
             throw new IllegalStateException("Game is not startable");
         }
         makeMove(START_GAME, "", makeShuffle(shuffle, board.getPlayers().size()), 0);
+        return board;
+    }
+
+    private Wallet getCurrentWallet() {
+        return board.getWallets().get(board.getPlayers().indexOf(board.getCurrentPlayer()));
+    }
+
+    synchronized public Board1856 auctionBuy() {
+        if(!Era.AUCTION.name().equals(board.getPhase())) throw new IllegalStateException("No auction");
+        if (!NORMAL_EVENT.equals(board.getEvent())) throw new IllegalStateException("No offering");
+        int price = priv2price.get(board.getCurrentCorp()) - board.getAuctionDiscount();
+        int cash = getCurrentWallet().getCash();
+        if( price > cash) throw new IllegalStateException(("not enough cash"));
+        makeMove(AUCTION_BUY, board.getCurrentPlayer(), board.getCurrentCorp(), price);
         return board;
     }
 }

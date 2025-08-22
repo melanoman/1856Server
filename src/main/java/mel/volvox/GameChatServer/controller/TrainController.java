@@ -102,4 +102,10 @@ public class TrainController {
                                      @RequestParam("shuffle") boolean shuffle) {
         return loadGame(table).startGame(shuffle);
     }
+
+    @PutMapping("1856/auction/buy/{table}")
+    @ResponseBody
+    synchronized Board1856 auctionBuy(@PathVariable String table) {
+        return loadGame(table).auctionBuy();
+    }
 }

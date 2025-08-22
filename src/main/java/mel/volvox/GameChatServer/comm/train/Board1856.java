@@ -10,10 +10,19 @@ import java.util.List;
 @NoArgsConstructor
 @Data
 public class Board1856 {
-   List<String> players = new ArrayList<>();
-   List<Wallet> wallets = new ArrayList<>();
    String name;
-   String phase = Game1856.Era.GATHER.name();
    int moveNumber;
    int undoCount;
+
+   String phase = Game1856.Era.GATHER.name();
+   String event;
+   List<String> players = new ArrayList<>();
+   List<Wallet> wallets = new ArrayList<>();
+
+   String currentPlayer;
+   String currentCorp;
+   int passCount;
+   String priorityHolder;
+
+   int auctionDiscount; //$5 off per allpass
 }
