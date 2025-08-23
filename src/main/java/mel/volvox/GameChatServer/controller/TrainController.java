@@ -110,6 +110,7 @@ public class TrainController {
     }
 
     @PutMapping("1856/pass/{table}")
+    @ResponseBody
     synchronized Board1856 pass(@PathVariable String table) {
         return loadGame(table).pass();
     }

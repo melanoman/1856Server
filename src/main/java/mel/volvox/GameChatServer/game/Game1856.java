@@ -119,11 +119,12 @@ public class Game1856 extends AbstractGame {
         }
     }
 
-    private void doAuctionPass(TrainMove move) {
-        throw new IllegalStateException("TODO implement pass");
+    private void doAuctionPass(TrainMove move, boolean rawMove) {
+        incrementPlayer(false, rawMove);
     }
 
     private void doMove(TrainMove move, boolean rawMove) {
+        board.setPassCount(move.getOldPassCount());
         switch (move.getAction()) {
             case ADD_PLAYER:
                 board.getPlayers().add(move.getPlayer());
@@ -138,7 +139,7 @@ public class Game1856 extends AbstractGame {
                 doAuctionBuy(move, rawMove);
                 break;
             case AUCTION_PASS:
-                doAuctionPass(move);
+                doAuctionPass(move, rawMove);
                 break;
             default:
                 throw new IllegalStateException("unknown move action: "+move.getAction());
@@ -231,10 +232,6 @@ public class Game1856 extends AbstractGame {
         incrementPrivate(rawMove);
     }
 
-    private void doPass(boolean rawMove) {
-        incrementPlayer(false, rawMove);
-    }
-
     private void undoAuctionBuy(TrainMove move) {
         // TODO restore pass count
         board.setPhase(Era.AUCTION.name());
@@ -252,6 +249,10 @@ public class Game1856 extends AbstractGame {
         }
     }
 
+    private void undoAuctionPass(TrainMove move) {
+        board.setCurrentPlayer(move.getPlayer());
+    }
+
     synchronized public boolean undoMove(TrainMove move) {
         board.setPassCount(move.getOldPassCount());
         switch (move.getAction()) {
@@ -266,6 +267,9 @@ public class Game1856 extends AbstractGame {
                 return true;
             case AUCTION_BUY:
                 undoAuctionBuy(move);
+                return true;
+            case AUCTION_PASS:
+                undoAuctionPass(move);
                 return true;
             default:
                 return false;
@@ -375,11 +379,7 @@ public class Game1856 extends AbstractGame {
         return board;
     }
 
-    private Board1856 lastPass() {
-        throw new IllegalStateException("TODO lastPass");
-    }
-
-    public Board1856 pass() {
+    synchronized public Board1856 pass() {
         if (phaseIs(Era.AUCTION) && eventIs(NORMAL_EVENT)) {
             makeMove(AUCTION_PASS, board.getCurrentPlayer(), "", 1);
             return board;
