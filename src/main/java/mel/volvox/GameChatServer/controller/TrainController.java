@@ -114,4 +114,12 @@ public class TrainController {
     synchronized Board1856 pass(@PathVariable String table) {
         return loadGame(table).pass();
     }
+
+    @PutMapping("1856/auction/bid/{table}/{corp}/{amount}")
+    @ResponseBody
+    synchronized Board1856 auctionBid(@PathVariable String table,
+                                      @PathVariable String corp,
+                                      @PathVariable int amount) {
+        throw new IllegalStateException("TODO implement bid");
+    }
 }
