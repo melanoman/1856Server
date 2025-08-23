@@ -15,6 +15,8 @@ public class TrainMove {
     TrainMoveID id;
     String action;
     String player;
-    String corp; // use "" if no corp
+    String corp;
     int amount;
+    int oldPassCount;
+    boolean isFollow; // true if undo should continue past this move
 }

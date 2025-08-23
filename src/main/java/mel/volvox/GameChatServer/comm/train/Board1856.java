@@ -15,14 +15,14 @@ public class Board1856 {
    int undoCount;
 
    String phase = Game1856.Era.GATHER.name();
-   String event;
+   String event = "";
    List<String> players = new ArrayList<>();
    List<Wallet> wallets = new ArrayList<>();
 
-   String currentPlayer;
-   String currentCorp;
-   int passCount;
-   String priorityHolder;
+   String currentPlayer = "";
+   String currentCorp = "";
+   int passCount = 0;
+   String priorityHolder = "";
 
-   int auctionDiscount; //$5 off per allpass
+   int auctionDiscount = 0; //$5 off per allpass
 }
