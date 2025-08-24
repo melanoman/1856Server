@@ -28,7 +28,7 @@ public class Game1856 extends AbstractGame {
     public static final String AUCTION_REBID = "auctionRebid";
     public static final String AUCTION_BUY = "auctionBuy";
     public static final String AUCTION_PASS = "auctionPass";
-    public static final String LONE_BUY = "auctionLoneBuy";
+    public static final String AUCTION_LONEBUY = "auctionLoneBuy";
 
     // action constants
     public static final String NORMAL_EVENT = "";
@@ -126,13 +126,17 @@ public class Game1856 extends AbstractGame {
     }
 
     private void doAuctionBid(TrainMove move, boolean rawMove) {
-        getCurrentWallet().getPrivates().add(new Priv(move.getCorp(), move.getAmount()));
+        Wallet w = getCurrentWallet();
+        w.getPrivates().add(new Priv(move.getCorp(), move.getAmount()));
+        w.setCash(w.getCash()-move.getAmount());
         incrementPlayer(true, rawMove);
     }
 
     private void undoAuctionBid(TrainMove move) {
         board.setCurrentPlayer(move.getPlayer());
-        getCurrentWallet().getPrivates().removeIf(priv -> move.getCorp().equals(priv.getCorp()));
+        Wallet w = getCurrentWallet();
+        w.getPrivates().removeIf(priv -> move.getCorp().equals(priv.getCorp()));
+        w.setCash(w.getCash()+move.getAmount());
     }
 
     private void doMove(TrainMove move, boolean rawMove) {
@@ -159,6 +163,9 @@ public class Game1856 extends AbstractGame {
             case AUCTION_REBID:
                 doAuctionRebid(move, rawMove);
                 break;
+            case AUCTION_LONEBUY:
+                doLoneBuy(move, rawMove);
+                break;
             default:
                 throw new IllegalStateException("unknown move action: "+move.getAction());
         }
@@ -171,6 +178,7 @@ public class Game1856 extends AbstractGame {
                 priv.setAmount(priv.getAmount() + move.getAmount());
             }
         }
+        w.setCash(w.getCash()-move.getAmount());
         incrementPlayer(true, rawMove);
     }
 
@@ -182,6 +190,7 @@ public class Game1856 extends AbstractGame {
                 priv.setAmount(priv.getAmount() - move.getAmount());
             }
         }
+        w.setCash(w.getCash()+move.getAmount());
     }
 
     private void endAuctionRound(boolean rawMove) {
@@ -228,31 +237,39 @@ public class Game1856 extends AbstractGame {
             for(Wallet w: board.getWallets()) {
                 for (Priv priv : w.getPrivates()) {
                     if (privName.equals(priv.getCorp())) {
-                        makeMove(LONE_BUY, w.getName(), privName, priv2price.get(privName));
+                        makeMove(AUCTION_LONEBUY, w.getName(), privName, priv2price.get(privName), true);
                     }
                 }
             }
         }
     }
 
-    private void doLoneBuy(TrainMove move) {
-        throw new IllegalStateException("TODO lone buy");// TODO loneBuy
+    private void doLoneBuy(TrainMove move, boolean rawMove) {
+        for(Wallet w: board.getWallets()) {
+            if(w.getName().equals(move.getPlayer())) {
+                for (Priv priv:w.getPrivates()) {
+                    if (priv.getCorp().equals(move.getCorp())) {
+                        priv.setAmount(3);
+                    }
+                }
+            }
+        }
+        board.setCurrentCorp(move.getCorp());
+        incrementPrivate(rawMove);
     }
 
     private void incrementPrivate(boolean rawMove) {
         String next = priv2next.get(board.getCurrentCorp());
         int numBids = countBids(next);
-        while (numBids == 1) {
+        if (numBids == 1) {
             loneBuy(next, rawMove);
-            next = priv2next.get(board.getCurrentCorp());
-            numBids = countBids(next);
-        }
-        if(numBids > 1) {
+        } else if(numBids > 1) {
             board.setEvent(AUCTION_BIDOFF);
-        }
-        board.setCurrentCorp(next);
-        if(NONE.equals(next)) {
+            board.setCurrentCorp(next);
+        } else if(NONE.equals(next)) {
             endAuctionPhase();
+        } else {
+            board.setCurrentCorp(next);
         }
     }
 
@@ -469,9 +486,16 @@ public class Game1856 extends AbstractGame {
             throw new IllegalStateException("Minimum Bid is "+minBid);
         }
         int incr = calcRebidIncrement(getCurrentWallet(), corp, amount);
+        Wallet w = getCurrentWallet();
         if (incr > 0) {
+            if(incr > w.getCash()) {
+                throw new IllegalStateException("Insufficient Funds");
+            }
             makeMove(AUCTION_REBID, board.getCurrentPlayer(), corp, incr);
         } else {
+            if(amount > w.getCash()) {
+                throw new IllegalStateException("Insufficient Funds");
+            }
             makeMove(AUCTION_BID, board.getCurrentPlayer(), corp, amount);
         }
         return board;
