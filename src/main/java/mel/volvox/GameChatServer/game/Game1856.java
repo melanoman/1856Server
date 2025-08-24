@@ -377,7 +377,6 @@ public class Game1856 extends AbstractGame {
         }
         TrainMoveID id = new TrainMoveID(board.getName(), board.getMoveNumber()+1);
         TrainMove out = new TrainMove(id, action, player, corp, amount, board.getPassCount(), isFollow);
-        System.out.println("Move move #"+id.getSerialNumber()+" with action "+action);
         repo.save(out);
         board.setMoveNumber(id.getSerialNumber());
         history.add(out);
@@ -385,10 +384,8 @@ public class Game1856 extends AbstractGame {
     }
 
     synchronized public Board1856 undo() {
-        System.out.println("move = " +board.getMoveNumber()+" undo ="+board.getUndoCount());
         if (board.getUndoCount() == board.getMoveNumber()) return board;
         TrainMove move = history.get(board.getMoveNumber()-board.getUndoCount()-1);
-        System.out.println("undo move #"+move.getId().getSerialNumber()+" action = "+move.getAction());
         if (undoMove(move)) {
             board.setUndoCount(board.getUndoCount()+1);
             if (move.isFollow()) return undo();
@@ -399,7 +396,6 @@ public class Game1856 extends AbstractGame {
     synchronized public Board1856 redo() {
         if (board.getUndoCount() < 1) return board;
         TrainMove currentMove = history.get(board.getMoveNumber()-board.getUndoCount());
-        System.out.println("Redo move #"+currentMove.getId().getSerialNumber());
         doMove(currentMove, false);
         board.setUndoCount(board.getUndoCount()-1);
         if (board.getUndoCount() > 0) {
