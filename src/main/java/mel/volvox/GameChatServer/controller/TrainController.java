@@ -122,4 +122,12 @@ public class TrainController {
                                       @PathVariable int amount) {
         return loadGame(table).bid(corp, amount);
     }
+
+    @PutMapping("1856/auction/bidoff/{table}/{bidder}/{amount}")
+    @ResponseBody
+    synchronized Board1856 auctionBidoff(@PathVariable String table,
+                                         @PathVariable String bidder,
+                                         @PathVariable int amount) {
+        return loadGame(table).bidoff(bidder, amount);
+    }
 }

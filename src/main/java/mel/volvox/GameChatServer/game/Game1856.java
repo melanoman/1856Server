@@ -20,7 +20,10 @@ public class Game1856 extends AbstractGame {
     public static final int[] START_CASH = { 0, 0, 0, 500, 375, 300, 250 };
     public static final String NONE = "";
 
-    // phase constants
+    // error constants
+    public static final String FUNDS = "Insufficient Funds";
+
+    // action constants
     public static final String ADD_PLAYER = "addPlayer";
     public static final String RENAME_PLAYER = "renamePlayer";
     public static final String START_GAME = "startGame";
@@ -30,8 +33,9 @@ public class Game1856 extends AbstractGame {
     public static final String AUCTION_PASS = "auctionPass";
     public static final String AUCTION_LONEBUY = "auctionLoneBuy";
     public static final String START_BIDOFF = "startBidoff";
+    public static final String END_BIDOFF = "endBidoff";
 
-    // action constants
+    // event constants
     public static final String NORMAL_EVENT = "";
     public static final String BIDOFF_EVENT = "bidoff";
 
@@ -179,6 +183,9 @@ public class Game1856 extends AbstractGame {
                 break;
             case START_BIDOFF:
                 doStartBidoff(move);
+                break;
+            case END_BIDOFF:
+                doEndBidoff(move, rawMove);
                 break;
             default:
                 throw new IllegalStateException("unknown move action: "+move.getAction());
@@ -371,9 +378,21 @@ public class Game1856 extends AbstractGame {
             case START_BIDOFF:
                 undoStartBidoff(move);
                 return true;
+            case END_BIDOFF:
+                undoEndBidoff(move);
+                return true;
             default:
                 return false;
         }
+    }
+
+    private void doEndBidoff(TrainMove move, boolean rawMove) {
+        System.out.println("TODO doEndBidoff");
+    }
+
+    private void undoEndBidoff(TrainMove move) {
+        System.out.println("TODO undoEndBidoff");
+
     }
 
     private void lockUndo() {
@@ -513,7 +532,7 @@ public class Game1856 extends AbstractGame {
         }
         int overbid = highBid(corp) + 5;
         int price = priv2price.get(corp);
-        int minBid = (price > overbid) ? price : overbid;
+        int minBid = (price > overbid) ? price + 5 : overbid;
 
         if (amount < minBid) {
             throw new IllegalStateException("Minimum Bid is "+minBid);
@@ -522,14 +541,38 @@ public class Game1856 extends AbstractGame {
         Wallet w = getCurrentWallet();
         if (incr > 0) {
             if(incr > w.getCash()) {
-                throw new IllegalStateException("Insufficient Funds");
+                throw new IllegalStateException(FUNDS);
             }
             makeMove(AUCTION_REBID, board.getCurrentPlayer(), corp, incr);
         } else {
             if(amount > w.getCash()) {
-                throw new IllegalStateException("Insufficient Funds");
+                throw new IllegalStateException(FUNDS);
             }
             makeMove(AUCTION_BID, board.getCurrentPlayer(), corp, amount);
+        }
+        return board;
+    }
+
+    private Wallet getPlayerWallet(String player) {
+        int playerIndex = board.getPlayers().indexOf(player);
+        if(playerIndex < 0) throw new IllegalStateException("Unknown Player");
+        return board.getWallets().get(playerIndex);
+    }
+
+    synchronized public Board1856 bidoff(String player, int amount) {
+        Wallet w = getPlayerWallet(player);
+        String corp = board.getCurrentCorp();
+        int oldMin = highBid(corp);
+
+        int increment = 99999;
+        for (Priv priv: w.getPrivates()) {
+            if (priv.getCorp().equals(corp)) increment = amount - priv.getAmount();
+        }
+        if (increment > w.getCash()) throw new IllegalStateException(FUNDS);
+        if ((increment == 0 && amount == oldMin) || amount >= oldMin + 5) {
+            makeMove(END_BIDOFF, player, corp, amount);
+        } else {
+            throw new IllegalStateException("Minimum Raise is $5");
         }
         return board;
     }
