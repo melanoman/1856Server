@@ -84,7 +84,7 @@ public class Game1856 extends AbstractGame {
     final private static String SHUFFLE_STOCK = "123456";
 
     static String makeShuffle(boolean shuffle, int size) {
-        StringBuffer buf = new StringBuffer(SHUFFLE_STOCK.substring(0, size));
+        StringBuilder buf = new StringBuilder(SHUFFLE_STOCK.substring(0, size));
         if(shuffle) {
             for (int i = size; i > 0; i--) {
                 int j = DiceService.Roll(i);
@@ -387,12 +387,45 @@ public class Game1856 extends AbstractGame {
     }
 
     private void doEndBidoff(TrainMove move, boolean rawMove) {
-        System.out.println("TODO doEndBidoff");
+        String uncorp = "_"+move.getCorp();
+        Wallet addTo = null;
+        for (Wallet w: board.getWallets()) {
+            for(Priv priv: w.getPrivates()) {
+                if (priv.getCorp().equals(move.getCorp())) {
+                    priv.setCorp(uncorp);
+                    if(w.getName().equals(move.getPlayer())) {
+                        w.setCash(w.getCash() - move.getAmount());
+                        addTo = w;
+                    } else {
+                        w.setCash(w.getCash() + priv.getAmount());
+                    }
+                }
+            }
+        }
+        addTo.getPrivates().add(new Priv(move.getCorp(), 3));
+        board.setEvent(NORMAL_EVENT);
+        incrementPrivate(rawMove);
     }
 
     private void undoEndBidoff(TrainMove move) {
-        System.out.println("TODO undoEndBidoff");
-
+        board.setCurrentCorp(move.getCorp());
+        board.setEvent(BIDOFF_EVENT);
+        String uncorp = "_"+move.getCorp();
+        for (Wallet w: board.getWallets()) {
+            if(w.getName().equals(move.getPlayer())) {
+                w.getPrivates().removeIf(priv -> priv.getCorp().equals(move.getCorp()));
+            }
+            for(Priv priv: w.getPrivates()) {
+                if (priv.getCorp().equals(uncorp)) {
+                    priv.setCorp(move.getCorp());
+                    if(w.getName().equals(move.getPlayer())) {
+                        w.setCash(w.getCash() + move.getAmount());
+                    } else {
+                        w.setCash(w.getCash() - priv.getAmount());
+                    }
+                }
+            }
+        }
     }
 
     private void lockUndo() {
@@ -570,7 +603,7 @@ public class Game1856 extends AbstractGame {
         }
         if (increment > w.getCash()) throw new IllegalStateException(FUNDS);
         if ((increment == 0 && amount == oldMin) || amount >= oldMin + 5) {
-            makeMove(END_BIDOFF, player, corp, amount);
+            makeMove(END_BIDOFF, player, corp, increment);
         } else {
             throw new IllegalStateException("Minimum Raise is $5");
         }
