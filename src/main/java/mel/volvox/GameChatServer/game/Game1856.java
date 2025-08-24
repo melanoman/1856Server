@@ -24,6 +24,8 @@ public class Game1856 extends AbstractGame {
     public static final String ADD_PLAYER = "addPlayer";
     public static final String RENAME_PLAYER = "renamePlayer";
     public static final String START_GAME = "startGame";
+    public static final String AUCTION_BID = "auctionBid";
+    public static final String AUCTION_REBID = "auctionRebid";
     public static final String AUCTION_BUY = "auctionBuy";
     public static final String AUCTION_PASS = "auctionPass";
     public static final String LONE_BUY = "auctionLoneBuy";
@@ -123,6 +125,16 @@ public class Game1856 extends AbstractGame {
         incrementPlayer(false, rawMove);
     }
 
+    private void doAuctionBid(TrainMove move, boolean rawMove) {
+        getCurrentWallet().getPrivates().add(new Priv(move.getCorp(), move.getAmount()));
+        incrementPlayer(true, rawMove);
+    }
+
+    private void undoAuctionBid(TrainMove move) {
+        board.setCurrentPlayer(move.getPlayer());
+        getCurrentWallet().getPrivates().removeIf(priv -> move.getCorp().equals(priv.getCorp()));
+    }
+
     private void doMove(TrainMove move, boolean rawMove) {
         board.setPassCount(move.getOldPassCount());
         switch (move.getAction()) {
@@ -141,8 +153,34 @@ public class Game1856 extends AbstractGame {
             case AUCTION_PASS:
                 doAuctionPass(move, rawMove);
                 break;
+            case AUCTION_BID:
+                doAuctionBid(move, rawMove);
+                break;
+            case AUCTION_REBID:
+                doAuctionRebid(move, rawMove);
+                break;
             default:
                 throw new IllegalStateException("unknown move action: "+move.getAction());
+        }
+    }
+
+    private void doAuctionRebid(TrainMove move, boolean rawMove) {
+        Wallet w = getCurrentWallet();
+        for (Priv priv: w.getPrivates()) {
+            if(priv.getCorp().equals(move.getCorp())) {
+                priv.setAmount(priv.getAmount() + move.getAmount());
+            }
+        }
+        incrementPlayer(true, rawMove);
+    }
+
+    private void undoAuctionRebid(TrainMove move) {
+        board.setCurrentPlayer(move.getPlayer());
+        Wallet w = getCurrentWallet();
+        for (Priv priv: w.getPrivates()) {
+            if(priv.getCorp().equals(move.getCorp())) {
+                priv.setAmount(priv.getAmount() - move.getAmount());
+            }
         }
     }
 
@@ -150,12 +188,13 @@ public class Game1856 extends AbstractGame {
         board.setPassCount(0);
         board.setAuctionDiscount(board.getAuctionDiscount()+5);
         if (priv2price.get(board.getCurrentCorp()) == board.getAuctionDiscount()) {
-            //TODO auction giveaway
+            throw new IllegalStateException("TODO all pass in auction (pay priv, discount)");
         }
     }
 
     private void endAuctionPhase() {
         // TODO start first stock round
+        throw new IllegalStateException("TODO end auction phase");
     }
 
     private int countBids(String privName) {
@@ -164,6 +203,19 @@ public class Game1856 extends AbstractGame {
             for(Priv priv: w.getPrivates()) {
                 if(privName.equals(priv.getCorp())) {
                     out++;
+                    break;
+                }
+            }
+        }
+        return out;
+    }
+
+    private int highBid(String privName) {
+        int out = 0;
+        for(Wallet w: board.getWallets()) {
+            for(Priv priv: w.getPrivates()) {
+                if(privName.equals(priv.getCorp())) {
+                    if(priv.getAmount() > out) out = priv.getAmount();
                     break;
                 }
             }
@@ -270,6 +322,12 @@ public class Game1856 extends AbstractGame {
                 return true;
             case AUCTION_PASS:
                 undoAuctionPass(move);
+                return true;
+            case AUCTION_BID:
+                undoAuctionBid(move);
+                return true;
+            case AUCTION_REBID:
+                undoAuctionRebid(move);
                 return true;
             default:
                 return false;
@@ -385,5 +443,37 @@ public class Game1856 extends AbstractGame {
             return board;
         }
         throw new IllegalStateException("Pass not allowed here");
+    }
+
+    /**
+     * @return 0 if not a rebid, amount to increase bid if rebid
+     */
+    private int calcRebidIncrement(Wallet w, String corp, int amount) {
+        for (Priv priv: w.getPrivates()) {
+            if(priv.getCorp().equals(corp)) {
+                return amount - priv.getAmount();
+            }
+        }
+        return 0; // not a rebid
+    }
+
+    synchronized public Board1856 bid(String corp, int amount) {
+        if (!phaseIs(Era.AUCTION) || !eventIs(NORMAL_EVENT)) {
+            throw new IllegalStateException("Not time for normal bids");
+        }
+        int overbid = highBid(corp) + 5;
+        int price = priv2price.get(corp);
+        int minBid = (price > overbid) ? price : overbid;
+
+        if (amount < minBid) {
+            throw new IllegalStateException("Minimum Bid is "+minBid);
+        }
+        int incr = calcRebidIncrement(getCurrentWallet(), corp, amount);
+        if (incr > 0) {
+            makeMove(AUCTION_REBID, board.getCurrentPlayer(), corp, incr);
+        } else {
+            makeMove(AUCTION_BID, board.getCurrentPlayer(), corp, amount);
+        }
+        return board;
     }
 }

@@ -120,6 +120,6 @@ public class TrainController {
     synchronized Board1856 auctionBid(@PathVariable String table,
                                       @PathVariable String corp,
                                       @PathVariable int amount) {
-        throw new IllegalStateException("TODO implement bid");
+        return loadGame(table).bid(corp, amount);
     }
 }
