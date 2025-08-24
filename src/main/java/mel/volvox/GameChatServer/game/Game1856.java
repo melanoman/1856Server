@@ -383,11 +383,19 @@ public class Game1856 extends AbstractGame {
         doMove(out, true);
     }
 
+    void recalculatePriority() {
+        int index = board.getPlayers().indexOf(board.getCurrentPlayer()) - board.getPassCount();
+        if (index < 0) index += board.getPlayers().size();
+        board.setPriorityHolder(board.getPlayers().get(index));
+    }
+
     synchronized public Board1856 undo() {
         if (board.getUndoCount() == board.getMoveNumber()) return board;
         TrainMove move = history.get(board.getMoveNumber()-board.getUndoCount()-1);
         if (undoMove(move)) {
             board.setUndoCount(board.getUndoCount()+1);
+            board.setPassCount(move.getOldPassCount());
+            recalculatePriority();
             if (move.isFollow()) return undo();
         }
         return board;
