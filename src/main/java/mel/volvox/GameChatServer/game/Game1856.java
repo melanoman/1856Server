@@ -29,10 +29,11 @@ public class Game1856 extends AbstractGame {
     public static final String AUCTION_BUY = "auctionBuy";
     public static final String AUCTION_PASS = "auctionPass";
     public static final String AUCTION_LONEBUY = "auctionLoneBuy";
+    public static final String START_BIDOFF = "startBidoff";
 
     // action constants
     public static final String NORMAL_EVENT = "";
-    public static final String AUCTION_BIDOFF = "bidoff";
+    public static final String BIDOFF_EVENT = "bidoff";
 
     // private companies
     public static final String PRIVATE_FLOS = "flos";
@@ -139,6 +140,16 @@ public class Game1856 extends AbstractGame {
         w.setCash(w.getCash()+move.getAmount());
     }
 
+    private void doStartBidoff(TrainMove move) {
+        board.setEvent(BIDOFF_EVENT);
+        board.setCurrentCorp(move.getCorp());
+    }
+
+    private void undoStartBidoff(TrainMove move) {
+        board.setCurrentCorp(move.getPlayer());
+        board.setEvent(NORMAL_EVENT);
+    }
+
     private void doMove(TrainMove move, boolean rawMove) {
         board.setPassCount(move.getOldPassCount());
         switch (move.getAction()) {
@@ -165,6 +176,9 @@ public class Game1856 extends AbstractGame {
                 break;
             case AUCTION_LONEBUY:
                 doLoneBuy(move, rawMove);
+                break;
+            case START_BIDOFF:
+                doStartBidoff(move);
                 break;
             default:
                 throw new IllegalStateException("unknown move action: "+move.getAction());
@@ -276,8 +290,9 @@ public class Game1856 extends AbstractGame {
         if (numBids == 1) {
             loneBuy(next, rawMove);
         } else if(numBids > 1) {
-            board.setEvent(AUCTION_BIDOFF);
-            board.setCurrentCorp(next);
+            if(rawMove) {
+                makeMove(START_BIDOFF, board.getCurrentCorp(), next, 0, true);
+            }
         } else if(NONE.equals(next)) {
             endAuctionPhase();
         } else {
@@ -352,6 +367,9 @@ public class Game1856 extends AbstractGame {
                 return true;
             case AUCTION_REBID:
                 undoAuctionRebid(move);
+                return true;
+            case START_BIDOFF:
+                undoStartBidoff(move);
                 return true;
             default:
                 return false;
