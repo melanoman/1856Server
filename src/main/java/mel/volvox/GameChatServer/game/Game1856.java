@@ -237,7 +237,7 @@ public class Game1856 extends AbstractGame {
             for(Wallet w: board.getWallets()) {
                 for (Priv priv : w.getPrivates()) {
                     if (privName.equals(priv.getCorp())) {
-                        makeMove(AUCTION_LONEBUY, w.getName(), privName, priv2price.get(privName), true);
+                        makeMove(AUCTION_LONEBUY, w.getName(), privName, priv.getAmount(), true);
                     }
                 }
             }
@@ -261,7 +261,6 @@ public class Game1856 extends AbstractGame {
     private void undoLoneBuy(TrainMove move) {
         for(Wallet w:board.getWallets()) {
             if(w.getName().equals(move.getPlayer())) {
-                w.setCash(w.getCash()+move.getAmount());
                 for(Priv priv: w.getPrivates()) {
                     if(priv.getCorp().equals(move.getCorp())) {
                         priv.setAmount(move.getAmount());
@@ -378,15 +377,18 @@ public class Game1856 extends AbstractGame {
         }
         TrainMoveID id = new TrainMoveID(board.getName(), board.getMoveNumber()+1);
         TrainMove out = new TrainMove(id, action, player, corp, amount, board.getPassCount(), isFollow);
+        System.out.println("Move move #"+id.getSerialNumber()+" with action "+action);
         repo.save(out);
         board.setMoveNumber(id.getSerialNumber());
-        doMove(out, true);
         history.add(out);
+        doMove(out, true);
     }
 
     synchronized public Board1856 undo() {
+        System.out.println("move = " +board.getMoveNumber()+" undo ="+board.getUndoCount());
         if (board.getUndoCount() == board.getMoveNumber()) return board;
         TrainMove move = history.get(board.getMoveNumber()-board.getUndoCount()-1);
+        System.out.println("undo move #"+move.getId().getSerialNumber()+" action = "+move.getAction());
         if (undoMove(move)) {
             board.setUndoCount(board.getUndoCount()+1);
             if (move.isFollow()) return undo();
@@ -397,6 +399,7 @@ public class Game1856 extends AbstractGame {
     synchronized public Board1856 redo() {
         if (board.getUndoCount() < 1) return board;
         TrainMove currentMove = history.get(board.getMoveNumber()-board.getUndoCount());
+        System.out.println("Redo move #"+currentMove.getId().getSerialNumber());
         doMove(currentMove, false);
         board.setUndoCount(board.getUndoCount()-1);
         if (board.getUndoCount() > 0) {
