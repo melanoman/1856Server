@@ -109,9 +109,9 @@ public class Game1856 extends AbstractGame {
         board.setPlayers(newPlayers);
         board.setPhase(Era.AUCTION.name());
         board.setCurrentPlayer(newPlayers.get(0));
+        board.setPriorityHolder(newPlayers.get(0));
         board.setPassCount(0);
         board.setCurrentCorp(PRIVATE_FLOS);
-        board.setPriorityHolder("");
         board.setEvent(NORMAL_EVENT);
         for (String player: board.getPlayers()) {
             Wallet wallet= new Wallet();
