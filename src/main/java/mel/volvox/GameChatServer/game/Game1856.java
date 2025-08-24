@@ -258,6 +258,19 @@ public class Game1856 extends AbstractGame {
         incrementPrivate(rawMove);
     }
 
+    private void undoLoneBuy(TrainMove move) {
+        for(Wallet w:board.getWallets()) {
+            if(w.getName().equals(move.getPlayer())) {
+                w.setCash(w.getCash()+move.getAmount());
+                for(Priv priv: w.getPrivates()) {
+                    if(priv.getCorp().equals(move.getCorp())) {
+                        priv.setAmount(move.getAmount());
+                    }
+                }
+            }
+        }
+    }
+
     private void incrementPrivate(boolean rawMove) {
         String next = priv2next.get(board.getCurrentCorp());
         int numBids = countBids(next);
@@ -302,20 +315,12 @@ public class Game1856 extends AbstractGame {
     }
 
     private void undoAuctionBuy(TrainMove move) {
-        // TODO restore pass count
         board.setPhase(Era.AUCTION.name());
         board.setCurrentPlayer(move.getPlayer());
         board.setCurrentCorp(move.getCorp());
-        //TODO remove lonebuys
         Wallet wallet = getCurrentWallet();
         wallet.setCash(wallet.getCash() + move.getAmount());
-        Priv doomed = null;
-        for (Priv priv: wallet.getPrivates()) {
-            if (move.getCorp().equals(priv.getCorp())) doomed = priv;
-        }
-        if (doomed != null) {
-           wallet.getPrivates().remove(doomed);
-        }
+        wallet.getPrivates().removeIf(priv -> priv.getCorp().equals(move.getCorp()));
     }
 
     private void undoAuctionPass(TrainMove move) {
@@ -336,6 +341,9 @@ public class Game1856 extends AbstractGame {
                 return true;
             case AUCTION_BUY:
                 undoAuctionBuy(move);
+                return true;
+            case AUCTION_LONEBUY:
+                undoLoneBuy(move);
                 return true;
             case AUCTION_PASS:
                 undoAuctionPass(move);
@@ -370,10 +378,10 @@ public class Game1856 extends AbstractGame {
         }
         TrainMoveID id = new TrainMoveID(board.getName(), board.getMoveNumber()+1);
         TrainMove out = new TrainMove(id, action, player, corp, amount, board.getPassCount(), isFollow);
-        doMove(out, true);
         repo.save(out);
-        history.add(out);
         board.setMoveNumber(id.getSerialNumber());
+        doMove(out, true);
+        history.add(out);
     }
 
     synchronized public Board1856 undo() {
