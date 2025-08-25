@@ -32,6 +32,7 @@ public class Game1856 extends AbstractGame {
     public static final String AUCTION_BUY = "auctionBuy";
     public static final String AUCTION_PASS = "auctionPass";
     public static final String AUCTION_END_ROUND = "auctionEndRound";
+    public static final String AUCTION_GIVEAWAY = "auctionFree";
     public static final String AUCTION_LONEBUY = "auctionLoneBuy";
     public static final String AWARD_BID = "awardBid";
     public static final String REFUND_BID = "refundBid";
@@ -177,8 +178,7 @@ public class Game1856 extends AbstractGame {
         board.setAuctionDiscount(board.getAuctionDiscount() + 5);
         board.setPassCount(0);
         if(rawMove && priv2price.get(board.getCurrentCorp()) == board.getAuctionDiscount()) {
-            //if (rawMove) makeMove(AUCTION_GIVEAWAY, ???);
-            //TODO NEXT
+            makeFollowMove(AUCTION_GIVEAWAY, board.getCurrentPlayer(), board.getCurrentCorp(), 0);
         }
     }
 
@@ -234,9 +234,26 @@ public class Game1856 extends AbstractGame {
             case REFUND_BID:
                 doRefundBid(move);
                 break;
+            case AUCTION_GIVEAWAY:
+                doAuctionGiveaway(move, rawMove);
+                break;
             default:
                 throw new IllegalStateException("unknown move action: "+move.getAction());
         }
+    }
+
+    private void doAuctionGiveaway(TrainMove move, boolean rawMove) {
+        Wallet w = getPlayerWallet(move.getPlayer());
+        w.getPrivates().add(new Priv(move.getCorp(), 3));
+        incrementPrivate(rawMove);
+        board.setAuctionDiscount(0);
+    }
+
+    private void undoAuctionGiveaway(TrainMove move) {
+        Wallet w = getPlayerWallet(move.getPlayer());
+        w.getPrivates().removeIf(x -> move.getCorp().equals(x.getCorp()));
+        board.setCurrentCorp(move.getCorp());
+        board.setAuctionDiscount(priv2price.get(move.getCorp()));
     }
 
     private void doAuctionRebid(TrainMove move, boolean rawMove) {
@@ -424,6 +441,9 @@ public class Game1856 extends AbstractGame {
                 return true;
             case REFUND_BID:
                 undoRefundBid(move);
+                return true;
+            case AUCTION_GIVEAWAY:
+                undoAuctionGiveaway(move);
                 return true;
             default:
                 return false;
