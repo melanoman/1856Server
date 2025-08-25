@@ -12,4 +12,14 @@ public class Wallet {
     String name;
     int cash;
     List<Priv> privates = new ArrayList<>();
+    List<Stock> stocks = new ArrayList<>();
+
+    public int countCerts() {
+        int count = privates.size();
+        for(Stock stock:getStocks()) {
+            count += stock.getAmount();
+            if (stock.isPresident) count--;
+        }
+        return count;
+    }
 }
