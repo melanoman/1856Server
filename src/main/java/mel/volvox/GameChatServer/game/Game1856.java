@@ -82,7 +82,7 @@ public class Game1856 extends AbstractGame {
 
     private List<TrainMove> history = new ArrayList<>();
 
-    public enum Era { GATHER, AUCTION, STOCK, OP, DONE }
+    public enum Era { GATHER, AUCTION, STOCK, OP, CGRFORM, DONE }
 
     synchronized public void loadMoves(List<TrainMove> moves) {
         history = moves;
@@ -457,12 +457,10 @@ public class Game1856 extends AbstractGame {
 
     private void doEndAuctionPhase(TrainMove move) {
         board.setPhase(Era.STOCK.name());
-        board.setRemainingStockRounds(1);
     }
 
     private void undoEndAuctionPhase(TrainMove move) {
         board.setPhase(Era.AUCTION.name());
-        board.setRemainingStockRounds(0);
     }
 
     private void doAwardBid(TrainMove move) {
