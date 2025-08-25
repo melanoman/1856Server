@@ -27,6 +27,7 @@ public class Game1856 extends AbstractGame {
     public static final String ADD_PLAYER = "addPlayer";
     public static final String RENAME_PLAYER = "renamePlayer";
     public static final String START_GAME = "startGame";
+
     public static final String AUCTION_BID = "auctionBid";
     public static final String AUCTION_REBID = "auctionRebid";
     public static final String AUCTION_BUY = "auctionBuy";
@@ -34,11 +35,11 @@ public class Game1856 extends AbstractGame {
     public static final String AUCTION_END_ROUND = "auctionEndRound";
     public static final String AUCTION_GIVEAWAY = "auctionFree";
     public static final String AUCTION_LONEBUY = "auctionLoneBuy";
-    public static final String AWARD_BID = "awardBid";
-    public static final String REFUND_BID = "refundBid";
-    public static final String START_BIDOFF = "startBidoff";
-    public static final String END_BIDOFF = "endBidoff";
-    public static final String END_AUCTION_PHASE = "endAuctionPhase";
+    public static final String AUCTION_AWARD_BID = "awardBid";
+    public static final String AUCTION_REFUND_BID = "refundBid";
+    public static final String AUCTION_START_BIDOFF = "startBidoff";
+    public static final String AUCTION_END_BIDOFF = "endBidoff";
+    public static final String AUCTION_END_PHASE = "endAuctionPhase";
 
     // event constants
     public static final String NORMAL_EVENT = "";
@@ -220,25 +221,25 @@ public class Game1856 extends AbstractGame {
             case AUCTION_LONEBUY:
                 doLoneBuy(move, rawMove);
                 break;
-            case START_BIDOFF:
+            case AUCTION_START_BIDOFF:
                 doStartBidoff(move);
                 break;
-            case END_BIDOFF:
+            case AUCTION_END_BIDOFF:
                 doEndBidoff(move, rawMove);
                 break;
             case AUCTION_END_ROUND:
                 doAuctionEndRound(move, rawMove);
                 break;
-            case AWARD_BID:
+            case AUCTION_AWARD_BID:
                 doAwardBid(move);
                 break;
-            case REFUND_BID:
+            case AUCTION_REFUND_BID:
                 doRefundBid(move);
                 break;
             case AUCTION_GIVEAWAY:
                 doAuctionGiveaway(move, rawMove);
                 break;
-            case END_AUCTION_PHASE:
+            case AUCTION_END_PHASE:
                 doEndAuctionPhase(move);
                 break;
             default:
@@ -353,11 +354,11 @@ public class Game1856 extends AbstractGame {
             loneBuy(next, rawMove);
         } else if(numBids > 1) {
             if(rawMove) {
-                makeFollowMove(START_BIDOFF, board.getCurrentCorp(), next, 0);
+                makeFollowMove(AUCTION_START_BIDOFF, board.getCurrentCorp(), next, 0);
             }
         } else if(NONE.equals(next)) {
             if (rawMove) {
-                makeFollowMove(END_AUCTION_PHASE, "", "", 0);
+                makeFollowMove(AUCTION_END_PHASE, "", "", 0);
             }
         } else {
             board.setCurrentCorp(next);
@@ -428,25 +429,25 @@ public class Game1856 extends AbstractGame {
             case AUCTION_REBID:
                 undoAuctionRebid(move);
                 return true;
-            case START_BIDOFF:
+            case AUCTION_START_BIDOFF:
                 undoStartBidoff(move);
                 return true;
-            case END_BIDOFF:
+            case AUCTION_END_BIDOFF:
                 undoEndBidoff(move);
                 return true;
             case AUCTION_END_ROUND:
                 undoAuctionEndRound(move);
                 return true;
-            case AWARD_BID:
+            case AUCTION_AWARD_BID:
                 undoAwardBid(move);
                 return true;
-            case REFUND_BID:
+            case AUCTION_REFUND_BID:
                 undoRefundBid(move);
                 return true;
             case AUCTION_GIVEAWAY:
                 undoAuctionGiveaway(move);
                 return true;
-            case END_AUCTION_PHASE:
+            case AUCTION_END_PHASE:
                 undoEndAuctionPhase(move);
                 return true;
             default:
@@ -526,8 +527,8 @@ public class Game1856 extends AbstractGame {
                         }
                     }
                 }
-                if (award != null) makeFollowMove(AWARD_BID, move.getPlayer(), move.getCorp(), award.getAmount());
-                if (refund != null) makeFollowMove(REFUND_BID, w.getName(), move.getCorp(), refund.getAmount());
+                if (award != null) makeFollowMove(AUCTION_AWARD_BID, move.getPlayer(), move.getCorp(), award.getAmount());
+                if (refund != null) makeFollowMove(AUCTION_REFUND_BID, w.getName(), move.getCorp(), refund.getAmount());
             }
         }
     }
@@ -721,7 +722,7 @@ public class Game1856 extends AbstractGame {
         }
         if (increment > w.getCash()) throw new IllegalStateException(FUNDS);
         if ((increment == 0 && amount == oldMin) || amount >= oldMin + 5) {
-            makePrimaryMove(END_BIDOFF, player, corp, increment);
+            makePrimaryMove(AUCTION_END_BIDOFF, player, corp, increment);
         } else {
             throw new IllegalStateException("Minimum Raise is $5");
         }
