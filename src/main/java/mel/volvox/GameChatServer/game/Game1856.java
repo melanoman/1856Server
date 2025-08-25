@@ -608,10 +608,14 @@ public class Game1856 extends AbstractGame {
     }
 
     synchronized public boolean addPlayer(String name) {
-        if (!Era.GATHER.name().equals(board.getPhase()) ||
-                board.getPlayers().size() >= 6 ||
-                board.getPlayers().contains(name)) {
-            return false;
+        if(!Era.GATHER.name().equals(board.getPhase())) {
+            throw new IllegalStateException("Too Late to Add Players");
+        }
+        if (board.getPlayers().contains(name)) {
+            throw new IllegalStateException("Duplicate Name not allowed");
+        }
+        if(board.getPlayers().size() > 6) {
+            throw new IllegalStateException("Maximum Player Count: 6");
         }
         makePrimaryMove(ADD_PLAYER, name, "", 0);
         return true;
@@ -619,15 +623,21 @@ public class Game1856 extends AbstractGame {
 
     synchronized public Board1856 renamePlayer(String oldName, String newName) {
         int seat = board.getPlayers().indexOf(oldName);
-        if(seat < 0 || board.getPlayers().contains(newName)) return board;
+        if(seat < 0) {
+            throw new IllegalStateException("Player not found");
+        }
+        if (board.getPlayers().contains(newName)) {
+            throw new IllegalStateException("Duplicate Name not allowed");
+        }
         makePrimaryMove(RENAME_PLAYER, newName, oldName, seat);
         return board;
     }
 
     synchronized public Board1856 startGame(boolean shuffle) {
-        if (!Era.GATHER.name().equals(board.getPhase()) ||
-                board.getPlayers().size() < 3 ||
-                board.getPlayers().size() > 6) {
+        if(board.getPlayers().size() < 3) {
+            throw new IllegalStateException("Need at least 3 players to start");
+        }
+        if (!Era.GATHER.name().equals(board.getPhase()) || board.getPlayers().size() > 6) {
             throw new IllegalStateException("Game is not startable");
         }
         makePrimaryMove(START_GAME, "", makeShuffle(shuffle, board.getPlayers().size()), 0);
