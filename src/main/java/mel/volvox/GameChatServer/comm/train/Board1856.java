@@ -25,4 +25,5 @@ public class Board1856 {
    String priorityHolder = "";
 
    int auctionDiscount = 0; //$5 off per allpass
+   int remainingStockRounds = 0; // count DOWN not up
 }

@@ -38,6 +38,7 @@ public class Game1856 extends AbstractGame {
     public static final String REFUND_BID = "refundBid";
     public static final String START_BIDOFF = "startBidoff";
     public static final String END_BIDOFF = "endBidoff";
+    public static final String END_AUCTION_PHASE = "endAuctionPhase";
 
     // event constants
     public static final String NORMAL_EVENT = "";
@@ -237,6 +238,9 @@ public class Game1856 extends AbstractGame {
             case AUCTION_GIVEAWAY:
                 doAuctionGiveaway(move, rawMove);
                 break;
+            case END_AUCTION_PHASE:
+                doEndAuctionPhase(move);
+                break;
             default:
                 throw new IllegalStateException("unknown move action: "+move.getAction());
         }
@@ -276,11 +280,6 @@ public class Game1856 extends AbstractGame {
             }
         }
         w.setCash(w.getCash()+move.getAmount());
-    }
-
-    private void endAuctionPhase() {
-        // TODO start first stock round
-        throw new IllegalStateException("TODO end auction phase");
     }
 
     private int countBids(String privName) {
@@ -357,7 +356,9 @@ public class Game1856 extends AbstractGame {
                 makeFollowMove(START_BIDOFF, board.getCurrentCorp(), next, 0);
             }
         } else if(NONE.equals(next)) {
-            endAuctionPhase();
+            if (rawMove) {
+                makeFollowMove(END_AUCTION_PHASE, "", "", 0);
+            }
         } else {
             board.setCurrentCorp(next);
             board.setEvent(NORMAL_EVENT);
@@ -445,9 +446,22 @@ public class Game1856 extends AbstractGame {
             case AUCTION_GIVEAWAY:
                 undoAuctionGiveaway(move);
                 return true;
+            case END_AUCTION_PHASE:
+                undoEndAuctionPhase(move);
+                return true;
             default:
                 return false;
         }
+    }
+
+    private void doEndAuctionPhase(TrainMove move) {
+        board.setPhase(Era.STOCK.name());
+        board.setRemainingStockRounds(1);
+    }
+
+    private void undoEndAuctionPhase(TrainMove move) {
+        board.setPhase(Era.AUCTION.name());
+        board.setRemainingStockRounds(0);
     }
 
     private void doAwardBid(TrainMove move) {
