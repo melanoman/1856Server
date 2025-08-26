@@ -31,6 +31,7 @@ public class Game1856 extends AbstractGame {
     public static final String AUCTION_BID = "auctionBid";
     public static final String AUCTION_REBID = "auctionRebid";
     public static final String AUCTION_BUY = "auctionBuy";
+    public static final String AUCTION_DISCOUNT_RESET = "discountReset";
     public static final String AUCTION_PASS = "auctionPass";
     public static final String AUCTION_END_ROUND = "auctionEndRound";
     public static final String AUCTION_GIVEAWAY = "auctionFree";
@@ -242,6 +243,9 @@ public class Game1856 extends AbstractGame {
             case AUCTION_END_PHASE:
                 doEndAuctionPhase(move);
                 break;
+            case AUCTION_DISCOUNT_RESET:
+                doAuctionDiscountReset();
+                break;
             default:
                 throw new IllegalStateException("unknown move action: "+move.getAction());
         }
@@ -384,6 +388,9 @@ public class Game1856 extends AbstractGame {
     private void doAuctionBuy(TrainMove move, boolean rawMove) {
         Wallet wallet = getCurrentWallet();
         wallet.setCash(wallet.getCash() - move.getAmount());
+        if (rawMove && board.getAuctionDiscount() > 0) {
+            makeFollowMove(AUCTION_DISCOUNT_RESET, "", "", board.getAuctionDiscount());
+        }
         wallet.getPrivates().add(new Priv(move.getCorp(), 3));
         incrementAuctionPlayer(true, rawMove);
         incrementPrivate(rawMove);
@@ -450,9 +457,20 @@ public class Game1856 extends AbstractGame {
             case AUCTION_END_PHASE:
                 undoEndAuctionPhase(move);
                 return true;
+            case AUCTION_DISCOUNT_RESET:
+                undoAuctionDiscountReset(move);
+                return true;
             default:
                 return false;
         }
+    }
+
+    private void undoAuctionDiscountReset(TrainMove move) {
+        board.setAuctionDiscount(move.getAmount());
+    }
+
+    private void doAuctionDiscountReset() {
+        board.setAuctionDiscount(0);
     }
 
     private void doEndAuctionPhase(TrainMove move) {
