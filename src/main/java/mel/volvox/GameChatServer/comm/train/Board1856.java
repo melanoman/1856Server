@@ -18,6 +18,10 @@ public class Board1856 {
    String event = "";
    List<String> players = new ArrayList<>();
    List<Wallet> wallets = new ArrayList<>();
+   //TODO populate when ending auction phase
+   //List<Corp> corps = new ArrayList<>();
+
+   int bankCash = 10500; // 12k minus 1500 starting cash
 
    String currentPlayer = "";
    String currentCorp = "";
