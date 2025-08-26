@@ -504,6 +504,7 @@ public class Game1856 extends AbstractGame {
     }
 
     private void undoEndAuctionPhase(TrainMove move) {
+        board.setCorps(new ArrayList<>());
         board.setPhase(Era.AUCTION.name());
     }
 
