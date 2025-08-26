@@ -2,6 +2,7 @@ package mel.volvox.GameChatServer.game;
 
 import lombok.Getter;
 import lombok.Setter;
+import mel.volvox.GameChatServer.comm.train.Corp;
 import mel.volvox.GameChatServer.comm.train.Priv;
 import mel.volvox.GameChatServer.comm.train.Board1856;
 import mel.volvox.GameChatServer.model.train.TrainMove;
@@ -10,9 +11,7 @@ import mel.volvox.GameChatServer.comm.train.Wallet;
 import mel.volvox.GameChatServer.repository.TrainRepo;
 import mel.volvox.GameChatServer.service.DiceService;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Game1856 extends AbstractGame {
     @Setter TrainRepo repo; // set by controller
@@ -483,8 +482,25 @@ public class Game1856 extends AbstractGame {
         board.setAuctionDiscount(0);
     }
 
+    static List<Corp> INIT_IPO = List.of(
+            new Corp("BBG", 3),
+            new Corp("CA", 3),
+            new Corp("CPR", 4),
+            new Corp("CV", 3),
+            new Corp("GT", 4),
+            new Corp("GW", 4),
+            new Corp("LPS", 2),
+            new Corp("TGB", 2),
+            new Corp("THB", 2),
+            new Corp("WBG", 3),
+            new Corp("WR", 2)
+    );
+
     private void doEndAuctionPhase(TrainMove move) {
         board.setPhase(Era.STOCK.name());
+        for(Corp c: INIT_IPO) {
+            board.getCorps().add(c.dup());
+        }
     }
 
     private void undoEndAuctionPhase(TrainMove move) {

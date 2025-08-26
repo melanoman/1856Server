@@ -8,6 +8,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Data
 public class Priv {
+    public Priv dup() { return new Priv(corp, amount); }
+
     String corp; // I know, it's a company.  Corp is short for company.
     int amount; // >5 = bid, 0 = power used, 1-3 = power abvailable (tokens left for tunnel/bridge)
 }
