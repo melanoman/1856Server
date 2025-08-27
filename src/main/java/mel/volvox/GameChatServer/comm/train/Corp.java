@@ -19,16 +19,18 @@ public class Corp {
     public Corp dup() {
         List<Priv> newPrivs = new ArrayList<>();
         for (Priv p: privates) newPrivs.add(p.dup());
-        return new Corp(name, par, bankShares, poolShares, cash, tokensLeft,
-                newPrivs, portRights, bridgeRights, tunnelRights);
+        return new Corp(name, par, bankShares, price, poolShares, cash, tokensLeft,
+                prez, newPrivs, portRights, bridgeRights, tunnelRights);
     }
 
     String name; // 2-3 letter abbreviation. not full text
     int par = 0;
     int bankShares = 10;
+    int price = 0;
     int poolShares = 0;
     int cash = 0;
     int tokensLeft = 0;
+    String prez = "";
     List<Priv> privates = new ArrayList<>();
     boolean portRights = false;
     boolean bridgeRights = false;
