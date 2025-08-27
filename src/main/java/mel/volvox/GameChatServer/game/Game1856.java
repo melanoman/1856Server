@@ -41,6 +41,9 @@ public class Game1856 extends AbstractGame {
     public static final String AUCTION_END_BIDOFF = "endBidoff";
     public static final String AUCTION_END_PHASE = "endAuctionPhase";
 
+    public static final String STOCK_PASS = "stockPass";
+    public static final String STOCK_END_ROUND = "stockEndRound";
+
     // event constants
     public static final String NORMAL_EVENT = "";
     public static final String BIDOFF_EVENT = "bidoff";
@@ -254,6 +257,9 @@ public class Game1856 extends AbstractGame {
                 break;
             case AUCTION_DISCOUNT_RESET:
                 doAuctionDiscountReset();
+                break;
+            case STOCK_PASS:
+                doStockPass(move, rawMove);
                 break;
             default:
                 throw new IllegalStateException("unknown move action: "+move.getAction());
@@ -469,9 +475,27 @@ public class Game1856 extends AbstractGame {
             case AUCTION_DISCOUNT_RESET:
                 undoAuctionDiscountReset(move);
                 return true;
+            case STOCK_PASS:
+                undoStockPass(move);
+                return true;
             default:
                 return false;
         }
+    }
+
+    private void doStockPass(TrainMove move, boolean rawMove) {
+        int index = board.getPlayers().indexOf(board.getCurrentPlayer()) + 1;
+        if (index >= board.getPlayers().size()) index = 0;
+        board.setCurrentPlayer(board.getPlayers().get(index));
+        board.setPassCount(board.getPassCount()+1);
+        if(rawMove && board.getPassCount() == board.getPlayers().size()) {
+            //TODO implement END STOCK ROUND
+            //makeFollowMove(STOCK_END_ROUND, board.getCurrentPlayer(), "", 0);
+        }
+    }
+
+    private void undoStockPass(TrainMove move) {
+        board.setCurrentPlayer(move.getPlayer());
     }
 
     private void undoAuctionDiscountReset(TrainMove move) {
@@ -714,6 +738,10 @@ public class Game1856 extends AbstractGame {
     synchronized public Board1856 pass() {
         if (phaseIs(Era.AUCTION) && eventIs(NORMAL_EVENT)) {
             makePrimaryMove(AUCTION_PASS, board.getCurrentPlayer(), "", 1);
+            return board;
+        }
+        if (phaseIs(Era.STOCK)) {
+            makePrimaryMove(STOCK_PASS, board.getCurrentPlayer(), "", 1);
             return board;
         }
         throw new IllegalStateException("Pass not allowed here");
