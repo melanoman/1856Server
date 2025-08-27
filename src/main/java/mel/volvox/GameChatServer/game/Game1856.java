@@ -492,7 +492,7 @@ public class Game1856 extends AbstractGame {
             new Corp("LPS", 2),
             new Corp("TGB", 2),
             new Corp("THB", 2),
-            new Corp("WBG", 3),
+            new Corp("WGB", 3),
             new Corp("WR", 2)
     );
 
