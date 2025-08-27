@@ -656,6 +656,7 @@ public class Game1856 extends AbstractGame {
     }
 
     void recalculatePriority() {
+        if(phaseIs(Era.GATHER)) return;
         int index = board.getPlayers().indexOf(board.getCurrentPlayer()) - board.getPassCount();
         if (index < 0) index += board.getPlayers().size();
         board.setPriorityHolder(board.getPlayers().get(index));
