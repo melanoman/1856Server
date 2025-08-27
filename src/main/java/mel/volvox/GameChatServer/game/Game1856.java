@@ -261,6 +261,9 @@ public class Game1856 extends AbstractGame {
             case STOCK_PASS:
                 doStockPass(move, rawMove);
                 break;
+            case STOCK_END_ROUND:
+                doEndStockRound(move, rawMove);
+                break;
             default:
                 throw new IllegalStateException("unknown move action: "+move.getAction());
         }
@@ -478,9 +481,23 @@ public class Game1856 extends AbstractGame {
             case STOCK_PASS:
                 undoStockPass(move);
                 return true;
+            case STOCK_END_ROUND:
+                undoEndStockRound(move);
+                return true;
             default:
                 return false;
         }
+    }
+
+    private void doEndStockRound(TrainMove move, boolean rawMove) {
+        //TODO change OR count based on train offering
+        board.setRemainingOpRounds(1);
+        board.setPhase(Era.OP.name());
+    }
+
+    private void undoEndStockRound(TrainMove move) {
+        board.setRemainingOpRounds(0);
+        board.setPhase(Era.STOCK.name());
     }
 
     private void doStockPass(TrainMove move, boolean rawMove) {
@@ -489,8 +506,7 @@ public class Game1856 extends AbstractGame {
         board.setCurrentPlayer(board.getPlayers().get(index));
         board.setPassCount(board.getPassCount()+1);
         if(rawMove && board.getPassCount() == board.getPlayers().size()) {
-            //TODO implement END STOCK ROUND
-            //makeFollowMove(STOCK_END_ROUND, board.getCurrentPlayer(), "", 0);
+            makeFollowMove(STOCK_END_ROUND, board.getCurrentPlayer(), "", 0);
         }
     }
 
