@@ -2,12 +2,9 @@ package mel.volvox.GameChatServer.game;
 
 import lombok.Getter;
 import lombok.Setter;
-import mel.volvox.GameChatServer.comm.train.Corp;
-import mel.volvox.GameChatServer.comm.train.Priv;
-import mel.volvox.GameChatServer.comm.train.Board1856;
+import mel.volvox.GameChatServer.comm.train.*;
 import mel.volvox.GameChatServer.model.train.TrainMove;
 import mel.volvox.GameChatServer.model.train.TrainMoveID;
-import mel.volvox.GameChatServer.comm.train.Wallet;
 import mel.volvox.GameChatServer.repository.TrainRepo;
 import mel.volvox.GameChatServer.service.DiceService;
 
@@ -42,6 +39,7 @@ public class Game1856 extends AbstractGame {
     public static final String AUCTION_END_PHASE = "endAuctionPhase";
 
     public static final String STOCK_PASS = "stockPass";
+    public static final String STOCK_SET_PAR = "stockSetPar";
     public static final String STOCK_END_ROUND = "stockEndRound";
 
     // event constants
@@ -146,10 +144,10 @@ public class Game1856 extends AbstractGame {
     }
 
     private void payPlayer(String player, int amount) {
-        payWallet(getPlayerWallet(player) , amount);
+        payToWallet(getPlayerWallet(player) , amount);
     }
 
-    private void payWallet(Wallet w, int amount) {
+    private void payToWallet(Wallet w, int amount) {
         w.setCash(w.getCash() + amount);
         board.setBankCash(board.getBankCash() - amount);
     }
@@ -161,7 +159,7 @@ public class Game1856 extends AbstractGame {
     private void doAuctionBid(TrainMove move, boolean rawMove) {
         Wallet w = getCurrentWallet();
         w.getPrivates().add(new Priv(move.getCorp(), move.getAmount()));
-        payWallet(w, -move.getAmount());
+        payToWallet(w, -move.getAmount());
         incrementAuctionPlayer(true, rawMove);
     }
 
@@ -169,7 +167,7 @@ public class Game1856 extends AbstractGame {
         board.setCurrentPlayer(move.getPlayer());
         Wallet w = getCurrentWallet();
         w.getPrivates().removeIf(priv -> move.getCorp().equals(priv.getCorp()));
-        payWallet(w, move.getAmount());
+        payToWallet(w, move.getAmount());
     }
 
     private void doStartBidoff(TrainMove move) {
@@ -187,7 +185,7 @@ public class Game1856 extends AbstractGame {
         for(Wallet w: board.getWallets()) {
             for (Priv priv: w.getPrivates()) {
                 if(priv.getAmount() > 3) continue;
-                payWallet(w, priv2div.get(priv.getCorp()));
+                payToWallet(w, priv2div.get(priv.getCorp()));
             }
         }
         board.setAuctionDiscount(board.getAuctionDiscount() + 5);
@@ -202,7 +200,7 @@ public class Game1856 extends AbstractGame {
         for(Wallet w: board.getWallets()) {
             for (Priv priv: w.getPrivates()) {
                 if(priv.getAmount() > 3) continue;
-                payWallet(w, -priv2div.get(priv.getCorp()));
+                payToWallet(w, -priv2div.get(priv.getCorp()));
             }
         }
         board.setAuctionDiscount(board.getAuctionDiscount() - 5);
@@ -264,6 +262,9 @@ public class Game1856 extends AbstractGame {
             case STOCK_END_ROUND:
                 doEndStockRound(move, rawMove);
                 break;
+            case STOCK_SET_PAR:
+                doSetPar(move, rawMove);
+                break;
             default:
                 throw new IllegalStateException("unknown move action: "+move.getAction());
         }
@@ -290,7 +291,7 @@ public class Game1856 extends AbstractGame {
                 priv.setAmount(priv.getAmount() + move.getAmount());
             }
         }
-        payWallet(w, -move.getAmount());
+        payToWallet(w, -move.getAmount());
         incrementAuctionPlayer(true, rawMove);
     }
 
@@ -302,7 +303,7 @@ public class Game1856 extends AbstractGame {
                 priv.setAmount(priv.getAmount() - move.getAmount());
             }
         }
-        payWallet(w, move.getAmount());
+        payToWallet(w, move.getAmount());
     }
 
     private int countBids(String privName) {
@@ -403,9 +404,25 @@ public class Game1856 extends AbstractGame {
         }
     }
 
+    //TODO refactor to extract commonality with incrAuction, stockPass
+    private void  incrementStockPlayer(boolean actionTaken, boolean rawMove) {
+        int index = board.getPlayers().indexOf(board.getCurrentPlayer()) + 1;
+        if (index >= board.getPlayers().size()) index = 0;
+        board.setCurrentPlayer(board.getPlayers().get(index));
+        if (actionTaken) {
+            board.setPriorityHolder(board.getPlayers().get(index));
+            board.setPassCount(0);
+        } else {
+            board.setPassCount(board.getPassCount()+1);
+            if(rawMove && board.getPassCount() == board.getPlayers().size()) {
+                makeFollowMove(STOCK_END_ROUND, board.getCurrentPlayer(), "", 0);
+            }
+        }
+    }
+
     private void doAuctionBuy(TrainMove move, boolean rawMove) {
         Wallet wallet = getCurrentWallet();
-        payWallet(wallet, -move.getAmount());
+        payToWallet(wallet, -move.getAmount());
         if (rawMove && board.getAuctionDiscount() > 0) {
             makeFollowMove(AUCTION_DISCOUNT_RESET, "", "", board.getAuctionDiscount());
         }
@@ -419,7 +436,7 @@ public class Game1856 extends AbstractGame {
         board.setCurrentPlayer(move.getPlayer());
         board.setCurrentCorp(move.getCorp());
         Wallet wallet = getCurrentWallet();
-        payWallet(wallet, move.getAmount());
+        payToWallet(wallet, move.getAmount());
         wallet.getPrivates().removeIf(priv -> priv.getCorp().equals(move.getCorp()));
     }
 
@@ -484,9 +501,36 @@ public class Game1856 extends AbstractGame {
             case STOCK_END_ROUND:
                 undoEndStockRound(move);
                 return true;
+            case STOCK_SET_PAR:
+                undoSetPar(move);
+                return true;
             default:
                 return false;
         }
+    }
+
+    private void undoSetPar(TrainMove move) {
+        Corp c = findCorp(move.getCorp());
+        c.setPar(0);
+        c.setPrez("");
+        c.setBankShares(10);
+        c.setPrice(move.getAmount()); //TODO setColumn
+        Wallet w = findWallet(move.getPlayer());
+        payToWallet(w, 2*move.getAmount());
+        w.getStocks().removeIf(x -> x.getCorp().equals(move.getCorp()));
+        board.setCurrentPlayer(move.getPlayer());
+    }
+
+    private void doSetPar(TrainMove move, boolean rawMove) {
+        Corp c = findCorp(move.getCorp());
+        c.setPar(move.getAmount());
+        c.setPrez(move.getPlayer());
+        c.setBankShares(8);
+        c.setPrice(0); //TODO setColumn
+        Wallet w = findWallet(move.getPlayer());
+        payToWallet(w, -2*move.getAmount());
+        w.getStocks().add(new Stock(move.getCorp(), 2, true));
+        incrementStockPlayer(true, rawMove);
     }
 
     private void doEndStockRound(TrainMove move, boolean rawMove) {
@@ -536,6 +580,8 @@ public class Game1856 extends AbstractGame {
             new Corp("WR", 2)
     );
 
+    static List<Integer> PAR_VALUES = List.of(65, 70, 75, 80, 90, 100);
+
     private void doEndAuctionPhase(TrainMove move) {
         board.setPhase(Era.STOCK.name());
         for(Corp c: INIT_IPO) {
@@ -575,7 +621,7 @@ public class Game1856 extends AbstractGame {
     private void doRefundBid(TrainMove move) {
         for (Wallet w: board.getWallets()) {
             if (w.getName().equals(move.getPlayer())) {
-                payWallet(w, move.getAmount());
+                payToWallet(w, move.getAmount());
                 w.getPrivates().removeIf(x -> x.getCorp().equals(move.getCorp()));
             }
         }
@@ -584,7 +630,7 @@ public class Game1856 extends AbstractGame {
     private void undoRefundBid(TrainMove move) {
         for (Wallet w: board.getWallets()) {
             if (w.getName().equals(move.getPlayer())) {
-                payWallet(w, -move.getAmount());
+                payToWallet(w, -move.getAmount());
                 w.getPrivates().add(new Priv(move.getCorp(), move.getAmount()));
             }
         }
@@ -593,7 +639,7 @@ public class Game1856 extends AbstractGame {
     private void doEndBidoff(TrainMove move, boolean rawMove) {
         for (Wallet w: board.getWallets()) {
             if(move.getPlayer().equals(w.getName())) {
-                payWallet(w, -move.getAmount());
+                payToWallet(w, -move.getAmount());
             }
         }
         incrementPrivate(rawMove);
@@ -619,7 +665,7 @@ public class Game1856 extends AbstractGame {
     private void undoEndBidoff(TrainMove move) {
         for (Wallet w: board.getWallets()) {
             if(move.getPlayer().equals(w.getName())) {
-                payWallet(w, move.getAmount());
+                payToWallet(w, move.getAmount());
             }
         }
         board.setEvent(BIDOFF_EVENT);
@@ -824,6 +870,32 @@ public class Game1856 extends AbstractGame {
         } else {
             throw new IllegalStateException("Minimum Raise is $5");
         }
+        return board;
+    }
+
+    private Corp findCorp(String name) {
+        for (Corp c: board.getCorps()) {
+            if(c.getName().equals(name)) return c;
+        }
+        throw new IllegalStateException("Unknown Corp");
+    }
+
+    private Wallet findWallet(String name) {
+        for(Wallet w: board.getWallets()) {
+            if (w.getName().equals(name)) return w;
+        }
+        throw new IllegalStateException("Unknown Player");
+    }
+
+    synchronized public Board1856 setPar(String corpName, int amount) {
+        if(!PAR_VALUES.contains(amount)) {
+            throw new IllegalStateException("Par Value must be 65, 70, 75, 80, 90, or 100");
+        }
+        Wallet w = findWallet(board.getCurrentPlayer());
+        if (w.getCash() < amount * 2) throw new IllegalStateException(FUNDS);
+        Corp corp = findCorp(corpName);
+        if(corp.getPar() != 0) throw new IllegalStateException("Par is already set");
+        makePrimaryMove(STOCK_SET_PAR, board.getCurrentPlayer(), corpName, amount);
         return board;
     }
 }

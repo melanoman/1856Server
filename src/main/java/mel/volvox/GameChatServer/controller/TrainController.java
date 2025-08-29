@@ -130,4 +130,12 @@ public class TrainController {
                                          @PathVariable int amount) {
         return loadGame(table).bidoff(bidder, amount);
     }
+
+    @PutMapping("1856/par/{table}/{corp}/{amount}")
+    @ResponseBody
+    synchronized Board1856 setPar(@PathVariable String table,
+                                  @PathVariable String corp,
+                                  @PathVariable int amount) {
+        return loadGame(table).setPar(corp, amount);
+    }
 }
