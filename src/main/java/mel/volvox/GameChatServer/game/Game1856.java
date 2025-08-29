@@ -514,7 +514,7 @@ public class Game1856 extends AbstractGame {
         c.setPar(0);
         c.setPrez("");
         c.setBankShares(10);
-        c.setPrice(move.getAmount()); //TODO setColumn
+        c.setPrice(0); //TODO setColumn
         Wallet w = findWallet(move.getPlayer());
         payToWallet(w, 2*move.getAmount());
         w.getStocks().removeIf(x -> x.getCorp().equals(move.getCorp()));
@@ -526,7 +526,7 @@ public class Game1856 extends AbstractGame {
         c.setPar(move.getAmount());
         c.setPrez(move.getPlayer());
         c.setBankShares(8);
-        c.setPrice(0); //TODO setColumn
+        c.setPrice(move.getAmount()); //TODO setColumn
         Wallet w = findWallet(move.getPlayer());
         payToWallet(w, -2*move.getAmount());
         w.getStocks().add(new Stock(move.getCorp(), 2, true));
