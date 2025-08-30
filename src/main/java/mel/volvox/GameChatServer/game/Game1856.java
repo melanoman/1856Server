@@ -40,8 +40,10 @@ public class Game1856 extends AbstractGame {
 
     public static final String STOCK_PASS = "stockPass";
     public static final String STOCK_SET_PAR = "stockSetPar";
+    public static final String STOCK_BUY_BANK = "stockBuyBank";
     public static final String STOCK_END_ROUND = "stockEndRound";
 
+    public static final String UPDATE_PREZ = "updatePrez";
     // event constants
     public static final String NORMAL_EVENT = "";
     public static final String BIDOFF_EVENT = "bidoff";
@@ -265,9 +267,25 @@ public class Game1856 extends AbstractGame {
             case STOCK_SET_PAR:
                 doSetPar(move, rawMove);
                 break;
+            case STOCK_BUY_BANK:
+                doBuyBank(move, rawMove);
+                break;
+            case UPDATE_PREZ:
+                doUpdatePrez(move);
+                break;
             default:
                 throw new IllegalStateException("unknown move action: "+move.getAction());
         }
+    }
+
+    private void doUpdatePrez(TrainMove move) {
+        Corp c = findCorp(move.getCorp());
+        c.setPrez(move.getPlayer());
+    }
+
+    private void undoUpdatePrez(TrainMove move) {
+        Corp c = findCorp(move.getCorp());
+        c.setPrez(board.getPlayers().get(move.getAmount()));
     }
 
     private void doAuctionGiveaway(TrainMove move, boolean rawMove) {
@@ -504,9 +522,74 @@ public class Game1856 extends AbstractGame {
             case STOCK_SET_PAR:
                 undoSetPar(move);
                 return true;
+            case STOCK_BUY_BANK:
+                undoBuyBank(move);
+                return true;
+            case UPDATE_PREZ:
+                undoUpdatePrez(move);
+                return true;
             default:
                 return false;
         }
+    }
+
+    private void shareToWallet(Wallet w, String corpName, int shares) {
+        boolean wipe = false;
+        boolean create = true;
+        for (Stock s: w.getStocks()) {
+            if (s.getCorp().equals(corpName)) {
+                create = false;
+                s.setAmount(s.getAmount() + shares);
+                if (s.getAmount() == 0) wipe = true;
+            }
+        }
+        if (wipe) w.getStocks().removeIf(x -> corpName.equals(x.getCorp()));
+        if (create) w.getStocks().add(new Stock(corpName, shares, false));
+    }
+
+    private void updatePrez(String corpName) {
+        Corp c = findCorp(corpName);
+        int prezCount = 0;
+        int maxCount = 2;
+        String newPrez = "";
+        for(Wallet w: board.getWallets()) {
+            boolean prez = false;
+            if (w.getName().equals(c.getPrez())) prez = true;
+            for(Stock s: w.getStocks()) {
+                if (s.getCorp().equals(corpName)) {
+                    if (prez) prezCount = s.getAmount();
+                    if (s.getAmount() > maxCount) {
+                        maxCount = s.getAmount();
+                        newPrez = w.getName();
+                    }
+                }
+            }
+        }
+        if (maxCount > prezCount) {
+            makeFollowMove(UPDATE_PREZ, newPrez, corpName, board.getPlayers().indexOf(c.getPrez()));
+        }
+    }
+
+    private void doBuyBank(TrainMove move, boolean rawMove) {
+        //TODO SOON test un/doBuyBank
+        Corp c = findCorp(move.getCorp());
+        Wallet w = getPlayerWallet(move.getPlayer());
+        c.setBankShares(c.getBankShares() - 1);
+        shareToWallet(w, move.getCorp(), 1);
+        if (rawMove) {
+            updatePrez(move.getCorp());
+        }
+        payToWallet(w, -move.getAmount());
+        incrementStockPlayer(true, rawMove);
+    }
+
+    private void undoBuyBank(TrainMove move) {
+        Corp c = findCorp(move.getCorp());
+        Wallet w = getPlayerWallet(move.getPlayer());
+        c.setBankShares(c.getBankShares() + 1);
+        shareToWallet(w, move.getCorp(), -1);
+        payToWallet(w, move.getAmount());
+        board.setCurrentPlayer(move.getPlayer());
     }
 
     private void undoSetPar(TrainMove move) {
@@ -895,7 +978,23 @@ public class Game1856 extends AbstractGame {
         if (w.getCash() < amount * 2) throw new IllegalStateException(FUNDS);
         Corp corp = findCorp(corpName);
         if(corp.getPar() != 0) throw new IllegalStateException("Par is already set");
+        //TODO enforce cert limits (+2)
         makePrimaryMove(STOCK_SET_PAR, board.getCurrentPlayer(), corpName, amount);
         return board;
+    }
+
+    synchronized public Board1856 buyBank(String corpName) {
+        Wallet w = findWallet(board.getCurrentPlayer());
+        Corp c = findCorp(corpName);
+        if (c.getBankShares() < 1) throw new IllegalStateException("No Bank Shares Remain");
+        if (w.getCash() < c.getPar()) throw new IllegalStateException(FUNDS);
+        // TODO enforce cert limits
+        // TODO enforce buy block after sale same round
+        makePrimaryMove(STOCK_BUY_BANK, board.getCurrentPlayer(), corpName, c.getPar());
+        return board;
+    }
+
+    synchronized public Board1856 buyPool(String corpName) {
+        throw new IllegalStateException("TODO buy pool share");
     }
 }

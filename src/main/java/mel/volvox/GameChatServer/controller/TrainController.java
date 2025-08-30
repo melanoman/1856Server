@@ -138,4 +138,18 @@ public class TrainController {
                                   @PathVariable int amount) {
         return loadGame(table).setPar(corp, amount);
     }
+
+    @PutMapping("/1856/buy/{table}/bank/{corp}")
+    @ResponseBody
+    synchronized Board1856 buyBankShare(@PathVariable String table,
+                                        @PathVariable String corp) {
+        return loadGame(table).buyBank(corp);
+    }
+
+    @PutMapping("1856/buy/{table}/pool/{corp}")
+    @ResponseBody
+    synchronized Board1856 buyPoolShare(@PathVariable String table,
+                                        @PathVariable String corp) {
+        return loadGame(table).buyPool(corp);
+    }
 }
