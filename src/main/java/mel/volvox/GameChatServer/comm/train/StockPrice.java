@@ -47,6 +47,19 @@ public class StockPrice {
         else price -= 25;
     }
 
+    /**
+     * @return number of drop spaces prevents by floor
+     */
+    public int drop(int distance) {
+        if (y+distance > depth[x]-1) {
+            int out = y+distance-depth[x]+1;
+            y=depth[x]-1;
+            return out;
+        }
+        y+=distance;
+        return 0;
+    }
+
     public void up() {
         if(ceiling()) return;
         y--;

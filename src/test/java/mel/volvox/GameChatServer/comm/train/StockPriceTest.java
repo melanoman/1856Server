@@ -161,4 +161,16 @@ class StockPriceTest {
         assertEquals(60, sp.price);
         assertEquals(0, sp.x);
     }
+
+    @Test
+    void drop() {
+        StockPrice sp = StockPrice.makePar(65);
+        assertEquals(0, sp.drop(4));
+        assertEquals(3, sp.drop(4));
+
+        sp = StockPrice.makePar(70);
+        sp.right();
+        sp.right();
+        assertEquals(3, sp.drop(5));
+    }
 }
