@@ -544,7 +544,7 @@ public class Game1856 extends AbstractGame {
             }
         }
         if (wipe) w.getStocks().removeIf(x -> corpName.equals(x.getCorp()));
-        if (create) w.getStocks().add(new Stock(corpName, shares, false));
+        if (create) w.getStocks().add(new Stock(corpName, shares, false, false));
     }
 
     private void updatePrez(String corpName) {
@@ -612,7 +612,7 @@ public class Game1856 extends AbstractGame {
         c.setPrice(move.getAmount()); //TODO setColumn
         Wallet w = findWallet(move.getPlayer());
         payToWallet(w, -2*move.getAmount());
-        w.getStocks().add(new Stock(move.getCorp(), 2, true));
+        w.getStocks().add(new Stock(move.getCorp(), 2, true, false));
         incrementStockPlayer(true, rawMove);
     }
 

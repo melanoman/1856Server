@@ -1,6 +1,8 @@
 package mel.volvox.GameChatServer.controller;
 
 import mel.volvox.GameChatServer.comm.train.Board1856;
+import mel.volvox.GameChatServer.comm.train.Stock;
+import mel.volvox.GameChatServer.comm.train.StockSale;
 import mel.volvox.GameChatServer.game.Game1856;
 import mel.volvox.GameChatServer.model.seating.Channel;
 import mel.volvox.GameChatServer.repository.ChannelRepo;
@@ -151,5 +153,13 @@ public class TrainController {
     synchronized Board1856 buyPoolShare(@PathVariable String table,
                                         @PathVariable String corp) {
         return loadGame(table).buyPool(corp);
+    }
+
+    @PutMapping("1856/sell/{table}")
+    @ResponseBody
+    synchronized Board1856 sellShares(@PathVariable String table,
+                                      @RequestBody List<StockSale> stocks) {
+        for(StockSale s:stocks) System.out.println("Selling "+s.getAmount()+" shares of "+s.getName());
+        return loadGame(table).getBoard(); //TODO SOON sellShares
     }
 }

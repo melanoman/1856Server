@@ -7,9 +7,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
-public class Stock {
-    String corp;
+public class StockSale {
+    String name;
     int amount;
-    boolean isPresident;
-    boolean hasSold;
 }
