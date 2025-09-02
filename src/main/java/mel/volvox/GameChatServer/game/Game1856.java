@@ -581,8 +581,53 @@ public class Game1856 extends AbstractGame {
         }
     }
 
+    private void payWalletToCorpOrEscrow(Wallet w, Corp c, int amount) {
+        if(c.getBankShares() < 5) payWalletToEscrow(w, c, amount);
+        else payWalletToCorp(w, c, amount);
+    }
+
+    private void payWalletFromCorpOrEscrow(Wallet w, Corp c, int amount) {
+        if(c.getBankShares() < 5) payEscrowToWallet(w, c, amount);
+        else payCorpToWallet(w, c, amount);
+    }
+
+    private void payWalletToEscrow(Wallet w, Corp c, int amount) {
+        w.setCash(w.getCash() - amount);
+        c.setEscrow(w.getCash() + amount);
+        board.setBankCash(board.getBankCash() + amount); //bank holds the escrow
+    }
+
+    private void payEscrowToWallet(Wallet w, Corp c, int amount) {
+        w.setCash(w.getCash() + amount);
+        c.setEscrow(c.getEscrow() - amount);
+        board.setBankCash(board.getBankCash() - amount);
+    }
+
+    private void fundCorpIfSix(Wallet w, Corp c, int amount) {
+        payWalletToBank(w, amount); // bank holds escrow
+        if(c.getBankShares() == 4) { //release escrow
+            payBankToCorp(c, amount*10); //TODO TEST ALL_AT_ONCE FUNDING
+        }
+    }
+
+    private void defundCorpIfSix(Wallet w, Corp c, int amount) {
+        payBankToWallet(w, amount);
+        if(c.getBankShares() == 4) {
+            payCorpToBank(c, amount*10);
+        }
+    }
+
+    private void payBankToCorp(Corp c, int amount) {
+        c.setCash(c.getCash() + amount);
+        board.setBankCash(board.getBankCash() - amount);
+    }
+
+    private void payCorpToBank(Corp c, int amount) {
+        c.setCash(c.getCash() - amount);
+        board.setBankCash(board.getBankCash() + amount);
+    }
+
     private void doBuyBank(TrainMove move, boolean rawMove) {
-        //TODO SOON test un/doBuyBank
         Corp c = findCorp(move.getCorp());
         Wallet w = getPlayerWallet(move.getPlayer());
         c.setBankShares(c.getBankShares() - 1);
@@ -590,17 +635,30 @@ public class Game1856 extends AbstractGame {
         if (rawMove) {
             updatePrez(move.getCorp());
         }
-        payWalletToCorp(w, c, move.getAmount()); //TODO SOON or escrow or hold
+        switch (c.getFundingType()) {
+            case Corp.DESTINATION_TYPE -> payWalletToCorpOrEscrow(w, c, move.getAmount());
+            case Corp.INCREMENTAL_TYPE -> payWalletToCorp(w, c, move.getAmount());
+            case Corp.ALL_AT_ONCE_TYPE -> fundCorpIfSix(w, c, move.getAmount());
+        }
         incrementStockPlayer(true, rawMove);
     }
 
     private void undoBuyBank(TrainMove move) {
         Corp c = findCorp(move.getCorp());
         Wallet w = getPlayerWallet(move.getPlayer());
+        switch (c.getFundingType()) {
+            case Corp.DESTINATION_TYPE -> payWalletFromCorpOrEscrow(w, c, move.getAmount());
+            case Corp.INCREMENTAL_TYPE -> payCorpToWallet(w, c, move.getAmount());
+            case Corp.ALL_AT_ONCE_TYPE -> defundCorpIfSix(w, c, move.getAmount());
+        }
         c.setBankShares(c.getBankShares() + 1);
         shareToWallet(w, move.getCorp(), -1);
-        payCorpToWallet(w, c, move.getAmount());
         board.setCurrentPlayer(move.getPlayer());
+    }
+
+    private int currentFloatType() {
+        //TODO check next available train
+        return Corp.DESTINATION_TYPE;
     }
 
     private void undoSetPar(TrainMove move) {
@@ -610,7 +668,12 @@ public class Game1856 extends AbstractGame {
         c.setBankShares(10);
         c.setPrice(0); //TODO setColumn
         Wallet w = findWallet(move.getPlayer());
-        payCorpToWallet(w, c,2*move.getAmount()); //TODO SOON no refund on hold
+        if(c.getFundingType() != Corp.ALL_AT_ONCE_TYPE) {
+            payCorpToWallet(w, c, 2 * move.getAmount());
+        } else {
+            payBankToWallet(w,2 * move.getAmount());
+        }
+        c.setFundingType(0);
         w.getStocks().removeIf(x -> x.getCorp().equals(move.getCorp()));
         board.setCurrentPlayer(move.getPlayer());
     }
@@ -621,8 +684,13 @@ public class Game1856 extends AbstractGame {
         c.setPrez(move.getPlayer());
         c.setBankShares(8);
         c.setPrice(move.getAmount()); //TODO setColumn
+        c.setFundingType(currentFloatType());
         Wallet w = findWallet(move.getPlayer());
-        payWalletToCorp(w, c,2*move.getAmount()); //TODO SOON or hold
+        if (c.getFundingType() != Corp.ALL_AT_ONCE_TYPE) {
+            payWalletToCorp(w, c, 2 * move.getAmount());
+        } else {
+            payWalletToBank(w, 2 * move.getAmount()); //bank holds escrow
+        }
         w.getStocks().add(new Stock(move.getCorp(), 2, true, false));
         incrementStockPlayer(true, rawMove);
     }
