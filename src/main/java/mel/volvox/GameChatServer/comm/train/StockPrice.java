@@ -17,6 +17,22 @@ public class StockPrice {
         return out;
     }
 
+    public boolean leftEdge() {
+        return x==0;
+    }
+
+    public boolean rightEdge() {
+        return depth[x+1] <= y;
+    }
+
+    public boolean floor() {
+        return depth[x] == y+1;
+    }
+
+    public boolean ceiling() {
+        return y==0;
+    }
+
     private void incrementPrice() {
         if(price > 110) price+= 25;
         else if(price == 110) price += 15;
@@ -32,24 +48,24 @@ public class StockPrice {
     }
 
     public void up() {
-        if(y == 0) return;
+        if(ceiling()) return;
         y--;
         incrementPrice();
     }
 
     public void down() {
-        if(depth[x] == y+1) return;
+        if(floor()) return;
         y++;
         decrementPrice();
     }
 
     public void right() {
-        if(depth[x+1] <= y) up();
+        if(rightEdge()) up();
         else { x++; incrementPrice(); }
     }
 
     public void left() {
-        if(x==0) down();
+        if(leftEdge()) down();
         else { x--; decrementPrice(); }
     }
 }
