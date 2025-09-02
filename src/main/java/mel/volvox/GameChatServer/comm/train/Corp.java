@@ -29,7 +29,7 @@ public class Corp {
     String name; // 2-3 letter abbreviation. not full text
     int par = 0;
     int bankShares = 10;
-    int price = 0;
+    StockPrice price = null;
     int poolShares = 0;
     int cash = 0;
     int escrow = 0;

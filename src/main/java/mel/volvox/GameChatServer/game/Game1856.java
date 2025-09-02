@@ -666,7 +666,7 @@ public class Game1856 extends AbstractGame {
         c.setPar(0);
         c.setPrez("");
         c.setBankShares(10);
-        c.setPrice(0); //TODO setColumn
+        c.setPrice(null);
         Wallet w = findWallet(move.getPlayer());
         if(c.getFundingType() != Corp.ALL_AT_ONCE_TYPE) {
             payCorpToWallet(w, c, 2 * move.getAmount());
@@ -683,7 +683,7 @@ public class Game1856 extends AbstractGame {
         c.setPar(move.getAmount());
         c.setPrez(move.getPlayer());
         c.setBankShares(8);
-        c.setPrice(move.getAmount()); //TODO setColumn
+        c.setPrice(StockPrice.makePar(move.getAmount()));
         c.setFundingType(currentFloatType());
         Wallet w = findWallet(move.getPlayer());
         if (c.getFundingType() != Corp.ALL_AT_ONCE_TYPE) {
