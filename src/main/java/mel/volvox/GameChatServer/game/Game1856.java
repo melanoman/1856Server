@@ -236,14 +236,17 @@ public class Game1856 extends AbstractGame {
         board.setEvent(NORMAL_EVENT);
     }
 
-    private void doAuctionEndRound(TrainMove move, boolean rawMove) {
-        //pay dividends
+    private void payPrivs() {
         for(Wallet w: board.getWallets()) {
             for (Priv priv: w.getPrivates()) {
-                if(priv.getAmount() > 3) continue;
+                if(priv.getAmount() > 3) continue;  //TODO check for closed
                 payBankToWallet(w, priv2div.get(priv.getCorp()));
             }
         }
+    }
+
+    private void doAuctionEndRound(TrainMove move, boolean rawMove) {
+        payPrivs();
         if (board.getCurrentCorp().equals(PRIVATE_FLOS)) {
             board.setAuctionDiscount(board.getAuctionDiscount() + 5);
         }
@@ -253,14 +256,16 @@ public class Game1856 extends AbstractGame {
         }
     }
 
-    private void undoAuctionEndRound(TrainMove move) {
-        //unpay dividends
+    private void unpayPrivs() {
         for(Wallet w: board.getWallets()) {
             for (Priv priv: w.getPrivates()) {
-                if(priv.getAmount() > 3) continue;
+                if(priv.getAmount() > 3) continue; //TODO check for closed
                 payWalletToBank(w, priv2div.get(priv.getCorp()));
             }
         }
+    }
+
+    private void undoAuctionEndRound(TrainMove move) {
         if (board.getCurrentCorp().equals(PRIVATE_FLOS)) {
             board.setAuctionDiscount(board.getAuctionDiscount() - 5);
         }
@@ -337,21 +342,24 @@ public class Game1856 extends AbstractGame {
             case STOCK_HEADER:
                 break; //nothing to do -- this just anchors the sale list
             case DROP_STOCK_PRICE:
-                doDropStockPrice(move);
+                doDropStockPrice(move, rawMove);
                 break;
             default:
                 throw new IllegalStateException("unknown move action: "+move.getAction());
         }
     }
 
-    private void doDropStockPrice(TrainMove move) {
-        findCorp(move.getCorp()).getPrice().drop(move.getAmount());
-        //TODO resort
+    private void doDropStockPrice(TrainMove move, boolean rawMove) {
+        Corp c = findCorp(move.getCorp());
+        c.getPrice().drop(move.getAmount());
+        if (rawMove) {
+            //TODO find new list position
+        }
     }
 
     private void undoDropStockPrice(TrainMove move) {
+        Corp c = findCorp(move.getCorp());
         findCorp(move.getCorp()).getPrice().drop(-move.getAmount());
-        //TODO resort
     }
 
     private void sharesPoolToWallet(Wallet w, Corp corp, int amount) {
@@ -771,6 +779,8 @@ public class Game1856 extends AbstractGame {
         c.setPrez("");
         c.setBankShares(10);
         c.setPrice(null);
+        board.getCorps().remove(c);
+        board.getCorps().add(oldParIndex(c), c);
         Wallet w = findWallet(move.getPlayer());
         if(c.getFundingType() != Corp.ALL_AT_ONCE_TYPE) {
             payCorpToWallet(w, c, 2 * move.getAmount());
@@ -782,6 +792,28 @@ public class Game1856 extends AbstractGame {
         board.setCurrentPlayer(move.getPlayer());
     }
 
+    private int oldParIndex(Corp c) {
+        int i = board.getCorps().size();
+        while (i > 0) {
+            i--;
+            Corp c2 = board.getCorps().get(i);
+            if (c2.getPrice() != null || c2.getName().compareTo(c.getName()) > 0) continue;
+            return i+1;
+        }
+        return 0;
+    }
+
+    private int newParIndex(Corp c) {
+        int i = board.getCorps().size();
+        while (i > 0) {
+            i--;
+            Corp c2 = board.getCorps().get(i);
+            if (c2.getPrice() == null || c2.getPrice().getPrice() < c.getPar()) continue;
+            return i+1;
+        }
+        return 0;
+    }
+
     private void doSetPar(TrainMove move, boolean rawMove) {
         Corp c = findCorp(move.getCorp());
         c.setPar(move.getAmount());
@@ -789,6 +821,8 @@ public class Game1856 extends AbstractGame {
         c.setBankShares(8);
         c.setPrice(StockPrice.makePar(move.getAmount()));
         c.setFundingType(currentFloatType());
+        board.getCorps().remove(c);
+        board.getCorps().add(newParIndex(c), c);
         Wallet w = findWallet(move.getPlayer());
         if (c.getFundingType() != Corp.ALL_AT_ONCE_TYPE) {
             payWalletToCorp(w, c, 2 * move.getAmount());
@@ -799,15 +833,26 @@ public class Game1856 extends AbstractGame {
         incrementStockPlayer(true, rawMove);
     }
 
+
+
     private void doEndStockRound(TrainMove move, boolean rawMove) {
         //TODO change OR count based on train offering
         board.setRemainingOpRounds(1);
         board.setPhase(Era.OP.name());
+        if (rawMove) {
+           for(Corp c: board.getCorps()) {
+               if(c.getPoolShares() == 0 && c.getBankShares() == 0 && !c.getPrice().ceiling()) {
+                   makeFollowMove(DROP_STOCK_PRICE, "", c.getName(), -1); //rise 1
+               }
+           }
+        }
+        payPrivs();
     }
 
     private void undoEndStockRound(TrainMove move) {
         board.setRemainingOpRounds(0);
         board.setPhase(move.getCorp());
+        unpayPrivs();
     }
 
     private void doStockPass(TrainMove move, boolean rawMove) {
