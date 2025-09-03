@@ -43,6 +43,7 @@ public class Game1856 extends AbstractGame {
     public static final String STOCK_BUY_BANK = "stockBuyBank";
     public static final String STOCK_HEADER = "stockHeader";
     public static final String STOCK_SALE = "stockSale";
+    public static final String STOCK_FOOTER = "stockFooter";
     public static final String DROP_STOCK_PRICE = "dropStockPrice";
     public static final String REORDER_CORP = "reorderCorp";
     public static final String STOCK_END_ROUND = "stockEndRound";
@@ -126,6 +127,7 @@ public class Game1856 extends AbstractGame {
         for(StockSale sale: stockSales) {
             makeFollowMove(STOCK_SALE, board.getCurrentPlayer(), sale.getName(), sale.getAmount());
         }
+        makeFollowMove(STOCK_FOOTER, board.getCurrentPlayer(), "", 0);
         return board;
     }
 
@@ -348,6 +350,9 @@ public class Game1856 extends AbstractGame {
             case REORDER_CORP:
                 doReorderCorp(move);
                 break;
+            case STOCK_FOOTER:
+                doStockFooter(move, rawMove);
+                break;
             default:
                 throw new IllegalStateException("unknown move action: "+move.getAction());
         }
@@ -399,7 +404,6 @@ public class Game1856 extends AbstractGame {
             updatePrez(move.getCorp());
             makeFollowMove(REORDER_CORP, "", move.getCorp(), board.getCorps().indexOf(c));
         }
-        incrementStockPlayer(true, rawMove);
     }
 
     private void undoStockSale(TrainMove move) {
@@ -407,7 +411,6 @@ public class Game1856 extends AbstractGame {
         Corp c = findCorp(move.getCorp());
         sharesPoolToWallet(w, c, move.getAmount());
         payWalletToBank(w, move.getAmount() * c.getPrice().getPrice());
-        board.setCurrentPlayer(move.getPlayer());
     }
 
     private void doUpdatePrez(TrainMove move) {
@@ -671,9 +674,20 @@ public class Game1856 extends AbstractGame {
             case REORDER_CORP:
                 undoReorderCorp(move);
                 return true;
+            case STOCK_FOOTER:
+                undoStockFooter(move);
+                return true;
             default:
                 return false;
         }
+    }
+
+    private void doStockFooter(TrainMove move, boolean rawMove) {
+        incrementStockPlayer(true, rawMove);
+    }
+
+    private void undoStockFooter(TrainMove move) {
+        board.setCurrentPlayer(move.getPlayer());
     }
 
     private void shareToWallet(Wallet w, String corpName, int shares) {
