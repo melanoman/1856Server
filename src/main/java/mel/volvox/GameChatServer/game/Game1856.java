@@ -89,7 +89,7 @@ public class Game1856 extends AbstractGame {
     private List<TrainMove> history = new ArrayList<>();
 
     private void checkSalesList(List<StockSale> sales) {
-        // TODO no selling in an initial stock round
+        if (phaseIs(Era.INITIAL)) throw new IllegalStateException("No sales in 1st stock round");
         Wallet w = getCurrentWallet();
         for(StockSale sale: sales) {
             boolean legal = false;
@@ -128,7 +128,7 @@ public class Game1856 extends AbstractGame {
         return board;
     }
 
-    public enum Era { GATHER, AUCTION, STOCK, OP, CGRFORM, DONE }
+    public enum Era { GATHER, AUCTION, INITIAL, STOCK, OP, CGRFORM, DONE }
 
     synchronized public void loadMoves(List<TrainMove> moves) {
         history = moves;
@@ -849,7 +849,7 @@ public class Game1856 extends AbstractGame {
     static List<Integer> PAR_VALUES = List.of(65, 70, 75, 80, 90, 100);
 
     private void doEndAuctionPhase(TrainMove move) {
-        board.setPhase(Era.STOCK.name());
+        board.setPhase(Era.INITIAL.name());
         for(Corp c: INIT_IPO) {
             board.getCorps().add(c.dup());
         }
