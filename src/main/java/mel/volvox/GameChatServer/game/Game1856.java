@@ -540,7 +540,7 @@ public class Game1856 extends AbstractGame {
         } else {
             board.setPassCount(board.getPassCount()+1);
             if(rawMove && board.getPassCount() == board.getPlayers().size()) {
-                makeFollowMove(STOCK_END_ROUND, board.getCurrentPlayer(), "", 0);
+                makeFollowMove(STOCK_END_ROUND, board.getCurrentPlayer(), board.getPhase(), 0);
             }
         }
     }
@@ -807,7 +807,7 @@ public class Game1856 extends AbstractGame {
 
     private void undoEndStockRound(TrainMove move) {
         board.setRemainingOpRounds(0);
-        board.setPhase(Era.STOCK.name());
+        board.setPhase(move.getCorp());
     }
 
     private void doStockPass(TrainMove move, boolean rawMove) {
@@ -816,7 +816,7 @@ public class Game1856 extends AbstractGame {
         board.setCurrentPlayer(board.getPlayers().get(index));
         board.setPassCount(board.getPassCount()+1);
         if(rawMove && board.getPassCount() == board.getPlayers().size()) {
-            makeFollowMove(STOCK_END_ROUND, board.getCurrentPlayer(), "", 0);
+            makeFollowMove(STOCK_END_ROUND, board.getCurrentPlayer(), board.getPhase(), 0);
         }
     }
 
@@ -1069,7 +1069,7 @@ public class Game1856 extends AbstractGame {
             makePrimaryMove(AUCTION_PASS, board.getCurrentPlayer(), "", 1);
             return board;
         }
-        if (phaseIs(Era.STOCK)) {
+        if (phaseIs(Era.STOCK) || phaseIs(Era.INITIAL)) {
             makePrimaryMove(STOCK_PASS, board.getCurrentPlayer(), "", 1);
             return board;
         }
