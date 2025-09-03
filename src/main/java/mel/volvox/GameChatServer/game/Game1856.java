@@ -41,6 +41,8 @@ public class Game1856 extends AbstractGame {
     public static final String STOCK_PASS = "stockPass";
     public static final String STOCK_SET_PAR = "stockSetPar";
     public static final String STOCK_BUY_BANK = "stockBuyBank";
+    public static final String STOCK_HEADER = "stockHeader";
+    public static final String STOCK_SALE = "stockSale";
     public static final String STOCK_END_ROUND = "stockEndRound";
 
     public static final String UPDATE_PREZ = "updatePrez";
@@ -84,6 +86,48 @@ public class Game1856 extends AbstractGame {
     );
 
     private List<TrainMove> history = new ArrayList<>();
+
+    private void checkSalesList(List<StockSale> sales) {
+        // TODO no selling in an initial stock round
+        Wallet w = getCurrentWallet();
+        for(StockSale sale: sales) {
+            //TODO check if sale is legal, throw if not
+            boolean legal = false;
+            Corp c = findCorp(sale.getName());
+            for (Stock stock: w.getStocks()) {
+                if (stock.getCorp().equals(sale.getName())) {
+                    if(stock.getAmount() < sale.getAmount()) break;
+                    if(sale.getAmount()+c.getPoolShares() > 5) {
+                        throw new IllegalStateException("Pool shares may not exceed 50%");
+                    }
+                    if(stock.isPresident() && stock.getAmount() - sale.getAmount() < 2) {
+                        boolean noPrez = true;
+                        for (Wallet w2: board.getWallets()) {
+                            if(w2 == w) continue;
+                            for (Stock s: w2.getStocks()) {
+                                if (s.getCorp().equals(c.getName())) {
+                                    if(s.getAmount() > 1) noPrez = false;
+                                }
+                            }
+                        }
+                        if(noPrez) throw new IllegalStateException("No one to become president of "+sale.getName());
+                    }
+                    legal = true;
+                }
+            }
+            if (!legal) throw new IllegalStateException("Not enough shares of "+sale.getName());
+        }
+        throw new IllegalStateException("TODO SOON REMOVE DEBUG STOPPER");
+    }
+
+    public Board1856 makeSales(List<StockSale> stockSales) {
+        checkSalesList(stockSales);
+        makePrimaryMove(STOCK_HEADER, board.getCurrentPlayer(), "", 0);
+        for(StockSale sale: stockSales) {
+            makeFollowMove(STOCK_SALE, board.getCurrentPlayer(), sale.getName(), sale.getAmount());
+        }
+        return board;
+    }
 
     public enum Era { GATHER, AUCTION, STOCK, OP, CGRFORM, DONE }
 
@@ -284,9 +328,21 @@ public class Game1856 extends AbstractGame {
             case UPDATE_PREZ:
                 doUpdatePrez(move);
                 break;
+            case STOCK_SALE:
+                doStockSale(move, rawMove);
+            case STOCK_HEADER:
+                break; //nothing to do -- this just anchors the sale list
             default:
                 throw new IllegalStateException("unknown move action: "+move.getAction());
         }
+    }
+
+    private void doStockSale(TrainMove move, boolean rawMove) {
+        //TODO SOON doStockSale
+    }
+
+    private void undoStockSale(TrainMove move) {
+        //TODO SOON undoStockSale
     }
 
     private void doUpdatePrez(TrainMove move) {
@@ -539,6 +595,10 @@ public class Game1856 extends AbstractGame {
             case UPDATE_PREZ:
                 undoUpdatePrez(move);
                 return true;
+            case STOCK_SALE:
+                undoStockSale(move);
+            case STOCK_HEADER:
+                return true; // nothing to undo
             default:
                 return false;
         }

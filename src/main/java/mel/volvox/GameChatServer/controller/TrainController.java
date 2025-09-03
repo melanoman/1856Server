@@ -159,7 +159,6 @@ public class TrainController {
     @ResponseBody
     synchronized Board1856 sellShares(@PathVariable String table,
                                       @RequestBody List<StockSale> stocks) {
-        for(StockSale s:stocks) System.out.println("Selling "+s.getAmount()+" shares of "+s.getName());
-        return loadGame(table).getBoard(); //TODO SOON sellShares
+        return loadGame(table).makeSales(stocks);
     }
 }
