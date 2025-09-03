@@ -165,12 +165,26 @@ class StockPriceTest {
     @Test
     void drop() {
         StockPrice sp = StockPrice.makePar(65);
-        assertEquals(0, sp.drop(4));
-        assertEquals(3, sp.drop(4));
+        assertEquals(5, sp.y);
+        sp.drop(4);
+        assertEquals(9, sp.y);
+        sp.drop(4);
+        assertEquals(10, sp.y);
 
         sp = StockPrice.makePar(70);
+        assertEquals(4, sp.y);
         sp.right();
         sp.right();
-        assertEquals(3, sp.drop(5));
+        assertEquals(4, sp.y);
+        sp.drop(3);
+        assertEquals(6, sp.y);
+    }
+
+    @Test
+    void previewDrop() {
+        StockPrice sp = StockPrice.makePar(70);
+        assertEquals(6, sp.previewDrop(10));
+        assertEquals(4, sp.y);
+        assertEquals(4, sp.previewDrop(4));
     }
 }

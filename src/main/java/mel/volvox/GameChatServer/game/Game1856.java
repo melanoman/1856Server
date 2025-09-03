@@ -43,6 +43,7 @@ public class Game1856 extends AbstractGame {
     public static final String STOCK_BUY_BANK = "stockBuyBank";
     public static final String STOCK_HEADER = "stockHeader";
     public static final String STOCK_SALE = "stockSale";
+    public static final String DROP_STOCK_PRICE = "dropStockPrice";
     public static final String STOCK_END_ROUND = "stockEndRound";
 
     public static final String UPDATE_PREZ = "updatePrez";
@@ -91,7 +92,6 @@ public class Game1856 extends AbstractGame {
         // TODO no selling in an initial stock round
         Wallet w = getCurrentWallet();
         for(StockSale sale: sales) {
-            //TODO check if sale is legal, throw if not
             boolean legal = false;
             Corp c = findCorp(sale.getName());
             for (Stock stock: w.getStocks()) {
@@ -117,7 +117,6 @@ public class Game1856 extends AbstractGame {
             }
             if (!legal) throw new IllegalStateException("Not enough shares of "+sale.getName());
         }
-        throw new IllegalStateException("TODO SOON REMOVE DEBUG STOPPER");
     }
 
     public Board1856 makeSales(List<StockSale> stockSales) {
@@ -330,19 +329,56 @@ public class Game1856 extends AbstractGame {
                 break;
             case STOCK_SALE:
                 doStockSale(move, rawMove);
+                break;
             case STOCK_HEADER:
                 break; //nothing to do -- this just anchors the sale list
+            case DROP_STOCK_PRICE:
+                doDropStockPrice(move);
+                break;
             default:
                 throw new IllegalStateException("unknown move action: "+move.getAction());
         }
     }
 
+    private void doDropStockPrice(TrainMove move) {
+        findCorp(move.getCorp()).getPrice().drop(move.getAmount());
+        //TODO resort
+    }
+
+    private void undoDropStockPrice(TrainMove move) {
+        findCorp(move.getCorp()).getPrice().drop(-move.getAmount());
+        //TODO resort
+    }
+
+    private void sharesPoolToWallet(Wallet w, Corp corp, int amount) {
+        corp.setPoolShares(corp.getPoolShares() - amount);
+        shareToWallet(w, corp.getName(), amount);
+    }
+
+    private void sharesWalletToPool(Wallet w, Corp corp, int amount) {
+        corp.setPoolShares(corp.getPoolShares() + amount);
+        shareToWallet(w, corp.getName(), -amount);
+    }
+
     private void doStockSale(TrainMove move, boolean rawMove) {
-        //TODO SOON doStockSale
+        Wallet w = getPlayerWallet(move.getPlayer());
+        Corp c = findCorp(move.getCorp());
+        sharesWalletToPool(w, c, move.getAmount());
+        payBankToWallet(w, move.getAmount() * c.getPrice().getPrice());
+        if(rawMove) {
+            int drop = c.getPrice().previewDrop(move.getAmount());
+            if (drop > 0) makeFollowMove(DROP_STOCK_PRICE, "", move.getCorp(), drop);
+            updatePrez(move.getCorp());
+        }
+        incrementStockPlayer(true, rawMove);
     }
 
     private void undoStockSale(TrainMove move) {
-        //TODO SOON undoStockSale
+        Wallet w = getPlayerWallet(move.getPlayer());
+        Corp c = findCorp(move.getCorp());
+        sharesPoolToWallet(w, c, move.getAmount());
+        payWalletToBank(w, move.getAmount() * c.getPrice().getPrice());
+        board.setCurrentPlayer(move.getPlayer());
     }
 
     private void doUpdatePrez(TrainMove move) {
@@ -597,8 +633,12 @@ public class Game1856 extends AbstractGame {
                 return true;
             case STOCK_SALE:
                 undoStockSale(move);
+                return true;
             case STOCK_HEADER:
                 return true; // nothing to undo
+            case DROP_STOCK_PRICE:
+                undoDropStockPrice(move);
+                return true;
             default:
                 return false;
         }

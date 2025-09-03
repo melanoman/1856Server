@@ -54,17 +54,10 @@ public class StockPrice {
         else price -= 25;
     }
 
-    /**
-     * @return number of drop spaces prevents by floor
-     */
-    public int drop(int distance) {
-        if (y+distance > depth[x]-1) {
-            int out = y+distance-depth[x]+1;
-            y=depth[x]-1;
-            return out;
-        }
-        y+=distance;
-        return 0;
+    public void drop(int distance) {
+        y += distance; // assumes outer context won't try to drive through a ledge
+        while (distance > 0) { distance--; decrementPrice(); }
+        while (distance < 0) { distance++; incrementPrice(); }
     }
 
     public void up() {
@@ -87,5 +80,16 @@ public class StockPrice {
     public void left() {
         if(leftEdge()) down();
         else { x--; decrementPrice(); }
+    }
+
+    /**
+     * @return number of spaces that will be dropped accounting for ledges
+     */
+    public int previewDrop(int distance) {
+        if (y+distance > depth[x]-1) {
+            return depth[x]-1-y;
+        } else {
+            return distance;
+        }
     }
 }
