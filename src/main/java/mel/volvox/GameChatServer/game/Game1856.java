@@ -373,9 +373,6 @@ public class Game1856 extends AbstractGame {
     private void doDropStockPrice(TrainMove move, boolean rawMove) {
         Corp c = findCorp(move.getCorp());
         c.getPrice().drop(move.getAmount());
-        if (rawMove) {
-            //TODO find new list position
-        }
     }
 
     private void undoDropStockPrice(TrainMove move) {
