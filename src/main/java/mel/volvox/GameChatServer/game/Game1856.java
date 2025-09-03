@@ -44,6 +44,7 @@ public class Game1856 extends AbstractGame {
     public static final String STOCK_HEADER = "stockHeader";
     public static final String STOCK_SALE = "stockSale";
     public static final String DROP_STOCK_PRICE = "dropStockPrice";
+    public static final String REORDER_CORP = "reorderCorp";
     public static final String STOCK_END_ROUND = "stockEndRound";
 
     public static final String UPDATE_PREZ = "updatePrez";
@@ -344,9 +345,24 @@ public class Game1856 extends AbstractGame {
             case DROP_STOCK_PRICE:
                 doDropStockPrice(move, rawMove);
                 break;
+            case REORDER_CORP:
+                doReorderCorp(move);
+                break;
             default:
                 throw new IllegalStateException("unknown move action: "+move.getAction());
         }
+    }
+
+    private void doReorderCorp(TrainMove move) {
+        Corp c = findCorp(move.getCorp());
+        board.getCorps().remove(c);
+        board.getCorps().add(newStockIndex(c), c);
+    }
+
+    private void undoReorderCorp(TrainMove move) {
+        Corp c = findCorp(move.getCorp());
+        board.getCorps().remove(c);
+        board.getCorps().add(move.getAmount(), c);
     }
 
     private void doDropStockPrice(TrainMove move, boolean rawMove) {
@@ -381,6 +397,7 @@ public class Game1856 extends AbstractGame {
             int drop = c.getPrice().previewDrop(move.getAmount());
             if (drop > 0) makeFollowMove(DROP_STOCK_PRICE, "", move.getCorp(), drop);
             updatePrez(move.getCorp());
+            makeFollowMove(REORDER_CORP, "", move.getCorp(), board.getCorps().indexOf(c));
         }
         incrementStockPlayer(true, rawMove);
     }
@@ -651,6 +668,9 @@ public class Game1856 extends AbstractGame {
             case DROP_STOCK_PRICE:
                 undoDropStockPrice(move);
                 return true;
+            case REORDER_CORP:
+                undoReorderCorp(move);
+                return true;
             default:
                 return false;
         }
@@ -803,12 +823,12 @@ public class Game1856 extends AbstractGame {
         return 0;
     }
 
-    private int newParIndex(Corp c) {
+    private int newStockIndex(Corp c) {
         int i = board.getCorps().size();
         while (i > 0) {
             i--;
             Corp c2 = board.getCorps().get(i);
-            if (c2.getPrice() == null || c2.getPrice().getPrice() < c.getPar()) continue;
+            if (c2.getPrice() == null || c2.getPrice().getPrice() < c.getPrice().getPrice()) continue;
             return i+1;
         }
         return 0;
@@ -822,7 +842,7 @@ public class Game1856 extends AbstractGame {
         c.setPrice(StockPrice.makePar(move.getAmount()));
         c.setFundingType(currentFloatType());
         board.getCorps().remove(c);
-        board.getCorps().add(newParIndex(c), c);
+        board.getCorps().add(newStockIndex(c), c);
         Wallet w = findWallet(move.getPlayer());
         if (c.getFundingType() != Corp.ALL_AT_ONCE_TYPE) {
             payWalletToCorp(w, c, 2 * move.getAmount());
