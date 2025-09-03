@@ -244,7 +244,9 @@ public class Game1856 extends AbstractGame {
                 payBankToWallet(w, priv2div.get(priv.getCorp()));
             }
         }
-        board.setAuctionDiscount(board.getAuctionDiscount() + 5);
+        if (board.getCurrentCorp().equals(PRIVATE_FLOS)) {
+            board.setAuctionDiscount(board.getAuctionDiscount() + 5);
+        }
         board.setPassCount(0);
         if(rawMove && priv2price.get(board.getCurrentCorp()) == board.getAuctionDiscount()) {
             makeFollowMove(AUCTION_GIVEAWAY, board.getCurrentPlayer(), board.getCurrentCorp(), 0);
@@ -259,7 +261,9 @@ public class Game1856 extends AbstractGame {
                 payWalletToBank(w, priv2div.get(priv.getCorp()));
             }
         }
-        board.setAuctionDiscount(board.getAuctionDiscount() - 5);
+        if (board.getCurrentCorp().equals(PRIVATE_FLOS)) {
+            board.setAuctionDiscount(board.getAuctionDiscount() - 5);
+        }
     }
 
     private void doMove(TrainMove move, boolean rawMove) {
