@@ -870,6 +870,7 @@ public class Game1856 extends AbstractGame {
         //TODO change OR count based on train offering
         board.setRemainingOpRounds(1);
         board.setPhase(Era.OP.name());
+        board.setCurrentCorp(board.getCorps().get(0).getName());
         if (rawMove) {
            for(Corp c: board.getCorps()) {
                if(c.getPoolShares() == 0 && c.getBankShares() == 0 && !c.getPrice().ceiling()) {
@@ -883,6 +884,7 @@ public class Game1856 extends AbstractGame {
     private void undoEndStockRound(TrainMove move) {
         board.setRemainingOpRounds(0);
         board.setPhase(move.getCorp());
+        board.setCurrentCorp("");
         unpayPrivs();
     }
 

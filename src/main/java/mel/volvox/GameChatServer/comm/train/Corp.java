@@ -23,7 +23,7 @@ public class Corp {
         List<Priv> newPrivs = new ArrayList<>();
         for (Priv p: privates) newPrivs.add(p.dup());
         return new Corp(name, par, bankShares, price, poolShares, cash, escrow, tokensLeft,
-                prez, fundingType, newPrivs, portRights, bridgeRights, tunnelRights);
+                prez, fundingType, newPrivs, portRights, bridgeRights, tunnelRights, hasOperated);
     }
 
     String name; // 2-3 letter abbreviation. not full text
@@ -40,4 +40,5 @@ public class Corp {
     boolean portRights = false;
     boolean bridgeRights = false;
     boolean tunnelRights = false;
+    boolean hasOperated = false;
 }
