@@ -168,7 +168,10 @@ public class Game1856 extends AbstractGame {
         board.setPlayers(newPlayers);
         board.setPhase(Era.GATHER.name());
         board.setWallets(new ArrayList<>());
+        board.setTrains(new ArrayList<>());
     }
+
+    List<Integer> TRAIN_START = List.of(2,2,2,2,2,2, 3,3,3,3,3, 4,4,4,4, 5,5,5, 6,6);
 
     private void doStart(String order) {
         List<String> newPlayers = new ArrayList<>();
@@ -189,6 +192,7 @@ public class Game1856 extends AbstractGame {
             board.getWallets().add(wallet);
         }
         board.setBankCash(10500); //12k minus 1500 for total player starting cash
+        board.getTrains().addAll(TRAIN_START);
     }
 
     private void payBankToWallet(Wallet w, int amount) {
