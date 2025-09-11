@@ -52,6 +52,8 @@ public class Game1856 extends AbstractGame {
     // event constants
     public static final String NORMAL_EVENT = "";
     public static final String BIDOFF_EVENT = "bidoff";
+    public static final String PRE_REV_EVENT = "PRE_REV";
+    public static final String POST_REV_EVENT = "POST_REV";
 
     // private companies
     public static final String PRIVATE_FLOS = "flos";
@@ -875,6 +877,7 @@ public class Game1856 extends AbstractGame {
         board.setRemainingOpRounds(1);
         board.setPhase(Era.OP.name());
         board.setCurrentCorp(board.getCorps().get(0).getName());
+        board.setEvent(PRE_REV_EVENT);
         if (rawMove) {
            for(Corp c: board.getCorps()) {
                if(c.getPoolShares() == 0 && c.getBankShares() == 0 && !c.getPrice().ceiling()) {
@@ -889,6 +892,7 @@ public class Game1856 extends AbstractGame {
         board.setRemainingOpRounds(0);
         board.setPhase(move.getCorp());
         board.setCurrentCorp("");
+        board.setEvent(NORMAL_EVENT);
         unpayPrivs();
     }
 

@@ -16,14 +16,15 @@ public class Corp {
     public static final int ALL_AT_ONCE_TYPE = 12;
     public Corp(String name, int startTokens) {
         this.name = name;
-        this.tokensLeft = startTokens;
+        this.tokensMax = startTokens;
     }
 
     public Corp dup() {
         List<Priv> newPrivs = new ArrayList<>();
         for (Priv p: privates) newPrivs.add(p.dup());
-        return new Corp(name, par, bankShares, price, poolShares, cash, escrow, tokensLeft,
-                prez, fundingType, newPrivs, portRights, bridgeRights, tunnelRights, hasOperated);
+        return new Corp(name, par, bankShares, price, poolShares, cash, escrow, tokensMax, tokensUsed,
+                prez, fundingType, newPrivs, portRights, bridgeRights, tunnelRights,
+                hasOperated, hasFloated);
     }
 
     String name; // 2-3 letter abbreviation. not full text
@@ -33,12 +34,14 @@ public class Corp {
     int poolShares = 0;
     int cash = 0;
     int escrow = 0;
-    int tokensLeft = 0;
+    int tokensMax = 0;
+    int tokensUsed = 0;
     String prez = "";
     int fundingType = 0;
     List<Priv> privates = new ArrayList<>();
     boolean portRights = false;
     boolean bridgeRights = false;
     boolean tunnelRights = false;
-    boolean hasOperated = false;
+    boolean hasOperated = false; //this round
+    boolean hasFloated = false;
 }
