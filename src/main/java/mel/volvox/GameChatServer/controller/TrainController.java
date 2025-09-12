@@ -161,4 +161,10 @@ public class TrainController {
                                       @RequestBody List<StockSale> stocks) {
         return loadGame(table).makeSales(stocks);
     }
+
+    @PutMapping("1856/loan/{table}")
+    @ResponseBody
+    synchronized Board1856 takeLoan(@PathVariable String table) {
+        return loadGame(table).takeLoan();
+    }
 }

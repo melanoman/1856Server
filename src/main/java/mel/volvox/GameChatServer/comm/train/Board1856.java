@@ -33,5 +33,5 @@ public class Board1856 {
    int maxOpRounds = 0;
 
    //operating scratchpad
-   boolean loanTaken = true; // clear after each corp, prevent 2xloan same turn
+   boolean loanTaken = false; // clear after each corp, prevent 2xloan same turn
 }

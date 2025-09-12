@@ -49,6 +49,9 @@ public class Game1856 extends AbstractGame {
     public static final String STOCK_END_ROUND = "stockEndRound";
 
     public static final String UPDATE_PREZ = "updatePrez";
+
+    public static final String TAKE_LOAN = "takeLoan";
+
     // event constants
     public static final String NORMAL_EVENT = "";
     public static final String BIDOFF_EVENT = "bidoff";
@@ -131,6 +134,32 @@ public class Game1856 extends AbstractGame {
         }
         makeFollowMove(STOCK_FOOTER, board.getCurrentPlayer(), "", 0);
         return board;
+    }
+
+    public Board1856 takeLoan() {
+        if (board.isLoanTaken()) throw new IllegalStateException("One loan per turn");
+        Corp corp = findCorp(board.getCurrentCorp());
+        if(corp.getLoans() >= 10 - corp.getBankShares() - corp.getPoolShares()) {
+            throw new IllegalStateException("Too many loans for Corp");
+        }
+        if (board.getTrains().size() < 2) throw new IllegalStateException("Too late for loans");
+        int amount = board.getEvent().equals(PRE_REV_EVENT) ? 100 : 90;
+        makePrimaryMove(TAKE_LOAN, "", corp.getName(), amount);
+        return board;
+    }
+
+    private void doTakeLoan(TrainMove move) {
+        Corp corp = findCorp(move.getCorp());
+        corp.setLoans(corp.getLoans() + 1);
+        payBankToCorp(corp, move.getAmount());
+        board.setLoanTaken(true);
+    }
+
+    private void undoTakeLoan(TrainMove move) {
+        Corp corp = findCorp(move.getCorp());
+        corp.setLoans(corp.getLoans() - 1);
+        payCorpToBank(corp, move.getAmount());
+        board.setLoanTaken(false);
     }
 
     public enum Era { GATHER, AUCTION, INITIAL, STOCK, OP, CGRFORM, DONE }
@@ -358,6 +387,9 @@ public class Game1856 extends AbstractGame {
                 break;
             case STOCK_FOOTER:
                 doStockFooter(move, rawMove);
+                break;
+            case TAKE_LOAN:
+                doTakeLoan(move);
                 break;
             default:
                 throw new IllegalStateException("unknown move action: "+move.getAction());
@@ -680,6 +712,9 @@ public class Game1856 extends AbstractGame {
             case STOCK_FOOTER:
                 undoStockFooter(move);
                 return true;
+            case TAKE_LOAN:
+                undoTakeLoan(move);
+                return true;
             default:
                 return false;
         }
@@ -805,9 +840,19 @@ public class Game1856 extends AbstractGame {
         board.setCurrentPlayer(move.getPlayer());
     }
 
+    private int nextTrainLevel() {
+        return board.getTrains().size() > 1 ? board.getTrains().get(0) : 8;
+    }
+
     private int currentFloatType() {
-        //TODO check next available train
-        return Corp.DESTINATION_TYPE;
+        switch (nextTrainLevel()) {
+            case 2: case 3: case 4:
+                return Corp.DESTINATION_TYPE;
+            case 5:
+                return Corp.INCREMENTAL_TYPE;
+            default:
+                return Corp.ALL_AT_ONCE_TYPE;
+        }
     }
 
     private void undoSetPar(TrainMove move) {
