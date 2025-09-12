@@ -742,7 +742,7 @@ public class Game1856 extends AbstractGame {
 
     private void payWalletToEscrow(Wallet w, Corp c, int amount) {
         w.setCash(w.getCash() - amount);
-        c.setEscrow(w.getCash() + amount);
+        c.setEscrow(c.getEscrow() + amount);
         board.setBankCash(board.getBankCash() + amount); //bank holds the escrow
     }
 
@@ -869,8 +869,6 @@ public class Game1856 extends AbstractGame {
         w.getStocks().add(new Stock(move.getCorp(), 2, true, false));
         incrementStockPlayer(true, rawMove);
     }
-
-
 
     private void doEndStockRound(TrainMove move, boolean rawMove) {
         //TODO change OR count based on train offering
