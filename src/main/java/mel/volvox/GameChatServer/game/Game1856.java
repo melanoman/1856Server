@@ -844,6 +844,21 @@ public class Game1856 extends AbstractGame {
         return board.getTrains().size() > 1 ? board.getTrains().get(0) : 8;
     }
 
+    private int currentTrainLevel() {
+        switch (board.getTrains().size()) {
+            case 0: case 1:
+                return 6; //TODO figure out if a D has been sold
+            case 2: case 3: case 4:
+                return 5;
+            case 5: case 6: case 7: case 8:
+                return 4;
+            case 9: case 10: case 11: case 12: case 13:
+                return 3;
+            default:
+                return 2;
+        }
+    }
+
     private int currentFloatType() {
         switch (nextTrainLevel()) {
             case 2: case 3: case 4:
@@ -915,10 +930,17 @@ public class Game1856 extends AbstractGame {
         incrementStockPlayer(true, rawMove);
     }
 
+    private int maxRounds() {
+        switch (currentTrainLevel()) {
+            case 2:         return 1;
+            case 3: case 4: return 2;
+            default:        return 3;
+        }
+    }
+
     private void doEndStockRound(TrainMove move, boolean rawMove) {
-        //TODO change OR count based on train offering
         board.setCurrentOpRound(1);
-        board.setMaxOpRounds(1);
+        board.setMaxOpRounds(maxRounds());
         board.setPhase(Era.OP.name());
         board.setCurrentCorp(board.getCorps().get(0).getName());
         board.setEvent(PRE_REV_EVENT);
