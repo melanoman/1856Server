@@ -29,5 +29,9 @@ public class Board1856 {
    String priorityHolder = "";
 
    int auctionDiscount = 0; //$5 off per allpass
-   int remainingOpRounds = 0; // count DOWN not up
+   int currentOpRound = 0; // count DOWN not up
+   int maxOpRounds = 0;
+
+   //operating scratchpad
+   boolean loanTaken = true; // clear after each corp, prevent 2xloan same turn
 }
