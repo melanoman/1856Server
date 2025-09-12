@@ -22,8 +22,9 @@ public class Corp {
     public Corp dup() {
         List<Priv> newPrivs = new ArrayList<>();
         for (Priv p: privates) newPrivs.add(p.dup());
-        return new Corp(name, par, bankShares, price, poolShares, cash, escrow, tokensMax, tokensUsed,
-                prez, fundingType, newPrivs, portRights, bridgeRights, tunnelRights,
+        return new Corp(name, par, bankShares, price, poolShares, cash, escrow,
+                tokensMax, tokensUsed, prez, fundingType, loans, newPrivs,
+                portRights, bridgeRights, tunnelRights,
                 hasOperated, hasFloated);
     }
 
@@ -38,6 +39,7 @@ public class Corp {
     int tokensUsed = 0;
     String prez = "";
     int fundingType = 0;
+    int loans = 0;
     List<Priv> privates = new ArrayList<>();
     boolean portRights = false;
     boolean bridgeRights = false;
