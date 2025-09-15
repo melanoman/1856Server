@@ -51,6 +51,7 @@ public class Game1856 extends AbstractGame {
     public static final String UPDATE_PREZ = "updatePrez";
 
     public static final String TAKE_LOAN = "takeLoan";
+    public static final String BUY_PRIV = "buyPriv";
 
     // event constants
     public static final String NORMAL_EVENT = "";
@@ -160,6 +161,39 @@ public class Game1856 extends AbstractGame {
         corp.setLoans(corp.getLoans() - 1);
         payCorpToBank(corp, move.getAmount());
         board.setLoanTaken(false);
+    }
+
+    private Corp getCurrentCorp() {
+        for(Corp c: board.getCorps()) {
+            if(c.getName().equals(board.getCurrentCorp())) return c;
+        }
+        throw new IllegalStateException("No Corporation is operating");
+    }
+
+    private Wallet findPrivOwner(String privName) {
+        for(Wallet w:board.getWallets()) {
+            for(Priv p:w.getPrivates()) {
+                if(p.getCorp().equals(privName)) return w;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * this is for corp buying private from player
+     */
+    public Board1856 buyPriv(String privName, int price) {
+        int level = currentTrainLevel();
+        if (level < 2) throw new IllegalStateException("No Company sales before first 3-train");
+        if (level > 5) throw new IllegalStateException("Private companies are closed");
+        int basePrice = priv2price.get(privName);
+        if(price*2 < basePrice) throw new IllegalStateException("Minimum price is "+(basePrice/2));
+        if(basePrice*2 < price) throw new IllegalStateException("Maximum price is "+(basePrice*2));
+        if (getCurrentCorp().getCash() < price) throw new IllegalStateException(FUNDS);
+        Wallet w = findPrivOwner(privName);
+        if(w == null) throw new IllegalStateException(privName+" already sold");
+        makePrimaryMove(BUY_PRIV, w.getName(), privName, price);
+        return board;
     }
 
     public enum Era { GATHER, AUCTION, INITIAL, STOCK, OP, CGRFORM, DONE }
@@ -391,9 +425,28 @@ public class Game1856 extends AbstractGame {
             case TAKE_LOAN:
                 doTakeLoan(move);
                 break;
+            case BUY_PRIV:
+                doBuyPriv(move);
+                break;
             default:
                 throw new IllegalStateException("unknown move action: "+move.getAction());
         }
+    }
+
+    private void doBuyPriv(TrainMove move) {
+        Corp c = getCurrentCorp();
+        Wallet w = findWallet(move.getPlayer());
+        payCorpToWallet(w, c, move.getAmount());
+        w.getPrivates().removeIf(x -> x.getCorp().equals(move.getCorp()));
+        c.getPrivates().add(new Priv(move.getCorp(), 3));
+    }
+
+    private void undoBuyPriv(TrainMove move) {
+        Corp c = getCurrentCorp();
+        Wallet w = findWallet(move.getPlayer());
+        payWalletToCorp(w, c, move.getAmount());
+        c.getPrivates().removeIf(x -> x.getCorp().equals(move.getCorp()));
+        w.getPrivates().add(new Priv(move.getCorp(), 3));
     }
 
     private void doReorderCorp(TrainMove move) {
@@ -714,6 +767,9 @@ public class Game1856 extends AbstractGame {
                 return true;
             case TAKE_LOAN:
                 undoTakeLoan(move);
+                return true;
+            case BUY_PRIV:
+                undoBuyPriv(move);
                 return true;
             default:
                 return false;

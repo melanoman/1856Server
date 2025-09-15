@@ -167,4 +167,12 @@ public class TrainController {
     synchronized Board1856 takeLoan(@PathVariable String table) {
         return loadGame(table).takeLoan();
     }
+
+    @PutMapping("1856/buypriv/{table}/{privName}/{price}")
+    @ResponseBody
+    synchronized Board1856 buyPriv(@PathVariable String table,
+                                   @PathVariable String privName,
+                                   @PathVariable int price) {
+        return loadGame(table).buyPriv(privName, price);
+    }
 }
