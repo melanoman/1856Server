@@ -484,15 +484,25 @@ public class Game1856 extends AbstractGame {
     }
 
     private void doEndOpRound(TrainMove move) {
-        //TODO SOON set up next round, make sure it is UNDOable
         board.setCurrentCorp("");
         board.setLoanTaken(false);
+        if(board.getCurrentOpRound() == board.getMaxOpRounds()) {
+            board.setPhase(Era.STOCK.name());
+        } else {
+            board.setCurrentOpRound(board.getCurrentOpRound() + 1);
+        }
     }
 
     private void undoEndOpRound(TrainMove move) {
-        //TODO SOON return to current round
         board.setCurrentCorp(move.getCorp());
         board.setLoanTaken(move.getAmount() > 0);
+        if (board.getPhase().equals(Era.OP.name())) {
+            board.setCurrentOpRound(board.getCurrentOpRound() - 1);
+        } else {
+            board.setCurrentOpRound(move.getAmount() > 0 ? move.getAmount() : -move.getAmount());
+            board.setMaxOpRounds(board.getCurrentOpRound());
+            board.setPhase(Era.OP.name());
+        }
     }
 
     private void doBuyPriv(TrainMove move) {
@@ -1103,8 +1113,9 @@ public class Game1856 extends AbstractGame {
             makeFollowMove(NEXT_CORP, board.getCurrentCorp(), corp.getName(), board.isLoanTaken() ? 1: 0);
             return;
         }
-        //TODO SOON save info to allow UNDO
-        makeFollowMove(END_OP_ROUND, "", board.getCurrentCorp(), 0);
+        makeFollowMove(END_OP_ROUND, "", board.getCurrentCorp(),
+                       board.isLoanTaken() ? board.getMaxOpRounds(): -board.getMaxOpRounds()
+        );
     }
 
     private void undoEndStockRound(TrainMove move) {
