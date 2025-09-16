@@ -184,7 +184,7 @@ public class Game1856 extends AbstractGame {
      */
     public Board1856 buyPriv(String privName, int price) {
         int level = currentTrainLevel();
-        if (level < 2) throw new IllegalStateException("No Company sales before first 3-train");
+        if (level < 3) throw new IllegalStateException("No Company sales before first 3-train");
         if (level > 5) throw new IllegalStateException("Private companies are closed");
         int basePrice = priv2price.get(privName);
         if(price*2 < basePrice) throw new IllegalStateException("Minimum price is "+(basePrice/2));
