@@ -456,6 +456,7 @@ public class Game1856 extends AbstractGame {
     private void doFloat(TrainMove move) {
         Corp corp = findCorp(move.getCorp());
         corp.setHasFloated(true);
+        corp.setTokensUsed(1);
         board.setCurrentCorp(corp.getName());
         board.setLoanTaken(false);
     }
@@ -463,6 +464,7 @@ public class Game1856 extends AbstractGame {
     private void undoFloat(TrainMove move) {
         Corp corp = findCorp(move.getCorp());
         corp.setHasFloated(false);
+        corp.setTokensUsed(0);
         board.setCurrentCorp(move.getPlayer());
         board.setLoanTaken(move.getAmount() > 0);
     }
