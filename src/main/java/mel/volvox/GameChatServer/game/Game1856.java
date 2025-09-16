@@ -518,7 +518,6 @@ public class Game1856 extends AbstractGame {
     }
 
     private void undoBuyPriv(TrainMove move) {
-        System.out.println("UNDO BUY PRIV");
         Corp c = getCurrentCorp();
         Wallet w = findWallet(move.getPlayer());
         payWalletToCorp(w, c, move.getAmount());
