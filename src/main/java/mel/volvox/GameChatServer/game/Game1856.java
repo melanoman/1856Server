@@ -188,7 +188,6 @@ public class Game1856 extends AbstractGame {
      * this is for corp buying private from player
      */
     public Board1856 buyPriv(String privName, int price) {
-        System.out.println("BUY PRIV");
         int level = currentTrainLevel();
         if (level < 3) throw new IllegalStateException("No Company sales before first 3-train");
         if (level > 5) throw new IllegalStateException("Private companies are closed");
@@ -511,7 +510,6 @@ public class Game1856 extends AbstractGame {
     }
 
     private void doBuyPriv(TrainMove move) {
-        System.out.println("DO BUY PRIV");
         Corp c = getCurrentCorp();
         Wallet w = findWallet(move.getPlayer());
         payCorpToWallet(w, c, move.getAmount());
