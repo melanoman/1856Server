@@ -55,6 +55,8 @@ public class Game1856 extends AbstractGame {
     public static final String BUY_PRIV = "buyPriv";
     public static final String FLOAT = "float";
     public static final String FAIL_FLOAT = "failFloat";
+    public static final String PAY_TOKEN = "payToken";
+    public static final String PAY_TILE = "payTile";
     public static final String NEXT_CORP = "nextCorp";
     public static final String END_OP_ROUND = "endOpRound";
 
@@ -441,6 +443,9 @@ public class Game1856 extends AbstractGame {
                 break;
             case FAIL_FLOAT:
                 doFailFloat(move);
+                break;
+            case PAY_TOKEN:
+                doPayToken(move);
                 break;
             case NEXT_CORP:
                 doNextCorp(move);
@@ -858,6 +863,9 @@ public class Game1856 extends AbstractGame {
             case FAIL_FLOAT:
                 undoFailFloat(move);
                 return true;
+            case PAY_TOKEN:
+                undoPayToken(move);
+                return true;
             case NEXT_CORP:
                 undoNextCorp(move);
                 return true;
@@ -867,6 +875,20 @@ public class Game1856 extends AbstractGame {
             default:
                 return false;
         }
+    }
+
+    private void doPayToken(TrainMove move) {
+        Corp c = getCurrentCorp();
+        board.setTokenPlayed(true);
+        c.setTokensUsed(c.getTokensUsed() + 1);
+        payCorpToBank(c, move.getAmount());
+    }
+
+    private void undoPayToken(TrainMove move) {
+        Corp c = getCurrentCorp();
+        board.setTokenPlayed(false);
+        c.setTokensUsed(c.getTokensUsed() - 1);
+        payBankToCorp(c, move.getAmount());
     }
 
     private void doBuyPool(TrainMove move, boolean rawMove) {
@@ -1499,6 +1521,7 @@ public class Game1856 extends AbstractGame {
     }
 
     synchronized public Board1856 setPar(String corpName, int amount) {
+        if (!board.getPhase().equals(Era.STOCK.name())) throw new IllegalStateException("Not Stock Round");
         if(!PAR_VALUES.contains(amount)) {
             throw new IllegalStateException("Par Value must be 65, 70, 75, 80, 90, or 100");
         }
@@ -1512,6 +1535,7 @@ public class Game1856 extends AbstractGame {
     }
 
     synchronized public Board1856 buyBank(String corpName) {
+        if (!board.getPhase().equals(Era.STOCK.name())) throw new IllegalStateException("Not Stock Round");
         Wallet w = findWallet(board.getCurrentPlayer());
         Corp c = findCorp(corpName);
         if (c.getBankShares() < 1) throw new IllegalStateException("No Bank Shares Remain");
@@ -1523,6 +1547,7 @@ public class Game1856 extends AbstractGame {
     }
 
     synchronized public Board1856 buyPool(String corpName) {
+        if (!board.getPhase().equals(Era.STOCK.name())) throw new IllegalStateException("Not Stock Round");
         Wallet w = findWallet(board.getCurrentPlayer());
         Corp c = findCorp(corpName);
         if (c.getPoolShares() < 1) throw new IllegalStateException("No pool shares available");
@@ -1530,6 +1555,19 @@ public class Game1856 extends AbstractGame {
         // TODO enforce cert limits
         // TODO enforce no buy after sale same round
         makePrimaryMove(STOCK_BUY_POOL, board.getCurrentPlayer(), corpName, c.getPar());
+        return board;
+    }
+
+    synchronized public Board1856 payToken() {
+        if (!board.getPhase().equals(Era.OP.name()) || !board.getEvent().equals(PRE_REV_EVENT)) {
+            throw new IllegalStateException("Tokens Only allowed before revenue");
+        }
+        if(board.isTokenPlayed()) throw new IllegalStateException("One paid token per turn");
+        Corp c = getCurrentCorp();
+        if(c.getTokensUsed() >= c.getTokensMax()) throw new IllegalStateException("All tokens used");
+        int price = c.getTokensUsed() > 1 ? 100 : 40;
+        if(c.getCash() < price) throw new IllegalStateException(FUNDS);
+        makePrimaryMove(PAY_TOKEN, "", board.getCurrentCorp(), price);
         return board;
     }
 }

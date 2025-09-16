@@ -175,4 +175,10 @@ public class TrainController {
                                    @PathVariable int price) {
         return loadGame(table).buyPriv(privName, price);
     }
+
+    @PutMapping("1856/token/{table}")
+    @ResponseBody
+    synchronized Board1856 payToken(@PathVariable String table) {
+        return loadGame(table).payToken();
+    }
 }

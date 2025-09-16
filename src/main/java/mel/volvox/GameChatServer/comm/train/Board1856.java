@@ -34,4 +34,6 @@ public class Board1856 {
 
    //operating scratchpad
    boolean loanTaken = false; // clear after each corp, prevent 2xloan same turn
+   boolean tilePlayed = false; // clear after revenue, prevent extra tile
+   boolean tokenPlayed = false; // clear after revenue, prevent extra token
 }
