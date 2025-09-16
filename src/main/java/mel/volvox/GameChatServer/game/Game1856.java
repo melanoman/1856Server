@@ -19,7 +19,7 @@ public class Game1856 extends AbstractGame {
     // error constants
     public static final String FUNDS = "Insufficient Funds";
 
-    // action constants
+    // action constants --- these make the database table human readable
     public static final String ADD_PLAYER = "addPlayer";
     public static final String RENAME_PLAYER = "renamePlayer";
     public static final String START_GAME = "startGame";
@@ -52,6 +52,10 @@ public class Game1856 extends AbstractGame {
 
     public static final String TAKE_LOAN = "takeLoan";
     public static final String BUY_PRIV = "buyPriv";
+    public static final String FLOAT = "float";
+    public static final String FAIL_FLOAT = "failFloat";
+    public static final String NEXT_CORP = "nextCorp";
+    public static final String END_OP_ROUND = "endOpRound";
 
     // event constants
     public static final String NORMAL_EVENT = "";
@@ -428,9 +432,67 @@ public class Game1856 extends AbstractGame {
             case BUY_PRIV:
                 doBuyPriv(move);
                 break;
+            case FLOAT:
+                doFloat(move);
+                break;
+            case FAIL_FLOAT:
+                doFailFloat(move);
+                break;
+            case NEXT_CORP:
+                doNextCorp(move);
+                break;
+            case END_OP_ROUND:
+                doEndOpRound(move);
+                break;
             default:
                 throw new IllegalStateException("unknown move action: "+move.getAction());
         }
+    }
+
+    private void doFloat(TrainMove move) {
+        Corp corp = findCorp(move.getCorp());
+        corp.setHasFloated(true);
+        board.setCurrentCorp(corp.getName());
+        board.setLoanTaken(false);
+    }
+
+    private void undoFloat(TrainMove move) {
+        Corp corp = findCorp(move.getCorp());
+        corp.setHasFloated(false);
+        board.setCurrentCorp(move.getPlayer());
+        board.setLoanTaken(move.getAmount() > 0);
+    }
+
+    private void doFailFloat(TrainMove move) {
+        Corp corp = findCorp(move.getCorp());
+        corp.setHasOperated(true);
+    }
+
+    private void undoFailFloat(TrainMove move) {
+        Corp corp = findCorp(move.getCorp());
+        corp.setHasOperated(false);
+    }
+
+    private void doNextCorp(TrainMove move) {
+        board.setLoanTaken(false);
+        board.setCurrentCorp(move.getCorp());
+    }
+
+    private void undoNextCorp(TrainMove move) {
+        board.setLoanTaken(move.getAmount() > 0);
+        board.setCurrentCorp(move.getPlayer());
+    }
+
+    private void doEndOpRound(TrainMove move) {
+        //TODO SOON set up next round, make sure it is UNDOable
+        board.setCurrentCorp("");
+        board.setLoanTaken(false);
+    }
+
+    private void undoEndOpRound(TrainMove move) {
+        //TODO SOON return to current round
+        board.setCurrentCorp(move.getCorp());
+        board.setLoanTaken(move.getAmount() > 0);
     }
 
     private void doBuyPriv(TrainMove move) {
@@ -771,6 +833,18 @@ public class Game1856 extends AbstractGame {
             case BUY_PRIV:
                 undoBuyPriv(move);
                 return true;
+            case FLOAT:
+                undoFloat(move);
+                return true;
+            case FAIL_FLOAT:
+                undoFailFloat(move);
+                return true;
+            case NEXT_CORP:
+                undoNextCorp(move);
+                return true;
+            case END_OP_ROUND:
+                undoEndOpRound(move);
+                return true;
             default:
                 return false;
         }
@@ -896,6 +970,9 @@ public class Game1856 extends AbstractGame {
         board.setCurrentPlayer(move.getPlayer());
     }
 
+    /**
+     * @return The level of the next available bank train, use 8 for D
+     */
     private int nextTrainLevel() {
         return board.getTrains().size() > 1 ? board.getTrains().get(0) : 8;
     }
@@ -998,7 +1075,6 @@ public class Game1856 extends AbstractGame {
         board.setCurrentOpRound(1);
         board.setMaxOpRounds(maxRounds());
         board.setPhase(Era.OP.name());
-        board.setCurrentCorp(board.getCorps().get(0).getName());
         board.setEvent(PRE_REV_EVENT);
         if (rawMove) {
            for(Corp c: board.getCorps()) {
@@ -1008,13 +1084,33 @@ public class Game1856 extends AbstractGame {
            }
         }
         payPrivs();
+        if (rawMove) setNextOpCorp();
+    }
+
+    private void setNextOpCorp() {
+        for (Corp corp: board.getCorps()) {
+            if (corp.isHasOperated()) continue;
+            if (!corp.isHasFloated()) {
+                int min = 3;//nextTrainLevel();
+                if (10-corp.getBankShares() < min) {
+                    makeFollowMove(FAIL_FLOAT, "", corp.getName(), 0);
+                    continue;
+                } else {
+                    makeFollowMove(FLOAT, board.getCurrentCorp(), corp.getName(), board.isLoanTaken() ? 1: 0);
+                    return;
+                }
+            }
+            makeFollowMove(NEXT_CORP, board.getCurrentCorp(), corp.getName(), board.isLoanTaken() ? 1: 0);
+            return;
+        }
+        //TODO SOON save info to allow UNDO
+        makeFollowMove(END_OP_ROUND, "", board.getCurrentCorp(), 0);
     }
 
     private void undoEndStockRound(TrainMove move) {
         board.setCurrentOpRound(0);
         board.setMaxOpRounds(0);
         board.setPhase(move.getCorp());
-        board.setCurrentCorp("");
         board.setEvent(NORMAL_EVENT);
         unpayPrivs();
     }
