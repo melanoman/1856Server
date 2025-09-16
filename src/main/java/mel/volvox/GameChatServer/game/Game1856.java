@@ -1494,6 +1494,12 @@ public class Game1856 extends AbstractGame {
     }
 
     synchronized public Board1856 buyPool(String corpName) {
-        throw new IllegalStateException("TODO buy pool share");
+        Wallet w = findWallet(board.getCurrentPlayer());
+        Corp c = findCorp(corpName);
+        if (c.getPoolShares() < 1) throw new IllegalStateException("No pool shares available");
+        if(w.getCash() < c.getPrice().getPrice()) throw new IllegalStateException(FUNDS);
+        // TODO enforce cert limits
+        // TODO enforce no buy after sale same round
+        return board;
     }
 }
