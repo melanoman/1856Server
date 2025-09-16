@@ -447,6 +447,9 @@ public class Game1856 extends AbstractGame {
             case PAY_TOKEN:
                 doPayToken(move);
                 break;
+            case PAY_TILE:
+                doPayTile(move);
+                break;
             case NEXT_CORP:
                 doNextCorp(move);
                 break;
@@ -866,6 +869,9 @@ public class Game1856 extends AbstractGame {
             case PAY_TOKEN:
                 undoPayToken(move);
                 return true;
+            case PAY_TILE:
+                undoPayTile(move);
+                return true;
             case NEXT_CORP:
                 undoNextCorp(move);
                 return true;
@@ -875,6 +881,18 @@ public class Game1856 extends AbstractGame {
             default:
                 return false;
         }
+    }
+
+    private void doPayTile(TrainMove move) {
+        Corp c = getCurrentCorp();
+        board.setTilePlayed(true);
+        payCorpToBank(c, move.getAmount());
+    }
+
+    private void undoPayTile(TrainMove move) {
+        Corp c = getCurrentCorp();
+        board.setTilePlayed(false);
+        payBankToCorp(c, move.getAmount());
     }
 
     private void doPayToken(TrainMove move) {
@@ -1560,7 +1578,7 @@ public class Game1856 extends AbstractGame {
 
     synchronized public Board1856 payToken() {
         if (!board.getPhase().equals(Era.OP.name()) || !board.getEvent().equals(PRE_REV_EVENT)) {
-            throw new IllegalStateException("Tokens Only allowed before revenue");
+            throw new IllegalStateException("Tokens allowed only before revenue");
         }
         if(board.isTokenPlayed()) throw new IllegalStateException("One paid token per turn");
         Corp c = getCurrentCorp();
@@ -1568,6 +1586,17 @@ public class Game1856 extends AbstractGame {
         int price = c.getTokensUsed() > 1 ? 100 : 40;
         if(c.getCash() < price) throw new IllegalStateException(FUNDS);
         makePrimaryMove(PAY_TOKEN, "", board.getCurrentCorp(), price);
+        return board;
+    }
+
+    synchronized public Board1856 payTile() {
+        if (!board.getPhase().equals(Era.OP.name()) || !board.getEvent().equals(PRE_REV_EVENT)) {
+            throw new IllegalStateException("Tiles allowed only before revenue");
+        }
+        if(board.isTilePlayed()) throw new IllegalStateException("One paid tile per turn");
+        Corp c = getCurrentCorp();
+        if(c.getCash() < 40) throw new IllegalStateException(FUNDS);
+        makePrimaryMove(PAY_TILE, "", board.getCurrentCorp(), 40);
         return board;
     }
 }

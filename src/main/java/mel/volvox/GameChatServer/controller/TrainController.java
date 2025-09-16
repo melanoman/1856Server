@@ -181,4 +181,10 @@ public class TrainController {
     synchronized Board1856 payToken(@PathVariable String table) {
         return loadGame(table).payToken();
     }
+
+    @PutMapping("1856/tile/{table}")
+    @ResponseBody
+    synchronized Board1856 payTile(@PathVariable String table) {
+        return loadGame(table).payTile();
+    }
 }
