@@ -41,6 +41,7 @@ public class Game1856 extends AbstractGame {
     public static final String STOCK_PASS = "stockPass";
     public static final String STOCK_SET_PAR = "stockSetPar";
     public static final String STOCK_BUY_BANK = "stockBuyBank";
+    public static final String STOCK_BUY_POOL = "stockBuyPool";
     public static final String STOCK_HEADER = "stockHeader";
     public static final String STOCK_SALE = "stockSale";
     public static final String STOCK_FOOTER = "stockFooter";
@@ -187,6 +188,7 @@ public class Game1856 extends AbstractGame {
      * this is for corp buying private from player
      */
     public Board1856 buyPriv(String privName, int price) {
+        System.out.println("BUY PRIV");
         int level = currentTrainLevel();
         if (level < 3) throw new IllegalStateException("No Company sales before first 3-train");
         if (level > 5) throw new IllegalStateException("Private companies are closed");
@@ -409,6 +411,9 @@ public class Game1856 extends AbstractGame {
             case STOCK_BUY_BANK:
                 doBuyBank(move, rawMove);
                 break;
+            case STOCK_BUY_POOL:
+                doBuyPool(move, rawMove);
+                break;
             case UPDATE_PREZ:
                 doUpdatePrez(move);
                 break;
@@ -506,6 +511,7 @@ public class Game1856 extends AbstractGame {
     }
 
     private void doBuyPriv(TrainMove move) {
+        System.out.println("DO BUY PRIV");
         Corp c = getCurrentCorp();
         Wallet w = findWallet(move.getPlayer());
         payCorpToWallet(w, c, move.getAmount());
@@ -514,6 +520,7 @@ public class Game1856 extends AbstractGame {
     }
 
     private void undoBuyPriv(TrainMove move) {
+        System.out.println("UNDO BUY PRIV");
         Corp c = getCurrentCorp();
         Wallet w = findWallet(move.getPlayer());
         payWalletToCorp(w, c, move.getAmount());
@@ -820,6 +827,9 @@ public class Game1856 extends AbstractGame {
             case STOCK_BUY_BANK:
                 undoBuyBank(move);
                 return true;
+            case STOCK_BUY_POOL:
+                undoBuyPool(move);
+                return true;
             case UPDATE_PREZ:
                 undoUpdatePrez(move);
                 return true;
@@ -858,6 +868,26 @@ public class Game1856 extends AbstractGame {
             default:
                 return false;
         }
+    }
+
+    private void doBuyPool(TrainMove move, boolean rawMove) {
+        Corp c = findCorp(move.getCorp());
+        Wallet w = getPlayerWallet(move.getPlayer());
+        c.setBankShares(c.getPoolShares() - 1);
+        shareToWallet(w, move.getCorp(), 1);
+        payWalletToBank(w, move.getAmount());
+        if (rawMove) {
+            updatePrez(move.getCorp());
+        }
+        incrementStockPlayer(true, rawMove);
+    }
+
+    private void undoBuyPool(TrainMove move) {
+        Corp c = findCorp(move.getCorp());
+        Wallet w = getPlayerWallet(move.getPlayer());
+        c.setPoolShares(c.getPoolShares() + 1);
+        shareToWallet(w, move.getCorp(), -1);
+        board.setCurrentPlayer(move.getPlayer());
     }
 
     private void doStockFooter(TrainMove move, boolean rawMove) {
@@ -1101,7 +1131,7 @@ public class Game1856 extends AbstractGame {
         for (Corp corp: board.getCorps()) {
             if (corp.isHasOperated()) continue;
             if (!corp.isHasFloated()) {
-                int min = 3;//nextTrainLevel();
+                int min = nextTrainLevel();
                 if (10-corp.getBankShares() < min) {
                     makeFollowMove(FAIL_FLOAT, "", corp.getName(), 0);
                     continue;
@@ -1500,6 +1530,7 @@ public class Game1856 extends AbstractGame {
         if(w.getCash() < c.getPrice().getPrice()) throw new IllegalStateException(FUNDS);
         // TODO enforce cert limits
         // TODO enforce no buy after sale same round
+        makePrimaryMove(STOCK_BUY_POOL, board.getCurrentPlayer(), corpName, c.getPar());
         return board;
     }
 }
