@@ -187,4 +187,18 @@ public class TrainController {
     synchronized Board1856 payTile(@PathVariable String table) {
         return loadGame(table).payTile();
     }
+
+    @PutMapping("1856/withhold/{table}/{amount}")
+    @ResponseBody
+    synchronized Board1856 withhold(@PathVariable String table,
+                                    @PathVariable int amount) {
+        return loadGame(table).withhold(amount);
+    }
+
+    @PutMapping("1856/payout/{table}/{amount}")
+    @ResponseBody
+    synchronized Board1856 payout(@PathVariable String table,
+                                  @PathVariable int amount) {
+        return loadGame(table).payout(amount);
+    }
 }

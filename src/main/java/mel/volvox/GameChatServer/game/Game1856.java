@@ -57,6 +57,9 @@ public class Game1856 extends AbstractGame {
     public static final String FAIL_FLOAT = "failFloat";
     public static final String PAY_TOKEN = "payToken";
     public static final String PAY_TILE = "payTile";
+    public static final String INTEREST = "payInterest";
+    public static final String PAYOUT = "payout";
+    public static final String WITHHOLD = "withhold";
     public static final String NEXT_CORP = "nextCorp";
     public static final String END_OP_ROUND = "endOpRound";
 
@@ -450,6 +453,12 @@ public class Game1856 extends AbstractGame {
             case PAY_TILE:
                 doPayTile(move);
                 break;
+            case INTEREST:
+                doInterest(move);
+                break;
+            case PAYOUT:
+                doPayout(move);
+                break;
             case NEXT_CORP:
                 doNextCorp(move);
                 break;
@@ -458,6 +467,40 @@ public class Game1856 extends AbstractGame {
                 break;
             default:
                 throw new IllegalStateException("unknown move action: "+move.getAction());
+        }
+    }
+
+    private void doInterest(TrainMove move) {
+        payCorpToBank(findCorp(move.getCorp()), move.getAmount());
+    }
+
+    private void undoInterest(TrainMove move) {
+        payBankToCorp(findCorp(move.getCorp()), move.getAmount());
+    }
+
+    private void doPayout(TrainMove move) {
+        board.setEvent(POST_REV_EVENT);
+        board.setTilePlayed(false);
+        board.setTokenPlayed(false);
+        for(Wallet w: board.getWallets()) {
+            for(Stock stock: w.getStocks()) {
+                if (stock.getCorp().equals(move.getCorp())) { //TODO special CGR payouts
+                    payBankToWallet(w, move.getAmount() * stock.getAmount());
+                }
+            }
+        }
+    }
+
+    private void undoPayout(TrainMove move) {
+        board.setEvent(PRE_REV_EVENT);
+        board.setTilePlayed(move.getPlayer().charAt(0) == 'T');
+        board.setTokenPlayed(move.getPlayer().charAt(1) == 't');
+        for(Wallet w: board.getWallets()) {
+            for(Stock stock: w.getStocks()) {
+                if (stock.getCorp().equals(move.getCorp())) { //TODO special CGR payouts
+                    payWalletToBank(w, move.getAmount() * stock.getAmount());
+                }
+            }
         }
     }
 
@@ -871,6 +914,12 @@ public class Game1856 extends AbstractGame {
                 return true;
             case PAY_TILE:
                 undoPayTile(move);
+                return true;
+            case INTEREST:
+                undoInterest(move);
+                return true;
+            case PAYOUT:
+                undoPayout(move);
                 return true;
             case NEXT_CORP:
                 undoNextCorp(move);
@@ -1598,5 +1647,41 @@ public class Game1856 extends AbstractGame {
         if(c.getCash() < 40) throw new IllegalStateException(FUNDS);
         makePrimaryMove(PAY_TILE, "", board.getCurrentCorp(), 40);
         return board;
+    }
+
+    // (T)ile and (t)oken state restoration string
+    private String restorePreRev() {
+        return board.isTilePlayed() ?
+                (board.isTokenPlayed() ? "Tt" : "T-") :
+                (board.isTokenPlayed() ? "-t" : "--");
+    }
+    synchronized public Board1856 payout(int amount) {
+        if(amount % 10 != 0) throw new IllegalStateException("Revenue must be a multiple of 10");
+        if(amount < 10) throw new IllegalStateException("Minimum payout is $10");
+        Corp c = getCurrentCorp();
+        int interest = 10 * c.getLoans();
+        if (interest <= c.getCash()) {
+            if (interest == 0) {
+                makePrimaryMove(PAYOUT, restorePreRev(), c.getName(), amount / 10);
+            } else {
+                makePrimaryMove(INTEREST, "", c.getName(), interest);
+                makeFollowMove(PAYOUT, restorePreRev(), c.getName(), amount / 10);
+            }
+        } else {
+            int downPayment = c.getCash() / 10 * 10;
+            int remainder = interest - downPayment;
+            if (remainder >= amount) throw new IllegalStateException("Too much interest to pay out");
+            makePrimaryMove(INTEREST, restorePreRev(), c.getName(), downPayment);
+            makeFollowMove(PAYOUT, restorePreRev(), c.getName(), (amount - remainder) / 10);
+        }
+        return board;
+    }
+
+    synchronized public Board1856 withhold(int amount) {
+        if(amount % 10 != 0) throw new IllegalStateException("Revenue must be a multiple of 10");
+        if(amount < 0) throw new IllegalStateException("Negative Revenue is not possible");
+        Corp c = getCurrentCorp();
+        //TODO SOON handle loan interest
+        throw new IllegalStateException("TODO implement withhold");
     }
 }
