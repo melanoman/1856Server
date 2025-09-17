@@ -57,6 +57,7 @@ public class Game1856 extends AbstractGame {
     public static final String FAIL_FLOAT = "failFloat";
     public static final String PAY_TOKEN = "payToken";
     public static final String PAY_TILE = "payTile";
+    public static final String RUN = "run";
     public static final String INTEREST = "payInterest";
     public static final String PAYOUT = "payout";
     public static final String WITHHOLD = "withhold";
@@ -453,6 +454,9 @@ public class Game1856 extends AbstractGame {
             case PAY_TILE:
                 doPayTile(move);
                 break;
+            case RUN:
+                doLastRun(move);
+                break;
             case INTEREST:
                 doInterest(move);
                 break;
@@ -482,6 +486,8 @@ public class Game1856 extends AbstractGame {
         board.setEvent(POST_REV_EVENT);
         board.setTilePlayed(false);
         board.setTokenPlayed(false);
+        Corp c = findCorp(move.getCorp());
+        payBankToCorp(c, c.getPoolShares() * move.getAmount());
         for(Wallet w: board.getWallets()) {
             for(Stock stock: w.getStocks()) {
                 if (stock.getCorp().equals(move.getCorp())) { //TODO special CGR payouts
@@ -495,6 +501,8 @@ public class Game1856 extends AbstractGame {
         board.setEvent(PRE_REV_EVENT);
         board.setTilePlayed(move.getPlayer().charAt(0) == 'T');
         board.setTokenPlayed(move.getPlayer().charAt(1) == 't');
+        Corp c = findCorp(move.getCorp());
+        payCorpToBank(c, c.getPoolShares() * move.getAmount());
         for(Wallet w: board.getWallets()) {
             for(Stock stock: w.getStocks()) {
                 if (stock.getCorp().equals(move.getCorp())) { //TODO special CGR payouts
@@ -915,6 +923,9 @@ public class Game1856 extends AbstractGame {
             case PAY_TILE:
                 undoPayTile(move);
                 return true;
+            case RUN:
+                undoLastRun(move);
+                return true;
             case INTEREST:
                 undoInterest(move);
                 return true;
@@ -930,6 +941,16 @@ public class Game1856 extends AbstractGame {
             default:
                 return false;
         }
+    }
+
+    private void doLastRun(TrainMove move) {
+        Corp c = findCorp(move.getCorp());
+        c.setLastRun(move.getAmount());
+    }
+
+    private void undoLastRun(TrainMove move) {
+        Corp c = findCorp(move.getCorp());
+        c.setLastRun(Integer.getInteger(move.getPlayer()));
     }
 
     private void doPayTile(TrainMove move) {
@@ -1661,17 +1682,19 @@ public class Game1856 extends AbstractGame {
         Corp c = getCurrentCorp();
         int interest = 10 * c.getLoans();
         if (interest <= c.getCash()) {
+            makePrimaryMove(RUN, ""+c.getLastRun(), c.getName(), amount);
             if (interest == 0) {
-                makePrimaryMove(PAYOUT, restorePreRev(), c.getName(), amount / 10);
+                makeFollowMove(PAYOUT, restorePreRev(), c.getName(), amount / 10);
             } else {
-                makePrimaryMove(INTEREST, "", c.getName(), interest);
+                makeFollowMove(INTEREST, "", c.getName(), interest);
                 makeFollowMove(PAYOUT, restorePreRev(), c.getName(), amount / 10);
             }
         } else {
             int downPayment = c.getCash() / 10 * 10;
             int remainder = interest - downPayment;
             if (remainder >= amount) throw new IllegalStateException("Too much interest to pay out");
-            makePrimaryMove(INTEREST, restorePreRev(), c.getName(), downPayment);
+            makePrimaryMove(RUN, ""+c.getLastRun(), c.getName(), amount);
+            makeFollowMove(INTEREST, restorePreRev(), c.getName(), downPayment);
             makeFollowMove(PAYOUT, restorePreRev(), c.getName(), (amount - remainder) / 10);
         }
         return board;
