@@ -439,7 +439,7 @@ public class Game1856 extends AbstractGame {
             case PRICE_UP:
             case PRICE_LEFT:
             case PRICE_RIGHT:
-                doStockStep(move);
+                doStockStep(move, rawMove);
                 break;
             case REORDER_CORP:
                 doReorderCorp(move);
@@ -639,7 +639,7 @@ public class Game1856 extends AbstractGame {
         c.getPrice().drop(-move.getAmount());
     }
 
-   private void doStockStep(TrainMove move) {
+   private void doStockStep(TrainMove move, boolean rawMove) {
         Corp c = findCorp(move.getCorp());
         switch (move.getAction()) {
             case PRICE_LEFT -> c.getPrice().left();
@@ -647,6 +647,9 @@ public class Game1856 extends AbstractGame {
             case PRICE_DOWN -> c.getPrice().down();
             case PRICE_UP -> c.getPrice().up();
         }
+       if (rawMove) {
+           makeFollowMove(REORDER_CORP, "", move.getCorp(), board.getCorps().indexOf(c));
+       }
    }
 
    private void undoStockStep(TrainMove move) {
