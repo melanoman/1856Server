@@ -1720,7 +1720,7 @@ public class Game1856 extends AbstractGame {
             int remainder = interest - downPayment;
             if (remainder >= amount) throw new IllegalStateException("Too much interest to pay out");
             makePrimaryMove(RUN, ""+c.getLastRun(), c.getName(), amount);
-            makeFollowMove(INTEREST, restorePreRev(), c.getName(), downPayment);
+            makeFollowMove(INTEREST, "", c.getName(), downPayment);
             makeFollowMove(PAYOUT, restorePreRev(), c.getName(), (amount - remainder) / 10);
         }
         return board;
@@ -1739,12 +1739,12 @@ public class Game1856 extends AbstractGame {
             if (remainder > c.getCash()) {
                 makeFollowMove(PREZ_INTEREST, "", c.getName(), remainder - amount);
             } else {
-                makeFollowMove(WITHHOLD, "", c.getName(), amount - remainder);
+                makeFollowMove(WITHHOLD, restorePreRev(), c.getName(), amount - remainder);
             }
         } else {
             makePrimaryMove(RUN, ""+c.getLastRun(), c.getName(), amount);
             makeFollowMove(INTEREST, "", c.getName(), interest);
-            makeFollowMove(WITHHOLD, "", c.getName(), amount);
+            makeFollowMove(WITHHOLD, restorePreRev(), c.getName(), amount);
         }
         return board;
     }
