@@ -201,4 +201,10 @@ public class TrainController {
                                   @PathVariable int amount) {
         return loadGame(table).payout(amount);
     }
+
+    @PutMapping("1856/destination/{table}")
+    @ResponseBody
+    synchronized Board1856 destination(@PathVariable String table) {
+        return loadGame(table).destination();
+    }
 }

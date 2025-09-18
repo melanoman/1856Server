@@ -61,6 +61,7 @@ public class Game1856 extends AbstractGame {
     public static final String FAIL_FLOAT = "failFloat";
     public static final String PAY_TOKEN = "payToken";
     public static final String PAY_TILE = "payTile";
+    public static final String DESTINATION = "destination";
     public static final String RUN = "run";
     public static final String INTEREST = "payInterest";
     public static final String PREZ_INTEREST = "prezInterest";
@@ -464,6 +465,9 @@ public class Game1856 extends AbstractGame {
                 break;
             case PAY_TILE:
                 doPayTile(move);
+                break;
+            case DESTINATION:
+                doDestination(move);
                 break;
             case RUN:
                 doLastRun(move);
@@ -983,6 +987,9 @@ public class Game1856 extends AbstractGame {
             case PAY_TILE:
                 undoPayTile(move);
                 return true;
+            case DESTINATION:
+                undoDestination(move);
+                return true;
             case RUN:
                 undoLastRun(move);
                 return true;
@@ -1004,6 +1011,22 @@ public class Game1856 extends AbstractGame {
             default:
                 return false;
         }
+    }
+
+    public void doDestination(TrainMove move) {
+        Corp c = findCorp(move.getCorp());
+        c.setCash(c.getCash() + move.getAmount());
+        c.setEscrow(0);
+        c.setReachedDest(true);
+        board.setBankCash(board.getBankCash() - move.getAmount());
+    }
+
+    public void undoDestination(TrainMove move) {
+        Corp c = findCorp(move.getCorp());
+        c.setCash(c.getCash() - move.getAmount());
+        c.setEscrow(move.getAmount());
+        c.setReachedDest(false);
+        board.setBankCash(board.getBankCash() + move.getAmount());
     }
 
     private void doLastRun(TrainMove move) {
@@ -1793,7 +1816,7 @@ public class Game1856 extends AbstractGame {
             }
         } else {
             makePrimaryMove(RUN, ""+c.getLastRun(), c.getName(), amount);
-            makeFollowMove(INTEREST, "", c.getName(), interest);
+            if (interest > 0) makeFollowMove(INTEREST, "", c.getName(), interest);
             makeFollowMove(WITHHOLD, restorePreRev(), c.getName(), amount);
         }
         if(c.getPrice().leftEdge()) {
@@ -1803,6 +1826,14 @@ public class Game1856 extends AbstractGame {
         } else {
             makeFollowMove(PRICE_LEFT, "", c.getName(), 1);
         }
+        return board;
+    }
+
+    synchronized public Board1856 destination() {
+        Corp corp = getCurrentCorp();
+        if (corp.isReachedDest()) throw new IllegalStateException("Already at destination");
+        if (corp.getFundingType() != Corp.DESTINATION_TYPE) throw new IllegalStateException("No destination");
+        makePrimaryMove(DESTINATION, "", corp.getName(), corp.getEscrow());
         return board;
     }
 }
