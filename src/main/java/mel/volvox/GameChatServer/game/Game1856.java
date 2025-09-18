@@ -1635,7 +1635,9 @@ public class Game1856 extends AbstractGame {
     }
 
     synchronized public Board1856 setPar(String corpName, int amount) {
-        if (!board.getPhase().equals(Era.STOCK.name())) throw new IllegalStateException("Not Stock Round");
+        if (!board.getPhase().equals(Era.STOCK.name()) && !board.getPhase().equals(Era.INITIAL.name())) {
+            throw new IllegalStateException("Not Stock Round");
+        }
         if(!PAR_VALUES.contains(amount)) {
             throw new IllegalStateException("Par Value must be 65, 70, 75, 80, 90, or 100");
         }
@@ -1649,7 +1651,9 @@ public class Game1856 extends AbstractGame {
     }
 
     synchronized public Board1856 buyBank(String corpName) {
-        if (!board.getPhase().equals(Era.STOCK.name())) throw new IllegalStateException("Not Stock Round");
+        if (!board.getPhase().equals(Era.STOCK.name()) && !board.getPhase().equals(Era.INITIAL.name())) {
+            throw new IllegalStateException("Not Stock Round");
+        }
         Wallet w = findWallet(board.getCurrentPlayer());
         Corp c = findCorp(corpName);
         if (c.getBankShares() < 1) throw new IllegalStateException("No Bank Shares Remain");
@@ -1661,7 +1665,9 @@ public class Game1856 extends AbstractGame {
     }
 
     synchronized public Board1856 buyPool(String corpName) {
-        if (!board.getPhase().equals(Era.STOCK.name())) throw new IllegalStateException("Not Stock Round");
+        if (!board.getPhase().equals(Era.STOCK.name()) && !board.getPhase().equals(Era.INITIAL.name())) {
+            throw new IllegalStateException("Not Stock Round");
+        }
         Wallet w = findWallet(board.getCurrentPlayer());
         Corp c = findCorp(corpName);
         if (c.getPoolShares() < 1) throw new IllegalStateException("No pool shares available");
