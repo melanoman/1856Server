@@ -19,7 +19,8 @@ public class Board1856 {
    List<String> players = new ArrayList<>();
    List<Wallet> wallets = new ArrayList<>();
    List<Corp> corps = new ArrayList<>();
-   List<Integer> trains = new ArrayList<>();
+   List<Integer> trains = new ArrayList<>(); //BANK TRAINS
+   List<Integer> trainPool = new ArrayList<>();
 
    int bankCash = 10500; // 12k minus 1500 starting cash
 
