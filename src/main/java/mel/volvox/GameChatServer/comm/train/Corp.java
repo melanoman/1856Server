@@ -25,7 +25,7 @@ public class Corp {
         return new Corp(name, par, bankShares, price, poolShares, cash, escrow,
                 tokensMax, tokensUsed, prez, fundingType, loans, lastRun,
                 newPrivs, portRights, bridgeRights, tunnelRights,
-                hasOperated, hasFloated);
+                hasOperated, hasFloated, reachedDest);
     }
 
     String name; // 2-3 letter abbreviation. not full text
@@ -47,4 +47,5 @@ public class Corp {
     boolean tunnelRights = false;
     boolean hasOperated = false; //this round
     boolean hasFloated = false;
+    boolean reachedDest = false;
 }
