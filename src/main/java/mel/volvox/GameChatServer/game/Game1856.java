@@ -583,11 +583,13 @@ public class Game1856 extends AbstractGame {
 
     private void doEndOpTurn(TrainMove move, boolean rawMove) {
         board.setEvent(PRE_REV_EVENT);
+        findCorp(move.getCorp()).setHasOperated(true);
         if (rawMove) setNextOpCorp();
     }
 
     private void undoEndOpTurn(TrainMove move) {
         board.setEvent(POST_REV_EVENT);
+        findCorp(move.getCorp()).setHasOperated(false);
     }
 
     private void doNextCorp(TrainMove move) {
