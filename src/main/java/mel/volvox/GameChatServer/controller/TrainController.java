@@ -207,4 +207,11 @@ public class TrainController {
     synchronized Board1856 destination(@PathVariable String table) {
         return loadGame(table).destination();
     }
+
+    // for face value purchases from the bank (not pool, not tradein)
+    @PutMapping("1856/banktrain/{table}")
+    @ResponseBody
+    synchronized Board1856 bankTrain(@PathVariable String table) {
+        return loadGame(table).buyBankTrain();
+    }
 }

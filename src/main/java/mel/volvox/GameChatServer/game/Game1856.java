@@ -67,6 +67,7 @@ public class Game1856 extends AbstractGame {
     public static final String PREZ_INTEREST = "prezInterest";
     public static final String PAYOUT = "payout";
     public static final String WITHHOLD = "withhold";
+    public static final String BUY_BANK_TRAIN = "buyBankTrain";
     public static final String NEXT_CORP = "nextCorp";
     public static final String END_OP_ROUND = "endOpRound";
 
@@ -200,7 +201,7 @@ public class Game1856 extends AbstractGame {
      * this is for corp buying private from player
      */
     public Board1856 buyPriv(String privName, int price) {
-        int level = currentTrainLevel();
+        int level = highestTrainSold();
         if (level < 3) throw new IllegalStateException("No Company sales before first 3-train");
         if (level > 5) throw new IllegalStateException("Private companies are closed");
         int basePrice = priv2price.get(privName);
@@ -480,6 +481,9 @@ public class Game1856 extends AbstractGame {
                 break;
             case WITHHOLD:
                 doWithhold(move);
+                break;
+            case BUY_BANK_TRAIN:
+                doBankTrain(move);
                 break;
             case NEXT_CORP:
                 doNextCorp(move);
@@ -1002,6 +1006,9 @@ public class Game1856 extends AbstractGame {
             case WITHHOLD:
                 undoWithhold(move);
                 return true;
+            case BUY_BANK_TRAIN:
+                undoBankTrain(move);
+                return true;
             case NEXT_CORP:
                 undoNextCorp(move);
                 return true;
@@ -1011,6 +1018,19 @@ public class Game1856 extends AbstractGame {
             default:
                 return false;
         }
+    }
+
+    public void doBankTrain(TrainMove move) {
+        Corp c = findCorp(move.getCorp());
+        payCorpToBank(c, TRAIN_PRICE[move.getAmount()]);
+        c.getTrains().add(board.getTrains().remove(0));
+    }
+
+    public void undoBankTrain(TrainMove move) {
+        Corp c = findCorp(move.getCorp());
+        payBankToCorp(c, TRAIN_PRICE[move.getAmount()]);
+        board.getTrains().add(0, move.getAmount());
+        c.getTrains().remove(Integer.valueOf(move.getAmount()));
     }
 
     public void doDestination(TrainMove move) {
@@ -1208,11 +1228,14 @@ public class Game1856 extends AbstractGame {
     /**
      * @return The level of the next available bank train, use 8 for D
      */
-    private int nextTrainLevel() {
+    private int availableTrainLevel() {
         return board.getTrains().size() > 1 ? board.getTrains().get(0) : 8;
     }
 
-    private int currentTrainLevel() {
+    /**
+     * @return The highest level of train sold
+     */
+    private int highestTrainSold() {
         switch (board.getTrains().size()) {
             case 0: case 1:
                 return 6; //TODO figure out if a D has been sold
@@ -1228,7 +1251,7 @@ public class Game1856 extends AbstractGame {
     }
 
     private int currentFloatType() {
-        switch (nextTrainLevel()) {
+        switch (availableTrainLevel()) {
             case 2: case 3: case 4:
                 return Corp.DESTINATION_TYPE;
             case 5:
@@ -1299,7 +1322,7 @@ public class Game1856 extends AbstractGame {
     }
 
     private int maxRounds() {
-        switch (currentTrainLevel()) {
+        switch (highestTrainSold()) {
             case 2:         return 1;
             case 3: case 4: return 2;
             default:        return 3;
@@ -1326,7 +1349,7 @@ public class Game1856 extends AbstractGame {
         for (Corp corp: board.getCorps()) {
             if (corp.isHasOperated()) continue;
             if (!corp.isHasFloated()) {
-                int min = nextTrainLevel();
+                int min = availableTrainLevel();
                 if (10-corp.getBankShares() < min) {
                     makeFollowMove(FAIL_FLOAT, "", corp.getName(), 0);
                     continue;
@@ -1834,6 +1857,27 @@ public class Game1856 extends AbstractGame {
         if (corp.isReachedDest()) throw new IllegalStateException("Already at destination");
         if (corp.getFundingType() != Corp.DESTINATION_TYPE) throw new IllegalStateException("No destination");
         makePrimaryMove(DESTINATION, "", corp.getName(), corp.getEscrow());
+        return board;
+    }
+
+    int[] TRAIN_PRICE = { 0, 0, 100, 225, 350, 550, 700, 0, 1100 };
+    int[] TRAIN_LIMIT = { 0, 0, 4, 4, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2}; //TODO SOON unhack
+    private int trainLimit(Board1856 board) {
+        //TODO SOON correct trainLimit for phase
+        //TODO special CGR limit
+        return TRAIN_LIMIT[highestTrainSold()];
+    }
+
+    synchronized public Board1856 buyBankTrain() {
+        // TODO TRADE-INS
+        // TODO FORCED CONTRIBUTIONS
+        // TODO ENFORCE LIMIT DROP TO POOL
+        int size = (board.getTrains().isEmpty()) ? 8 : board.getTrains().get(0);
+        int price =  TRAIN_PRICE[size];
+        Corp c = getCurrentCorp();
+        if (c.getTrains().size() >= trainLimit(board)) throw new IllegalStateException("Too many trains");
+        if (price > c.getCash()) throw new IllegalStateException(FUNDS);
+        makePrimaryMove(BUY_BANK_TRAIN, "", c.getName(), size);
         return board;
     }
 }
