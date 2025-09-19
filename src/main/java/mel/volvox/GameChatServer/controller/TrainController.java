@@ -214,4 +214,10 @@ public class TrainController {
     synchronized Board1856 bankTrain(@PathVariable String table) {
         return loadGame(table).buyBankTrain();
     }
+
+    @PutMapping("1856/endop/{table}")
+    @ResponseBody
+    synchronized Board1856 endOpTurn(@PathVariable String table) {
+        return loadGame(table).endOpTurn();
+    }
 }

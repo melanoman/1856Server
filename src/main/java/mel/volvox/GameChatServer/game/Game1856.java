@@ -68,14 +68,15 @@ public class Game1856 extends AbstractGame {
     public static final String PAYOUT = "payout";
     public static final String WITHHOLD = "withhold";
     public static final String BUY_BANK_TRAIN = "buyBankTrain";
+    public static final String END_OP_TURN = "endOpTurn";
     public static final String NEXT_CORP = "nextCorp";
     public static final String END_OP_ROUND = "endOpRound";
 
     // event constants
-    public static final String NORMAL_EVENT = "";
-    public static final String BIDOFF_EVENT = "bidoff";
-    public static final String PRE_REV_EVENT = "PRE_REV";
-    public static final String POST_REV_EVENT = "POST_REV";
+    public static final String NORMAL_EVENT = "in normal turn";
+    public static final String BIDOFF_EVENT = "resolving conflicting bids";
+    public static final String PRE_REV_EVENT = "before revenue";
+    public static final String POST_REV_EVENT = "done with revenue";
 
     // private companies
     public static final String PRIVATE_FLOS = "flos";
@@ -485,6 +486,9 @@ public class Game1856 extends AbstractGame {
             case BUY_BANK_TRAIN:
                 doBankTrain(move);
                 break;
+            case END_OP_TURN:
+                doEndOpTurn(move, rawMove);
+                break;
             case NEXT_CORP:
                 doNextCorp(move);
                 break;
@@ -575,6 +579,15 @@ public class Game1856 extends AbstractGame {
     private void undoFailFloat(TrainMove move) {
         Corp corp = findCorp(move.getCorp());
         corp.setHasOperated(false);
+    }
+
+    private void doEndOpTurn(TrainMove move, boolean rawMove) {
+        board.setEvent(PRE_REV_EVENT);
+        if (rawMove) setNextOpCorp();
+    }
+
+    private void undoEndOpTurn(TrainMove move) {
+        board.setEvent(POST_REV_EVENT);
     }
 
     private void doNextCorp(TrainMove move) {
@@ -1009,6 +1022,9 @@ public class Game1856 extends AbstractGame {
             case BUY_BANK_TRAIN:
                 undoBankTrain(move);
                 return true;
+            case END_OP_TURN:
+                undoEndOpTurn(move);
+                return true;
             case NEXT_CORP:
                 undoNextCorp(move);
                 return true;
@@ -1369,7 +1385,7 @@ public class Game1856 extends AbstractGame {
     private void undoEndStockRound(TrainMove move) {
         board.setCurrentOpRound(0);
         board.setMaxOpRounds(0);
-        board.setPhase(move.getCorp());
+        board.setPhase(Era.STOCK.name());
         board.setEvent(NORMAL_EVENT);
         unpayPrivs();
     }
@@ -1619,8 +1635,8 @@ public class Game1856 extends AbstractGame {
     }
 
     synchronized public Board1856 auctionBuy() {
-        if(!phaseIs(Era.AUCTION)) throw new IllegalStateException("No auction");
-        if (!eventIs(NORMAL_EVENT)) throw new IllegalStateException("No offering");
+        enforcePhase(Era.AUCTION);
+        enforceEvent(NORMAL_EVENT);
         int price = priv2price.get(board.getCurrentCorp()) - board.getAuctionDiscount();
         int cash = getCurrentWallet().getCash();
         if( price > cash) throw new IllegalStateException(("not enough cash"));
@@ -1653,9 +1669,8 @@ public class Game1856 extends AbstractGame {
     }
 
     synchronized public Board1856 bid(String corp, int amount) {
-        if (!phaseIs(Era.AUCTION) || !eventIs(NORMAL_EVENT)) {
-            throw new IllegalStateException("Not time for normal bids");
-        }
+        enforcePhase(Era.AUCTION);
+        enforceEvent(NORMAL_EVENT);
         int overbid = highBid(corp) + 5;
         int price = priv2price.get(corp);
         int minBid = (price > overbid) ? price + 5 : overbid;
@@ -1686,6 +1701,8 @@ public class Game1856 extends AbstractGame {
     }
 
     synchronized public Board1856 bidoff(String player, int amount) {
+        enforcePhase(Era.AUCTION);
+        enforceEvent(BIDOFF_EVENT);
         Wallet w = getPlayerWallet(player);
         String corp = board.getCurrentCorp();
         int oldMin = highBid(corp);
@@ -1718,9 +1735,7 @@ public class Game1856 extends AbstractGame {
     }
 
     synchronized public Board1856 setPar(String corpName, int amount) {
-        if (!board.getPhase().equals(Era.STOCK.name()) && !board.getPhase().equals(Era.INITIAL.name())) {
-            throw new IllegalStateException("Not Stock Round");
-        }
+        enforcePhase(Era.STOCK, Era.INITIAL);
         if(!PAR_VALUES.contains(amount)) {
             throw new IllegalStateException("Par Value must be 65, 70, 75, 80, 90, or 100");
         }
@@ -1734,9 +1749,7 @@ public class Game1856 extends AbstractGame {
     }
 
     synchronized public Board1856 buyBank(String corpName) {
-        if (!board.getPhase().equals(Era.STOCK.name()) && !board.getPhase().equals(Era.INITIAL.name())) {
-            throw new IllegalStateException("Not Stock Round");
-        }
+        enforcePhase(Era.STOCK, Era.INITIAL);
         Wallet w = findWallet(board.getCurrentPlayer());
         Corp c = findCorp(corpName);
         if (c.getBankShares() < 1) throw new IllegalStateException("No Bank Shares Remain");
@@ -1748,9 +1761,7 @@ public class Game1856 extends AbstractGame {
     }
 
     synchronized public Board1856 buyPool(String corpName) {
-        if (!board.getPhase().equals(Era.STOCK.name()) && !board.getPhase().equals(Era.INITIAL.name())) {
-            throw new IllegalStateException("Not Stock Round");
-        }
+        enforcePhase(Era.STOCK, Era.INITIAL);
         Wallet w = findWallet(board.getCurrentPlayer());
         Corp c = findCorp(corpName);
         if (c.getPoolShares() < 1) throw new IllegalStateException("No pool shares available");
@@ -1762,9 +1773,8 @@ public class Game1856 extends AbstractGame {
     }
 
     synchronized public Board1856 payToken() {
-        if (!board.getPhase().equals(Era.OP.name()) || !board.getEvent().equals(PRE_REV_EVENT)) {
-            throw new IllegalStateException("Tokens allowed only before revenue");
-        }
+        enforcePhase(Era.OP);
+        enforceEvent(PRE_REV_EVENT);
         if(board.isTokenPlayed()) throw new IllegalStateException("One paid token per turn");
         Corp c = getCurrentCorp();
         if(c.getTokensUsed() >= c.getTokensMax()) throw new IllegalStateException("All tokens used");
@@ -1775,9 +1785,8 @@ public class Game1856 extends AbstractGame {
     }
 
     synchronized public Board1856 payTile() {
-        if (!board.getPhase().equals(Era.OP.name()) || !board.getEvent().equals(PRE_REV_EVENT)) {
-            throw new IllegalStateException("Tiles allowed only before revenue");
-        }
+        enforcePhase(Era.OP);
+        enforceEvent(PRE_REV_EVENT);
         if(board.isTilePlayed()) throw new IllegalStateException("One paid tile per turn");
         Corp c = getCurrentCorp();
         if(c.getCash() < 40) throw new IllegalStateException(FUNDS);
@@ -1792,6 +1801,8 @@ public class Game1856 extends AbstractGame {
                 (board.isTokenPlayed() ? "-t" : "--");
     }
     synchronized public Board1856 payout(int amount) {
+        enforcePhase(Era.OP);
+        enforceEvent(PRE_REV_EVENT);
         if(amount % 10 != 0) throw new IllegalStateException("Revenue must be a multiple of 10");
         if(amount < 10) throw new IllegalStateException("Minimum payout is $10");
         Corp c = getCurrentCorp();
@@ -1823,6 +1834,8 @@ public class Game1856 extends AbstractGame {
     }
 
     synchronized public Board1856 withhold(int amount) {
+        enforcePhase(Era.OP);
+        enforceEvent(PRE_REV_EVENT);
         if(amount % 10 != 0) throw new IllegalStateException("Revenue must be a multiple of 10");
         if(amount < 0) throw new IllegalStateException("Negative Revenue is not possible");
         Corp c = getCurrentCorp();
@@ -1853,6 +1866,8 @@ public class Game1856 extends AbstractGame {
     }
 
     synchronized public Board1856 destination() {
+        enforcePhase(Era.OP);
+        enforceEvent(PRE_REV_EVENT);
         Corp corp = getCurrentCorp();
         if (corp.isReachedDest()) throw new IllegalStateException("Already at destination");
         if (corp.getFundingType() != Corp.DESTINATION_TYPE) throw new IllegalStateException("No destination");
@@ -1861,23 +1876,47 @@ public class Game1856 extends AbstractGame {
     }
 
     int[] TRAIN_PRICE = { 0, 0, 100, 225, 350, 550, 700, 0, 1100 };
-    int[] TRAIN_LIMIT = { 0, 0, 4, 4, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2}; //TODO SOON unhack
-    private int trainLimit(Board1856 board) {
-        //TODO SOON correct trainLimit for phase
-        //TODO special CGR limit
+    int[] TRAIN_LIMIT = { 0, 0, 4, 4, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2};
+    private int trainLimit(Board1856 board, Corp corp) {
+        if(corp.getName().equals("CGR")) return 3;
         return TRAIN_LIMIT[highestTrainSold()];
+    }
+
+    private void enforcePhase(Era e1, Era e2) {
+        if (board.getPhase().equals(e1.name())) return;
+        if (board.getPhase().equals(e2.name())) return;
+        throw new IllegalStateException("Action not legal in this phase");
+    }
+
+    /**
+     * when a generic exception will do
+     */
+    private void enforcePhase(Era era) {
+        if (!phaseIs(era)) throw new IllegalStateException("Not in "+era.name()+" round");
+    }
+
+    private void enforceEvent(String event) {
+        if(!eventIs(event)) throw new IllegalStateException("Not currently "+event);
     }
 
     synchronized public Board1856 buyBankTrain() {
         // TODO TRADE-INS
         // TODO FORCED CONTRIBUTIONS
         // TODO ENFORCE LIMIT DROP TO POOL
+        enforcePhase(Era.OP);
         int size = (board.getTrains().isEmpty()) ? 8 : board.getTrains().get(0);
         int price =  TRAIN_PRICE[size];
         Corp c = getCurrentCorp();
-        if (c.getTrains().size() >= trainLimit(board)) throw new IllegalStateException("Too many trains");
+        if (c.getTrains().size() >= trainLimit(board, c)) throw new IllegalStateException("Too many trains");
         if (price > c.getCash()) throw new IllegalStateException(FUNDS);
         makePrimaryMove(BUY_BANK_TRAIN, "", c.getName(), size);
+        return board;
+    }
+
+    synchronized public Board1856 endOpTurn() {
+        enforcePhase(Era.OP);
+        enforceEvent(POST_REV_EVENT);
+        makePrimaryMove(END_OP_TURN, "", board.getCurrentCorp(), 0);
         return board;
     }
 }
