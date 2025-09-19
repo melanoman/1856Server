@@ -605,6 +605,8 @@ public class Game1856 extends AbstractGame {
     private void doEndOpRound(TrainMove move) {
         board.setCurrentCorp("");
         board.setLoanTaken(false);
+        board.setPassCount(0);
+        for (Corp c: board.getCorps()) c.setHasOperated(false);
         if(board.getCurrentOpRound() == board.getMaxOpRounds()) {
             board.setPhase(Era.STOCK.name());
         } else {
@@ -615,6 +617,7 @@ public class Game1856 extends AbstractGame {
     private void undoEndOpRound(TrainMove move) {
         board.setCurrentCorp(move.getCorp());
         board.setLoanTaken(move.getAmount() > 0);
+        for (Corp c: board.getCorps()) c.setHasOperated(false);
         if (board.getPhase().equals(Era.OP.name())) {
             board.setCurrentOpRound(board.getCurrentOpRound() - 1);
         } else {
