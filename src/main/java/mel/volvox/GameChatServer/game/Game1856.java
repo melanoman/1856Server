@@ -68,6 +68,8 @@ public class Game1856 extends AbstractGame {
     public static final String PAYOUT = "payout";
     public static final String WITHHOLD = "withhold";
     public static final String BUY_BANK_TRAIN = "buyBankTrain";
+    public static final String RUST = "rust";
+    public static final String CLOSE_PRIVS = "closePrivs";
     public static final String END_OP_TURN = "endOpTurn";
     public static final String NEXT_CORP = "nextCorp";
     public static final String END_OP_ROUND = "endOpRound";
@@ -484,7 +486,7 @@ public class Game1856 extends AbstractGame {
                 doWithhold(move);
                 break;
             case BUY_BANK_TRAIN:
-                doBankTrain(move);
+                doBankTrain(move, rawMove);
                 break;
             case END_OP_TURN:
                 doEndOpTurn(move, rawMove);
@@ -603,21 +605,27 @@ public class Game1856 extends AbstractGame {
     }
 
     private void doEndOpRound(TrainMove move) {
-        board.setCurrentCorp("");
+        for(Corp c: board.getCorps()) {
+            c.setHasOperated(false);
+        }
         board.setLoanTaken(false);
         board.setPassCount(0);
-        for (Corp c: board.getCorps()) c.setHasOperated(false);
         if(board.getCurrentOpRound() == board.getMaxOpRounds()) {
             board.setPhase(Era.STOCK.name());
+            board.setCurrentCorp("");
         } else {
             board.setCurrentOpRound(board.getCurrentOpRound() + 1);
+            board.setCurrentCorp(board.getCorps().get(0).getName());
         }
     }
 
     private void undoEndOpRound(TrainMove move) {
+        for(Corp c: board.getCorps()) {
+            c.setHasOperated(true);
+        }
         board.setCurrentCorp(move.getCorp());
         board.setLoanTaken(move.getAmount() > 0);
-        for (Corp c: board.getCorps()) c.setHasOperated(false);
+        getCurrentCorp().setHasOperated(false);
         if (board.getPhase().equals(Era.OP.name())) {
             board.setCurrentOpRound(board.getCurrentOpRound() - 1);
         } else {
@@ -1041,10 +1049,18 @@ public class Game1856 extends AbstractGame {
         }
     }
 
-    public void doBankTrain(TrainMove move) {
+    public void doBankTrain(TrainMove move, boolean rawMove) {
         Corp c = findCorp(move.getCorp());
         payCorpToBank(c, TRAIN_PRICE[move.getAmount()]);
         c.getTrains().add(board.getTrains().remove(0));
+        if (rawMove) { // TODO first Diesel
+            switch(board.getTrains().size()) {
+                //TODO use player and corp for undo
+                case 1: makeFollowMove(RUST, "", "", 3); break;
+                case 4: makeFollowMove(CLOSE_PRIVS, "", "", 0);
+                case 8: makeFollowMove(RUST, "", "", 2); break;
+            }
+        }
     }
 
     public void undoBankTrain(TrainMove move) {
@@ -1355,6 +1371,9 @@ public class Game1856 extends AbstractGame {
         board.setMaxOpRounds(maxRounds());
         board.setPhase(Era.OP.name());
         board.setEvent(PRE_REV_EVENT);
+        for(Corp c: board.getCorps()) {
+            c.setHasOperated(false);
+        }
         if (rawMove) {
            for(Corp c: board.getCorps()) {
                if(c.getPoolShares() == 0 && c.getBankShares() == 0 && !c.getPrice().ceiling()) {
@@ -1914,6 +1933,10 @@ public class Game1856 extends AbstractGame {
         Corp c = getCurrentCorp();
         if (c.getTrains().size() >= trainLimit(board, c)) throw new IllegalStateException("Too many trains");
         if (price > c.getCash()) throw new IllegalStateException(FUNDS);
+        // TODO SOON REMOVE THIS HACK, IMPLEMENT RUST
+        if(c.getTrains().size() == 2 || c.getTrains().size() == 9 || c.getTrains().size() == 5) {
+            throw new IllegalStateException("TODO IMPLEMENT RUST");
+        }
         makePrimaryMove(BUY_BANK_TRAIN, "", c.getName(), size);
         return board;
     }
