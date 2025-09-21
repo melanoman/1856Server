@@ -172,7 +172,7 @@ public class TrainController {
         return loadGame(table).sellBuy(buyType, corp, par, stockSales);
     }
 
-    @PutMapping("1856/buySell/{table}/{buyType}/{corp}")
+    @PutMapping("1856/buySell/{table}/{buyType}/{corp}/{par}")
     @ResponseBody
     synchronized Board1856 buySell(@PathVariable String table,
                                    @PathVariable String buyType,
