@@ -177,7 +177,7 @@ public class TrainController {
     synchronized Board1856 buySell(@PathVariable String table,
                                    @PathVariable String buyType,
                                    @PathVariable String corp,
-                                   @PathVariable int par) {
+                                   @PathVariable int par,
                                    @RequestBody List<StockSale> stockSales) {
         return loadGame(table).buySell(buyType, corp, par, stockSales);
     }
