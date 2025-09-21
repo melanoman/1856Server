@@ -178,8 +178,8 @@ public class TrainController {
                                    @PathVariable String buyType,
                                    @PathVariable String corp,
                                    @PathVariable int par) {
-                                   //@RequestBody List<StockSale> stockSales) {
-        return loadGame(table).buySell(buyType, corp, par, null);
+                                   @RequestBody List<StockSale> stockSales) {
+        return loadGame(table).buySell(buyType, corp, par, stockSales);
     }
 
     @PutMapping("1856/loan/{table}")
