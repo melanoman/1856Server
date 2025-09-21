@@ -1796,6 +1796,14 @@ public class Game1856 extends AbstractGame {
         return board;
     }
 
+    synchronized public Board1856 buySell(String buyType, String corpName, int par, List<StockSale> sales) {
+        throw new IllegalStateException("TODO buySell server");
+    }
+
+    synchronized public Board1856 sellBuy(String buyType, String corpName, int par, List<StockSale> sales) {
+        throw new IllegalStateException("TODO sellBuy server");
+    }
+
     synchronized public Board1856 payToken() {
         enforcePhase(Era.OP);
         enforceEvent(PRE_REV_EVENT);

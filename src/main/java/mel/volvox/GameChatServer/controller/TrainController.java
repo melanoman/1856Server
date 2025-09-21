@@ -162,6 +162,26 @@ public class TrainController {
         return loadGame(table).makeSales(stocks);
     }
 
+    @PutMapping("1856/sellBuy/{table}/{buyType}/{corp}/{par}")
+    @ResponseBody
+    synchronized Board1856 sellBuy(@PathVariable String table,
+                                   @PathVariable String buyType,
+                                   @PathVariable String corp,
+                                   @PathVariable int par,
+                                   @RequestBody List<StockSale> stockSales) {
+        return loadGame(table).sellBuy(buyType, corp, par, stockSales);
+    }
+
+    @PutMapping("1856/buySell/{table}/{buyType}/{corp}")
+    @ResponseBody
+    synchronized Board1856 buySell(@PathVariable String table,
+                                   @PathVariable String buyType,
+                                   @PathVariable String corp,
+                                   @PathVariable int par) {
+                                   //@RequestBody List<StockSale> stockSales) {
+        return loadGame(table).buySell(buyType, corp, par, null);
+    }
+
     @PutMapping("1856/loan/{table}")
     @ResponseBody
     synchronized Board1856 takeLoan(@PathVariable String table) {
