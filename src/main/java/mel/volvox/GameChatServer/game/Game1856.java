@@ -641,6 +641,10 @@ public class Game1856 extends AbstractGame {
         payCorpToWallet(w, c, move.getAmount());
         w.getPrivates().removeIf(x -> x.getCorp().equals(move.getCorp()));
         c.getPrivates().add(new Priv(move.getCorp(), 3));
+        switch(move.getCorp()) {
+            case PRIVATE_STC -> { c.setTunnelRights(true);}
+            case PRIVATE_NIAG -> { c.setBridgeRights(true);}
+        }
     }
 
     private void undoBuyPriv(TrainMove move) {
@@ -649,6 +653,10 @@ public class Game1856 extends AbstractGame {
         payWalletToCorp(w, c, move.getAmount());
         c.getPrivates().removeIf(x -> x.getCorp().equals(move.getCorp()));
         w.getPrivates().add(new Priv(move.getCorp(), 3));
+        switch(move.getCorp()) {
+            case PRIVATE_STC -> { c.setTunnelRights(false);}
+            case PRIVATE_NIAG -> { c.setBridgeRights(false);}
+        }
     }
 
     private void doReorderCorp(TrainMove move) {
