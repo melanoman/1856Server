@@ -44,7 +44,7 @@ public class Game1856 extends AbstractGame {
     public static final String STOCK_BUY_POOL = "stockBuyPool";
     public static final String STOCK_HEADER = "stockHeader";
     public static final String STOCK_SALE = "stockSale";
-    public static final String STOCK_FOOTER = "stockFooter";
+    public static final String END_STOCK_ACTION = "stockFooter";
     public static final String REORDER_CORP = "reorderCorp";
     public static final String STOCK_END_ROUND = "stockEndRound";
 
@@ -154,7 +154,7 @@ public class Game1856 extends AbstractGame {
         for(StockSale sale: stockSales) {
             makeFollowMove(STOCK_SALE, board.getCurrentPlayer(), sale.getName(), sale.getAmount());
         }
-        makeFollowMove(STOCK_FOOTER, board.getCurrentPlayer(), "", 0);
+        makeFollowMove(END_STOCK_ACTION, board.getCurrentPlayer(), "", 0);
         return board;
     }
 
@@ -421,7 +421,7 @@ public class Game1856 extends AbstractGame {
                 doEndStockRound(move, rawMove);
                 break;
             case STOCK_SET_PAR:
-                doSetPar(move, rawMove);
+                doSetPar(move);
                 break;
             case STOCK_BUY_BANK:
                 doBuyBank(move, rawMove);
@@ -449,8 +449,8 @@ public class Game1856 extends AbstractGame {
             case REORDER_CORP:
                 doReorderCorp(move);
                 break;
-            case STOCK_FOOTER:
-                doStockFooter(move, rawMove);
+            case END_STOCK_ACTION:
+                doEndStockAction(true, rawMove);
                 break;
             case TAKE_LOAN:
                 doTakeLoan(move);
@@ -871,7 +871,7 @@ public class Game1856 extends AbstractGame {
     }
 
     //TODO refactor to extract commonality with incrAuction, stockPass
-    private void  incrementStockPlayer(boolean actionTaken, boolean rawMove) {
+    private void doEndStockAction(boolean actionTaken, boolean rawMove) {
         int index = board.getPlayers().indexOf(board.getCurrentPlayer()) + 1;
         if (index >= board.getPlayers().size()) index = 0;
         board.setCurrentPlayer(board.getPlayers().get(index));
@@ -996,8 +996,8 @@ public class Game1856 extends AbstractGame {
             case REORDER_CORP:
                 undoReorderCorp(move);
                 return true;
-            case STOCK_FOOTER:
-                undoStockFooter(move);
+            case END_STOCK_ACTION:
+                undoEndStockAction(move);
                 return true;
             case TAKE_LOAN:
                 undoTakeLoan(move);
@@ -1131,7 +1131,6 @@ public class Game1856 extends AbstractGame {
         if (rawMove) {
             updatePrez(move.getCorp());
         }
-        incrementStockPlayer(true, rawMove);
     }
 
     private void undoBuyPool(TrainMove move) {
@@ -1140,14 +1139,9 @@ public class Game1856 extends AbstractGame {
         c.setPoolShares(c.getPoolShares() + 1);
         shareToWallet(w, move.getCorp(), -1);
         payBankToWallet(w, move.getAmount());
-        board.setCurrentPlayer(move.getPlayer());
     }
 
-    private void doStockFooter(TrainMove move, boolean rawMove) {
-        incrementStockPlayer(true, rawMove);
-    }
-
-    private void undoStockFooter(TrainMove move) {
+    private void undoEndStockAction(TrainMove move) {
         board.setCurrentPlayer(move.getPlayer());
     }
 
@@ -1247,7 +1241,6 @@ public class Game1856 extends AbstractGame {
             case Corp.INCREMENTAL_TYPE -> payWalletToCorp(w, c, move.getAmount());
             case Corp.ALL_AT_ONCE_TYPE -> fundCorpIfSix(w, c, move.getAmount());
         }
-        incrementStockPlayer(true, rawMove);
     }
 
     private void undoBuyBank(TrainMove move) {
@@ -1260,7 +1253,6 @@ public class Game1856 extends AbstractGame {
         }
         c.setBankShares(c.getBankShares() + 1);
         shareToWallet(w, move.getCorp(), -1);
-        board.setCurrentPlayer(move.getPlayer());
     }
 
     /**
@@ -1315,7 +1307,6 @@ public class Game1856 extends AbstractGame {
         }
         c.setFundingType(0);
         w.getStocks().removeIf(x -> x.getCorp().equals(move.getCorp()));
-        board.setCurrentPlayer(move.getPlayer());
     }
 
     private int oldParIndex(Corp c) {
@@ -1340,7 +1331,7 @@ public class Game1856 extends AbstractGame {
         return 0;
     }
 
-    private void doSetPar(TrainMove move, boolean rawMove) {
+    private void doSetPar(TrainMove move) {
         Corp c = findCorp(move.getCorp());
         c.setPar(move.getAmount());
         c.setPrez(move.getPlayer());
@@ -1356,7 +1347,6 @@ public class Game1856 extends AbstractGame {
             payWalletToBank(w, 2 * move.getAmount()); //bank holds escrow
         }
         w.getStocks().add(new Stock(move.getCorp(), 2, true, false));
-        incrementStockPlayer(true, rawMove);
     }
 
     private int maxRounds() {
@@ -1759,17 +1749,22 @@ public class Game1856 extends AbstractGame {
         throw new IllegalStateException("Unknown Player");
     }
 
-    synchronized public Board1856 setPar(String corpName, int amount) {
+    private void canPar(Corp c, int par, Wallet w, int extraCash) {
         enforcePhase(Era.STOCK, Era.INITIAL);
-        if(!PAR_VALUES.contains(amount)) {
+        if(!PAR_VALUES.contains(par)) {
             throw new IllegalStateException("Par Value must be 65, 70, 75, 80, 90, or 100");
         }
+        if (w.getCash() + extraCash < par * 2) throw new IllegalStateException(FUNDS);
+        if(c.getPar() != 0) throw new IllegalStateException("Par is already set");
+    }
+
+    synchronized public Board1856 setPar(String corpName, int par) {
         Wallet w = findWallet(board.getCurrentPlayer());
-        if (w.getCash() < amount * 2) throw new IllegalStateException(FUNDS);
         Corp corp = findCorp(corpName);
-        if(corp.getPar() != 0) throw new IllegalStateException("Par is already set");
+        canPar(corp, par, w, 0);
         //TODO enforce cert limits (+2)
-        makePrimaryMove(STOCK_SET_PAR, board.getCurrentPlayer(), corpName, amount);
+        makePrimaryMove(STOCK_SET_PAR, board.getCurrentPlayer(), corpName, par);
+        makeFollowMove(END_STOCK_ACTION, board.getCurrentPlayer(), "", 0);
         return board;
     }
 
@@ -1786,6 +1781,7 @@ public class Game1856 extends AbstractGame {
         Corp c = findCorp(corpName);
         canBuyBank(c, w, 0);
         makePrimaryMove(STOCK_BUY_BANK, board.getCurrentPlayer(), corpName, c.getPar());
+        makeFollowMove(END_STOCK_ACTION, board.getCurrentPlayer(), "", 0);
         return board;
     }
 
@@ -1803,18 +1799,37 @@ public class Game1856 extends AbstractGame {
         Corp c = findCorp(corpName);
         canBuyPool(c, w, 0);
         makePrimaryMove(STOCK_BUY_POOL, board.getCurrentPlayer(), corpName, c.getPrice().getPrice());
+        makeFollowMove(END_STOCK_ACTION, board.getCurrentPlayer(), "", 0);
         return board;
     }
 
     synchronized public Board1856 buySell(String buyType, String corpName, int par, List<StockSale> sales) {
-        boolean isBank = buyType.equals("bank"); //TODO SOON handle par
+        boolean isBank = false;
+        boolean isPar = false;
+        switch (buyType) {
+            case "bank" -> isBank = true;
+            case "par" -> isPar = true;
+            case "pool" -> {}
+            default -> throw new IllegalStateException("Unknown Buy Type "+buyType);
+        }
         Wallet w = findWallet(board.getCurrentPlayer());
         Corp c = findCorp(corpName);
         if (isBank) canBuyBank(c, w, 0);
+        else if (isPar) canPar(c, par, w, 0);
         else canBuyPool(c, w, 0);
         checkSalesList(sales);
-        // TODO SOON makeMoves
-        throw new IllegalStateException("TODO buySell server");
+        // TODO SOON test buySell
+        //TODO SOON make sure this works with intervening buy
+        makePrimaryMove(STOCK_HEADER, board.getCurrentPlayer(), "", 0);
+        if (isBank) makeFollowMove(STOCK_BUY_BANK, w.getName(), c.getName(), c.getPar());
+        else if (isPar) makeFollowMove(STOCK_SET_PAR, w.getName(), c.getName(), par);
+        else makeFollowMove(STOCK_BUY_POOL, w.getName(), c.getName(), c.getPrice().getPrice());
+        for(StockSale sale: sales) {
+            makeFollowMove(STOCK_SALE, board.getCurrentPlayer(), sale.getName(), sale.getAmount());
+        }
+        //TODO SOON make sure this works with intervening buy
+        makeFollowMove(END_STOCK_ACTION, board.getCurrentPlayer(), "", 0);
+        return board;
     }
 
     private int salesValue(List<StockSale> sales) {
@@ -1827,15 +1842,32 @@ public class Game1856 extends AbstractGame {
     }
 
     synchronized public Board1856 sellBuy(String buyType, String corpName, int par, List<StockSale> sales) {
-        boolean isBank = buyType.equals("bank"); //TODO SOON handle par
+        boolean isBank = false;
+        boolean isPar = false;
+        switch (buyType) {
+            case "bank" -> isBank = true;
+            case "par" -> isPar = true;
+            case "pool" -> {}
+            default -> throw new IllegalStateException("Unknown Buy Type "+buyType);
+        }
         Wallet w = findWallet(board.getCurrentPlayer());
         Corp c = findCorp(corpName);
         checkSalesList(sales);
         int extraCash = salesValue(sales);
         if (isBank) canBuyBank(c, w, extraCash);
+        else if (isPar) canPar(c, par, w, extraCash);
         else canBuyPool(c, w, extraCash);
-        //TODO soon
-        throw new IllegalStateException("TODO sellBuy server");
+        //TODO SOON test sellBuy a lot
+        makePrimaryMove(STOCK_HEADER, board.getCurrentPlayer(), "", 0);
+        for(StockSale sale: sales) {
+            makeFollowMove(STOCK_SALE, board.getCurrentPlayer(), sale.getName(), sale.getAmount());
+        }
+        if (isBank) makeFollowMove(STOCK_BUY_BANK, w.getName(), c.getName(), c.getPar());
+        else if (isPar) makeFollowMove(STOCK_SET_PAR, w.getName(), c.getName(), par);
+        else makeFollowMove(STOCK_BUY_POOL, w.getName(), c.getName(), c.getPrice().getPrice());
+        //TODO SOON make sure this works with intervening buy
+        makeFollowMove(END_STOCK_ACTION, board.getCurrentPlayer(), "", 0);
+        return board;
     }
 
     synchronized public Board1856 payToken() {
