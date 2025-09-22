@@ -1125,7 +1125,7 @@ public class Game1856 extends AbstractGame {
     private void doBuyPool(TrainMove move, boolean rawMove) {
         Corp c = findCorp(move.getCorp());
         Wallet w = getPlayerWallet(move.getPlayer());
-        c.setBankShares(c.getPoolShares() - 1);
+        c.setPoolShares(c.getPoolShares() - 1);
         shareToWallet(w, move.getCorp(), 1);
         payWalletToBank(w, move.getAmount());
         if (rawMove) {
@@ -1139,6 +1139,7 @@ public class Game1856 extends AbstractGame {
         Wallet w = getPlayerWallet(move.getPlayer());
         c.setPoolShares(c.getPoolShares() + 1);
         shareToWallet(w, move.getCorp(), -1);
+        payBankToWallet(w, move.getAmount());
         board.setCurrentPlayer(move.getPlayer());
     }
 
@@ -1772,35 +1773,68 @@ public class Game1856 extends AbstractGame {
         return board;
     }
 
-    synchronized public Board1856 buyBank(String corpName) {
+    private void canBuyBank(Corp c, Wallet w, int extraCash) {
         enforcePhase(Era.STOCK, Era.INITIAL);
-        Wallet w = findWallet(board.getCurrentPlayer());
-        Corp c = findCorp(corpName);
         if (c.getBankShares() < 1) throw new IllegalStateException("No Bank Shares Remain");
-        if (w.getCash() < c.getPar()) throw new IllegalStateException(FUNDS);
+        if (w.getCash() + extraCash < c.getPar()) throw new IllegalStateException(FUNDS);
         // TODO enforce cert limits
         // TODO enforce buy block after sale same round
+    }
+
+    synchronized public Board1856 buyBank(String corpName) {
+        Wallet w = findWallet(board.getCurrentPlayer());
+        Corp c = findCorp(corpName);
+        canBuyBank(c, w, 0);
         makePrimaryMove(STOCK_BUY_BANK, board.getCurrentPlayer(), corpName, c.getPar());
         return board;
     }
 
-    synchronized public Board1856 buyPool(String corpName) {
+    private void canBuyPool(Corp c, Wallet w, int extraCash) {
+        System.out.println("player cash = "+w.getCash()+" pool price = "+c.getPrice().getPrice());
         enforcePhase(Era.STOCK, Era.INITIAL);
-        Wallet w = findWallet(board.getCurrentPlayer());
-        Corp c = findCorp(corpName);
         if (c.getPoolShares() < 1) throw new IllegalStateException("No pool shares available");
-        if(w.getCash() < c.getPrice().getPrice()) throw new IllegalStateException(FUNDS);
+        if(w.getCash() + extraCash < c.getPrice().getPrice()) throw new IllegalStateException(FUNDS);
         // TODO enforce cert limits
         // TODO enforce no buy after sale same round
-        makePrimaryMove(STOCK_BUY_POOL, board.getCurrentPlayer(), corpName, c.getPar());
+    }
+
+    synchronized public Board1856 buyPool(String corpName) {
+        Wallet w = findWallet(board.getCurrentPlayer());
+        Corp c = findCorp(corpName);
+        canBuyPool(c, w, 0);
+        makePrimaryMove(STOCK_BUY_POOL, board.getCurrentPlayer(), corpName, c.getPrice().getPrice());
         return board;
     }
 
     synchronized public Board1856 buySell(String buyType, String corpName, int par, List<StockSale> sales) {
+        boolean isBank = buyType.equals("bank"); //TODO SOON handle par
+        Wallet w = findWallet(board.getCurrentPlayer());
+        Corp c = findCorp(corpName);
+        if (isBank) canBuyBank(c, w, 0);
+        else canBuyPool(c, w, 0);
+        checkSalesList(sales);
+        // TODO SOON makeMoves
         throw new IllegalStateException("TODO buySell server");
     }
 
+    private int salesValue(List<StockSale> sales) {
+        int value = 0;
+        for (StockSale sale: sales) {
+            Corp c = findCorp(sale.getName());
+            value += c.getPrice().getPrice() * sale.getAmount();
+        }
+        return value;
+    }
+
     synchronized public Board1856 sellBuy(String buyType, String corpName, int par, List<StockSale> sales) {
+        boolean isBank = buyType.equals("bank"); //TODO SOON handle par
+        Wallet w = findWallet(board.getCurrentPlayer());
+        Corp c = findCorp(corpName);
+        checkSalesList(sales);
+        int extraCash = salesValue(sales);
+        if (isBank) canBuyBank(c, w, extraCash);
+        else canBuyPool(c, w, extraCash);
+        //TODO soon
         throw new IllegalStateException("TODO sellBuy server");
     }
 
