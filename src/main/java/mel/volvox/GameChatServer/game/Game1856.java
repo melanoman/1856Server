@@ -575,7 +575,7 @@ public class Game1856 extends AbstractGame {
         if (seller == null) payCorpToBank(buyer, 50);
         else payCorpToCorp(buyer, seller, 50);
         buyer.setBridgeRights(true);
-        //TODO update token count
+        board.setBridgeTokens(board.getBridgeTokens() - 1);
     }
 
     private void doBuyTunnel(TrainMove move) {
@@ -584,7 +584,7 @@ public class Game1856 extends AbstractGame {
         if (seller == null) payCorpToBank(buyer, 50);
         else payCorpToCorp(buyer, seller, 50);
         buyer.setTunnelRights(true);
-        //TODO update token count
+        board.setTunnelTokens(board.getTunnelTokens() - 1);
     }
 
     private void undoBuyBridge(TrainMove move) {
@@ -593,7 +593,7 @@ public class Game1856 extends AbstractGame {
         if (seller == null) payBankToCorp(buyer, 50);
         else payCorpToCorp(seller, buyer, 50);
         buyer.setBridgeRights(false);
-        //TODO update token count
+        board.setBridgeTokens(board.getBridgeTokens() + 1);
     }
 
     private void undoBuyTunnel(TrainMove move) {
@@ -602,7 +602,7 @@ public class Game1856 extends AbstractGame {
         if (seller == null) payBankToCorp(buyer, 50);
         else payCorpToCorp(seller, buyer, 50);
         buyer.setTunnelRights(false);
-        //TODO update token count
+        board.setTunnelTokens(board.getTunnelTokens() + 1);
     }
 
     private Corp findPrivCorp(String privName) {
@@ -759,8 +759,8 @@ public class Game1856 extends AbstractGame {
         w.getPrivates().removeIf(x -> x.getCorp().equals(move.getCorp()));
         c.getPrivates().add(new Priv(move.getCorp(), 3));
         switch(move.getCorp()) {
-            case PRIVATE_STC -> { c.setTunnelRights(true);}
-            case PRIVATE_NIAG -> { c.setBridgeRights(true);}
+            case PRIVATE_STC -> { c.setTunnelRights(true); board.setTunnelTokens(3); }
+            case PRIVATE_NIAG -> { c.setBridgeRights(true); board.setBridgeTokens(3); }
         }
     }
 
@@ -771,10 +771,12 @@ public class Game1856 extends AbstractGame {
         c.getPrivates().removeIf(x -> x.getCorp().equals(move.getCorp()));
         w.getPrivates().add(new Priv(move.getCorp(), 3));
         switch(move.getCorp()) {
-            case PRIVATE_STC -> { c.setTunnelRights(false);}
-            case PRIVATE_NIAG -> { c.setBridgeRights(false);}
+            case PRIVATE_STC -> { c.setTunnelRights(false); board.setTunnelTokens(0);}
+            case PRIVATE_NIAG -> { c.setBridgeRights(false); board.setBridgeTokens(0);}
         }
     }
+
+    //TODO if bridge/tunnel rust in player hands, put 3 tokens in bank
 
     private void doReorderCorp(TrainMove move) {
         Corp c = findCorp(move.getCorp());
@@ -2206,18 +2208,14 @@ public class Game1856 extends AbstractGame {
     private void buyBridge(Corp c) {
         if(c.isBridgeRights()) throw new IllegalStateException("Already have bridge rights");
         if(c.getCash() < 50) throw new IllegalStateException(FUNDS);
-        Priv p = findPriv(PRIVATE_NIAG);
-        if(p == null) throw new IllegalStateException("TODO buy from bank");
-        if(p.getAmount() < 1) throw new IllegalStateException("No bridge tokens remain");
+        if(board.getBridgeTokens() < 1) throw new IllegalStateException("No more bridge tokens");
         makePrimaryMove(BUY_BRIDGE, "", c.getName(), 0);
     }
 
     private void buyTunnel(Corp c) {
         if(c.isTunnelRights()) throw new IllegalStateException("Already have tunnel rights");
         if(c.getCash() < 50) throw new IllegalStateException(FUNDS);
-        Priv p = findPriv(PRIVATE_STC);
-        if(p == null) throw new IllegalStateException("TODO buy tunnel from bank");
-        if(p.getAmount() < 1) throw new IllegalStateException("No more tunnel tokens");
+        if(board.getTunnelTokens() < 1) throw new IllegalStateException("No Tunnel Tokens Left");
         makePrimaryMove(BUY_TUNNEL, "", c.getName(), 0);
     }
 
