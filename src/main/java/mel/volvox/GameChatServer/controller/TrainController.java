@@ -240,4 +240,12 @@ public class TrainController {
     synchronized Board1856 endOpTurn(@PathVariable String table) {
         return loadGame(table).endOpTurn();
     }
+
+    @PutMapping("1856/usePriv/{table}/{priv}/{option}")
+    @ResponseBody
+    synchronized Board1856 usePriv(@PathVariable String table,
+                                   @PathVariable String priv,
+                                   @PathVariable boolean option) {
+        return loadGame(table).usePriv(priv, option);
+    }
 }

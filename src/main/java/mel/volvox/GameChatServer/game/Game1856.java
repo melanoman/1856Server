@@ -55,6 +55,12 @@ public class Game1856 extends AbstractGame {
     public static final String PRICE_LEFT = "priceLeft";
     public static final String UPDATE_PREZ = "updatePrez";
 
+    public static final String USE_WS = "useWS";
+    public static final String USE_CAN = "useCAN";
+    public static final String USE_GLS = "useGLS";
+    public static final String BUY_BRIDGE = "buyBridge";
+    public static final String BUY_TUNNEL = "buyTunnel";
+
     public static final String TAKE_LOAN = "takeLoan";
     public static final String BUY_PRIV = "buyPriv";
     public static final String FLOAT = "float";
@@ -455,6 +461,15 @@ public class Game1856 extends AbstractGame {
             case TAKE_LOAN:
                 doTakeLoan(move);
                 break;
+            case USE_WS:
+                doUseWS(move);
+                break;
+            case USE_CAN:
+                doUseCAN(move);
+                break;
+            case USE_GLS:
+                doUseGLS(move);
+                break;
             case BUY_PRIV:
                 doBuyPriv(move);
                 break;
@@ -500,6 +515,52 @@ public class Game1856 extends AbstractGame {
             default:
                 throw new IllegalStateException("unknown move action: "+move.getAction());
         }
+    }
+
+    private void doUseWS(TrainMove move) {
+        Corp c = findCorp(move.getCorp());
+        if (move.getAmount() > 0) { // lay token for free
+            c.setTokensUsed(c.getTokensUsed() + 1);
+        }
+        c.getPrivates().removeIf(x -> x.getCorp().equals(PRIVATE_WS));
+    }
+
+    private void doUseCAN(TrainMove move) {
+        Corp c = findCorp(move.getCorp());
+        for (Priv p: c.getPrivates()) {
+            if(p.getCorp().equals(PRIVATE_CAN)) {
+                p.setAmount(0);
+            }
+        }
+    }
+
+    private void doUseGLS(TrainMove move) {
+        Corp c = findCorp(move.getCorp());
+        c.getPrivates().removeIf(x -> x.getCorp().equals(PRIVATE_GLS));
+        c.setPortRights(true);
+    }
+
+    private void undoUseWS(TrainMove move) {
+        Corp c = findCorp(move.getCorp());
+        if (move.getAmount() > 0) { // lay token for free
+            c.setTokensUsed(c.getTokensUsed() - 1);
+        }
+        c.getPrivates().add(new Priv(PRIVATE_WS, 3));
+    }
+
+    private void undoUseCAN(TrainMove move) {
+        Corp c = findCorp(move.getCorp());
+        for (Priv p: c.getPrivates()) {
+            if(p.getCorp().equals(PRIVATE_CAN)) {
+                p.setAmount(3);
+            }
+        }
+    }
+
+    private void undoUseGLS(TrainMove move) {
+        Corp c = findCorp(move.getCorp());
+        c.getPrivates().add(new Priv(PRIVATE_GLS, 3));
+        c.setPortRights(false);
     }
 
     private void doInterest(TrainMove move) {
@@ -1009,6 +1070,15 @@ public class Game1856 extends AbstractGame {
                 return true;
             case TAKE_LOAN:
                 undoTakeLoan(move);
+                return true;
+            case USE_WS:
+                undoUseWS(move);
+                return true;
+            case USE_CAN:
+                undoUseCAN(move);
+                return true;
+            case USE_GLS:
+                undoUseGLS(move);
                 return true;
             case BUY_PRIV:
                 undoBuyPriv(move);
@@ -2028,5 +2098,73 @@ public class Game1856 extends AbstractGame {
         enforceEvent(POST_REV_EVENT);
         makePrimaryMove(END_OP_TURN, "", board.getCurrentCorp(), 0);
         return board;
+    }
+
+    synchronized public Board1856 usePriv(String priv, boolean option) {
+        enforcePhase(Era.OP);
+        Corp c = getCurrentCorp();
+        switch (priv) {
+            case PRIVATE_WS -> useWS(c, option);
+            case PRIVATE_CAN -> useCAN(c);
+            case PRIVATE_GLS -> useGLS(c);
+            case PRIVATE_NIAG -> buyBridge(c);
+            case PRIVATE_STC -> buyTunnel(c);
+            default -> throw new IllegalStateException("No such Private: "+priv);
+        }
+        return board;
+    }
+
+    private void enforceOwns(Corp c, String privName) {
+        for(Priv p: c.getPrivates()) {
+            if (p.getCorp().equals(privName)) return;
+        }
+        throw new IllegalStateException("Corp does not own this private");
+    }
+
+    private void enforceHasToken(Corp c) {
+        if (c.getTokensUsed() == c.getTokensMax()) throw new IllegalStateException("No more tokens");
+    }
+
+    private void useWS(Corp c, boolean option) {
+        enforceOwns(c, PRIVATE_WS);
+        if (option) enforceHasToken(c);
+        makePrimaryMove(USE_WS, "", c.getName(), option ? 1 : 0);
+    }
+
+    private void useCAN(Corp c) {
+        enforceOwns(c, PRIVATE_CAN);
+        makePrimaryMove(USE_CAN, "", c.getName(), 0);
+    }
+
+    private void useGLS(Corp c) {
+        enforceOwns(c, PRIVATE_GLS);
+        makePrimaryMove(USE_GLS, "", c.getName(), 0);
+    }
+
+    private void buyBridge(Corp c) {
+        if(c.isBridgeRights()) throw new IllegalStateException("Already have bridge rights");
+        if(c.getCash() < 50) throw new IllegalStateException(FUNDS);
+        Priv p = findPriv(PRIVATE_NIAG);
+        if(p == null) throw new IllegalStateException("TODO buy from bank");
+        if(p.getAmount() < 1) throw new IllegalStateException("No bridge tokens remain");
+        throw new IllegalStateException("TODO buy bridge");
+    }
+
+    private void buyTunnel(Corp c) {
+        if(c.isTunnelRights()) throw new IllegalStateException("Already have tunnel rights");
+        if(c.getCash() < 50) throw new IllegalStateException(FUNDS);
+        Priv p = findPriv(PRIVATE_STC);
+        if(p == null) throw new IllegalStateException("TODO buy tunnel from bank");
+        if(p.getAmount() < 1) throw new IllegalStateException("No more tunnel tokens");
+        throw new IllegalStateException("TODO buy tunnel");
+    }
+
+    private Priv findPriv(String privName) {
+        for(Corp c: board.getCorps()) {
+            for(Priv p: c.getPrivates()) {
+                if(p.getCorp().equals(privName)) return p;
+            }
+        }
+        return null;
     }
 }
