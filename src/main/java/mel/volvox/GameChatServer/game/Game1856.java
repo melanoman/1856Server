@@ -81,10 +81,12 @@ public class Game1856 extends AbstractGame {
     public static final String END_OP_ROUND = "endOpRound";
 
     // event constants
+    // TODO move error message substrings out of constants to insulate clients
     public static final String NORMAL_EVENT = "in normal turn";
     public static final String BIDOFF_EVENT = "resolving conflicting bids";
     public static final String PRE_REV_EVENT = "before revenue";
     public static final String POST_REV_EVENT = "done with revenue";
+    public static final String FORCED_INTEREST_SALE = "InterestSale";
 
     // private companies
     public static final String PRIVATE_FLOS = "flos";
@@ -397,10 +399,7 @@ public class Game1856 extends AbstractGame {
             case STOCK_SALE -> doStockSale(move, rawMove);
             case STOCK_HEADER -> { } //nothing to do -- this just anchors the sale list
             case DROP_STOCK_PRICE -> doDropStockPrice(move, rawMove);
-            case PRICE_DOWN -> doStockStep(move, rawMove);
-            case PRICE_UP -> doStockStep(move, rawMove);
-            case PRICE_LEFT -> doStockStep(move, rawMove);
-            case PRICE_RIGHT -> doStockStep(move, rawMove);
+            case PRICE_DOWN, PRICE_UP, PRICE_LEFT, PRICE_RIGHT -> doStockStep(move, rawMove);
             case REORDER_CORP -> doReorderCorp(move);
             case END_STOCK_ACTION -> doEndStockAction(true, rawMove);
             case TAKE_LOAN -> doTakeLoan(move);
@@ -417,6 +416,7 @@ public class Game1856 extends AbstractGame {
             case DESTINATION -> doDestination(move);
             case RUN -> doLastRun(move);
             case INTEREST -> doInterest(move);
+            case PREZ_INTEREST -> doPrezInterest(move);
             case PAYOUT -> doPayout(move);
             case WITHHOLD -> doWithhold(move);
             case BUY_BANK_TRAIN -> doBankTrain(move, rawMove);
@@ -969,10 +969,7 @@ public class Game1856 extends AbstractGame {
             case STOCK_SALE -> undoStockSale(move);
             case STOCK_HEADER ->  {}  // nothing to undo
             case DROP_STOCK_PRICE -> undoDropStockPrice(move);
-            case PRICE_DOWN -> undoStockStep(move);
-            case PRICE_UP -> undoStockStep(move);
-            case PRICE_LEFT -> undoStockStep(move);
-            case PRICE_RIGHT -> undoStockStep(move);
+            case PRICE_DOWN, PRICE_UP, PRICE_LEFT, PRICE_RIGHT -> undoStockStep(move);
             case REORDER_CORP -> undoReorderCorp(move);
             case END_STOCK_ACTION -> undoEndStockAction(move);
             case TAKE_LOAN -> undoTakeLoan(move);
@@ -989,6 +986,7 @@ public class Game1856 extends AbstractGame {
             case DESTINATION -> undoDestination(move);
             case RUN -> undoLastRun(move);
             case INTEREST -> undoInterest(move);
+            case PREZ_INTEREST -> undoPrezInterest(move);
             case PAYOUT -> undoPayout(move);
             case WITHHOLD -> undoWithhold(move);
             case BUY_BANK_TRAIN -> undoBankTrain(move);
@@ -998,6 +996,26 @@ public class Game1856 extends AbstractGame {
             default -> { return false; }
         }
         return true;
+    }
+
+    public void doPrezInterest(TrainMove move) {
+        System.out.println("amount = "+move.getAmount());
+        Corp c = findCorp(move.getCorp());
+        Wallet w = findWallet(c.getPrez());
+        board.setTilePlayed(false);
+        board.setTokenPlayed(false);
+        payWalletToBank(w, move.getAmount());
+        if (w.getCash() < 0) board.setEvent(FORCED_INTEREST_SALE);
+        else board.setEvent(POST_REV_EVENT);
+    }
+
+    public void undoPrezInterest(TrainMove move) {
+        Corp c = findCorp(move.getCorp());
+        Wallet w = findWallet(c.getPrez());
+        board.setEvent(PRE_REV_EVENT);
+        board.setTilePlayed(move.getPlayer().charAt(0) == 'T');
+        board.setTokenPlayed(move.getPlayer().charAt(1) == 't');
+        payBankToWallet(w, move.getAmount());
     }
 
     public void doBankTrain(TrainMove move, boolean rawMove) {
@@ -1894,8 +1912,8 @@ public class Game1856 extends AbstractGame {
             int remainder = interest - downPayment;
             makePrimaryMove(RUN, ""+c.getLastRun(), c.getName(), amount);
             makeFollowMove(INTEREST, "", c.getName(), downPayment);
-            if (remainder > c.getCash()) {
-                makeFollowMove(PREZ_INTEREST, "", c.getName(), remainder - amount);
+            if (remainder > amount) {
+                makeFollowMove(PREZ_INTEREST, restorePreRev(), c.getName(), remainder - amount);
             } else {
                 makeFollowMove(WITHHOLD, restorePreRev(), c.getName(), amount - remainder);
             }
