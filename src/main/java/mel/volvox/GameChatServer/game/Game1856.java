@@ -395,7 +395,7 @@ public class Game1856 extends AbstractGame {
             case STOCK_BUY_POOL -> doBuyPool(move, rawMove);
             case UPDATE_PREZ -> doUpdatePrez(move);
             case STOCK_SALE -> doStockSale(move, rawMove);
-            case STOCK_HEADER -> { break; } //nothing to do -- this just anchors the sale list
+            case STOCK_HEADER -> { } //nothing to do -- this just anchors the sale list
             case DROP_STOCK_PRICE -> doDropStockPrice(move, rawMove);
             case PRICE_DOWN -> doStockStep(move, rawMove);
             case PRICE_UP -> doStockStep(move, rawMove);
