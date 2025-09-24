@@ -372,154 +372,58 @@ public class Game1856 extends AbstractGame {
 
     private void doMove(TrainMove move, boolean rawMove) {
         switch (move.getAction()) {
-            case ADD_PLAYER:
-                board.getPlayers().add(move.getPlayer());
-                break;
-            case RENAME_PLAYER:
-                board.getPlayers().set(move.getAmount(), move.getPlayer());
-                break;
-            case START_GAME:
-                doStart(move.getCorp());
-                break;
-            case AUCTION_BUY:
-                doAuctionBuy(move, rawMove);
-                break;
-            case AUCTION_PASS:
-                doAuctionPass(rawMove);
-                break;
-            case AUCTION_BID:
-                doAuctionBid(move, rawMove);
-                break;
-            case AUCTION_REBID:
-                doAuctionRebid(move, rawMove);
-                break;
-            case AUCTION_LONEBUY:
-                doLoneBuy(move, rawMove);
-                break;
-            case AUCTION_START_BIDOFF:
-                doStartBidoff(move);
-                break;
-            case AUCTION_END_BIDOFF:
-                doEndBidoff(move, rawMove);
-                break;
-            case AUCTION_END_ROUND:
-                doAuctionEndRound(move, rawMove);
-                break;
-            case AUCTION_AWARD_BID:
-                doAwardBid(move);
-                break;
-            case AUCTION_REFUND_BID:
-                doRefundBid(move);
-                break;
-            case AUCTION_GIVEAWAY:
-                doAuctionGiveaway(move, rawMove);
-                break;
-            case AUCTION_END_PHASE:
-                doEndAuctionPhase(move);
-                break;
-            case AUCTION_DISCOUNT_RESET:
-                doAuctionDiscountReset();
-                break;
-            case STOCK_PASS:
-                doStockPass(move, rawMove);
-                break;
-            case STOCK_END_ROUND:
-                doEndStockRound(move, rawMove);
-                break;
-            case STOCK_SET_PAR:
-                doSetPar(move);
-                break;
-            case STOCK_BUY_BANK:
-                doBuyBank(move, rawMove);
-                break;
-            case STOCK_BUY_POOL:
-                doBuyPool(move, rawMove);
-                break;
-            case UPDATE_PREZ:
-                doUpdatePrez(move);
-                break;
-            case STOCK_SALE:
-                doStockSale(move, rawMove);
-                break;
-            case STOCK_HEADER:
-                break; //nothing to do -- this just anchors the sale list
-            case DROP_STOCK_PRICE:
-                doDropStockPrice(move, rawMove);
-                break;
-            case PRICE_DOWN:
-            case PRICE_UP:
-            case PRICE_LEFT:
-            case PRICE_RIGHT:
-                doStockStep(move, rawMove);
-                break;
-            case REORDER_CORP:
-                doReorderCorp(move);
-                break;
-            case END_STOCK_ACTION:
-                doEndStockAction(true, rawMove);
-                break;
-            case TAKE_LOAN:
-                doTakeLoan(move);
-                break;
-            case USE_WS:
-                doUseWS(move);
-                break;
-            case USE_CAN:
-                doUseCAN(move);
-                break;
-            case USE_GLS:
-                doUseGLS(move);
-                break;
-            case BUY_BRIDGE:
-                doBuyBridge(move);
-                break;
-            case BUY_TUNNEL:
-                doBuyTunnel(move);
-                break;
-            case BUY_PRIV:
-                doBuyPriv(move);
-                break;
-            case FLOAT:
-                doFloat(move);
-                break;
-            case FAIL_FLOAT:
-                doFailFloat(move);
-                break;
-            case PAY_TOKEN:
-                doPayToken(move);
-                break;
-            case PAY_TILE:
-                doPayTile(move);
-                break;
-            case DESTINATION:
-                doDestination(move);
-                break;
-            case RUN:
-                doLastRun(move);
-                break;
-            case INTEREST:
-                doInterest(move);
-                break;
-            case PAYOUT:
-                doPayout(move);
-                break;
-            case WITHHOLD:
-                doWithhold(move);
-                break;
-            case BUY_BANK_TRAIN:
-                doBankTrain(move, rawMove);
-                break;
-            case END_OP_TURN:
-                doEndOpTurn(move, rawMove);
-                break;
-            case NEXT_CORP:
-                doNextCorp(move);
-                break;
-            case END_OP_ROUND:
-                doEndOpRound(move);
-                break;
-            default:
-                throw new IllegalStateException("unknown move action: "+move.getAction());
+            case ADD_PLAYER-> board.getPlayers().add(move.getPlayer());
+            case RENAME_PLAYER -> board.getPlayers().set(move.getAmount(), move.getPlayer());
+            case START_GAME -> doStart(move.getCorp());
+            case AUCTION_BUY -> doAuctionBuy(move, rawMove);
+            case AUCTION_PASS -> doAuctionPass(rawMove);
+            case AUCTION_BID -> doAuctionBid(move, rawMove);
+            case AUCTION_REBID -> doAuctionRebid(move, rawMove);
+            case AUCTION_LONEBUY -> doLoneBuy(move, rawMove);
+            case AUCTION_START_BIDOFF -> doStartBidoff(move);
+            case AUCTION_END_BIDOFF -> doEndBidoff(move, rawMove);
+            case AUCTION_END_ROUND -> doAuctionEndRound(move, rawMove);
+            case AUCTION_AWARD_BID -> doAwardBid(move);
+            case AUCTION_REFUND_BID -> doRefundBid(move);
+            case AUCTION_GIVEAWAY -> doAuctionGiveaway(move, rawMove);
+            case AUCTION_END_PHASE -> doEndAuctionPhase(move);
+            case AUCTION_DISCOUNT_RESET -> doAuctionDiscountReset();
+            case STOCK_PASS -> doStockPass(move, rawMove);
+            case STOCK_END_ROUND -> doEndStockRound(move, rawMove);
+            case STOCK_SET_PAR -> doSetPar(move);
+            case STOCK_BUY_BANK -> doBuyBank(move, rawMove);
+            case STOCK_BUY_POOL -> doBuyPool(move, rawMove);
+            case UPDATE_PREZ -> doUpdatePrez(move);
+            case STOCK_SALE -> doStockSale(move, rawMove);
+            case STOCK_HEADER -> { break; } //nothing to do -- this just anchors the sale list
+            case DROP_STOCK_PRICE -> doDropStockPrice(move, rawMove);
+            case PRICE_DOWN -> doStockStep(move, rawMove);
+            case PRICE_UP -> doStockStep(move, rawMove);
+            case PRICE_LEFT -> doStockStep(move, rawMove);
+            case PRICE_RIGHT -> doStockStep(move, rawMove);
+            case REORDER_CORP -> doReorderCorp(move);
+            case END_STOCK_ACTION -> doEndStockAction(true, rawMove);
+            case TAKE_LOAN -> doTakeLoan(move);
+            case USE_WS -> doUseWS(move);
+            case USE_CAN -> doUseCAN(move);
+            case USE_GLS -> doUseGLS(move);
+            case BUY_BRIDGE -> doBuyBridge(move);
+            case BUY_TUNNEL -> doBuyTunnel(move);
+            case BUY_PRIV -> doBuyPriv(move);
+            case FLOAT -> doFloat(move);
+            case FAIL_FLOAT -> doFailFloat(move);
+            case PAY_TOKEN -> doPayToken(move);
+            case PAY_TILE -> doPayTile(move);
+            case DESTINATION -> doDestination(move);
+            case RUN -> doLastRun(move);
+            case INTEREST -> doInterest(move);
+            case PAYOUT -> doPayout(move);
+            case WITHHOLD -> doWithhold(move);
+            case BUY_BANK_TRAIN -> doBankTrain(move, rawMove);
+            case END_OP_TURN -> doEndOpTurn(move, rawMove);
+            case NEXT_CORP -> doNextCorp(move);
+            case END_OP_ROUND -> doEndOpRound(move);
+            default -> throw new IllegalStateException("unknown move action: "+move.getAction());
         }
     }
 
@@ -1040,155 +944,60 @@ public class Game1856 extends AbstractGame {
     synchronized public boolean undoMove(TrainMove move) {
         board.setPassCount(move.getOldPassCount());
         switch (move.getAction()) {
-            case ADD_PLAYER:
-                board.getPlayers().remove(board.getPlayers().size()-1);
-                return true;
-            case RENAME_PLAYER:
-                board.getPlayers().set(move.getAmount(), move.getCorp());
-                return true;
-            case START_GAME:
-                undoStart(move.getCorp());
-                return true;
-            case AUCTION_BUY:
-                undoAuctionBuy(move);
-                return true;
-            case AUCTION_LONEBUY:
-                undoLoneBuy(move);
-                return true;
-            case AUCTION_PASS:
-                undoAuctionPass(move);
-                return true;
-            case AUCTION_BID:
-                undoAuctionBid(move);
-                return true;
-            case AUCTION_REBID:
-                undoAuctionRebid(move);
-                return true;
-            case AUCTION_START_BIDOFF:
-                undoStartBidoff(move);
-                return true;
-            case AUCTION_END_BIDOFF:
-                undoEndBidoff(move);
-                return true;
-            case AUCTION_END_ROUND:
-                undoAuctionEndRound(move);
-                return true;
-            case AUCTION_AWARD_BID:
-                undoAwardBid(move);
-                return true;
-            case AUCTION_REFUND_BID:
-                undoRefundBid(move);
-                return true;
-            case AUCTION_GIVEAWAY:
-                undoAuctionGiveaway(move);
-                return true;
-            case AUCTION_END_PHASE:
-                undoEndAuctionPhase(move);
-                return true;
-            case AUCTION_DISCOUNT_RESET:
-                undoAuctionDiscountReset(move);
-                return true;
-            case STOCK_PASS:
-                undoStockPass(move);
-                return true;
-            case STOCK_END_ROUND:
-                undoEndStockRound(move);
-                return true;
-            case STOCK_SET_PAR:
-                undoSetPar(move);
-                return true;
-            case STOCK_BUY_BANK:
-                undoBuyBank(move);
-                return true;
-            case STOCK_BUY_POOL:
-                undoBuyPool(move);
-                return true;
-            case UPDATE_PREZ:
-                undoUpdatePrez(move);
-                return true;
-            case STOCK_SALE:
-                undoStockSale(move);
-                return true;
-            case STOCK_HEADER:
-                return true; // nothing to undo
-            case DROP_STOCK_PRICE:
-                undoDropStockPrice(move);
-                return true;
-            case PRICE_DOWN:
-            case PRICE_UP:
-            case PRICE_LEFT:
-            case PRICE_RIGHT:
-                undoStockStep(move);
-                return true;
-            case REORDER_CORP:
-                undoReorderCorp(move);
-                return true;
-            case END_STOCK_ACTION:
-                undoEndStockAction(move);
-                return true;
-            case TAKE_LOAN:
-                undoTakeLoan(move);
-                return true;
-            case USE_WS:
-                undoUseWS(move);
-                return true;
-            case USE_CAN:
-                undoUseCAN(move);
-                return true;
-            case USE_GLS:
-                undoUseGLS(move);
-                return true;
-            case BUY_BRIDGE:
-                undoBuyBridge(move);
-                return true;
-            case BUY_TUNNEL:
-                undoBuyTunnel(move);
-                return true;
-            case BUY_PRIV:
-                undoBuyPriv(move);
-                return true;
-            case FLOAT:
-                undoFloat(move);
-                return true;
-            case FAIL_FLOAT:
-                undoFailFloat(move);
-                return true;
-            case PAY_TOKEN:
-                undoPayToken(move);
-                return true;
-            case PAY_TILE:
-                undoPayTile(move);
-                return true;
-            case DESTINATION:
-                undoDestination(move);
-                return true;
-            case RUN:
-                undoLastRun(move);
-                return true;
-            case INTEREST:
-                undoInterest(move);
-                return true;
-            case PAYOUT:
-                undoPayout(move);
-                return true;
-            case WITHHOLD:
-                undoWithhold(move);
-                return true;
-            case BUY_BANK_TRAIN:
-                undoBankTrain(move);
-                return true;
-            case END_OP_TURN:
-                undoEndOpTurn(move);
-                return true;
-            case NEXT_CORP:
-                undoNextCorp(move);
-                return true;
-            case END_OP_ROUND:
-                undoEndOpRound(move);
-                return true;
-            default:
-                return false;
+            case ADD_PLAYER -> board.getPlayers().remove(board.getPlayers().size()-1);
+            case RENAME_PLAYER -> board.getPlayers().set(move.getAmount(), move.getCorp());
+            case START_GAME -> undoStart(move.getCorp());
+            case AUCTION_BUY -> undoAuctionBuy(move);
+            case AUCTION_LONEBUY -> undoLoneBuy(move);
+            case AUCTION_PASS -> undoAuctionPass(move);
+            case AUCTION_BID -> undoAuctionBid(move);
+            case AUCTION_REBID -> undoAuctionRebid(move);
+            case AUCTION_START_BIDOFF -> undoStartBidoff(move);
+            case AUCTION_END_BIDOFF -> undoEndBidoff(move);
+            case AUCTION_END_ROUND -> undoAuctionEndRound(move);
+            case AUCTION_AWARD_BID -> undoAwardBid(move);
+            case AUCTION_REFUND_BID -> undoRefundBid(move);
+            case AUCTION_GIVEAWAY -> undoAuctionGiveaway(move);
+            case AUCTION_END_PHASE -> undoEndAuctionPhase(move);
+            case AUCTION_DISCOUNT_RESET -> undoAuctionDiscountReset(move);
+            case STOCK_PASS -> undoStockPass(move);
+            case STOCK_END_ROUND -> undoEndStockRound(move);
+            case STOCK_SET_PAR -> undoSetPar(move);
+            case STOCK_BUY_BANK -> undoBuyBank(move);
+            case STOCK_BUY_POOL-> undoBuyPool(move);
+            case UPDATE_PREZ -> undoUpdatePrez(move);
+            case STOCK_SALE -> undoStockSale(move);
+            case STOCK_HEADER ->  {}  // nothing to undo
+            case DROP_STOCK_PRICE -> undoDropStockPrice(move);
+            case PRICE_DOWN -> undoStockStep(move);
+            case PRICE_UP -> undoStockStep(move);
+            case PRICE_LEFT -> undoStockStep(move);
+            case PRICE_RIGHT -> undoStockStep(move);
+            case REORDER_CORP -> undoReorderCorp(move);
+            case END_STOCK_ACTION -> undoEndStockAction(move);
+            case TAKE_LOAN -> undoTakeLoan(move);
+            case USE_WS -> undoUseWS(move);
+            case USE_CAN -> undoUseCAN(move);
+            case USE_GLS -> undoUseGLS(move);
+            case BUY_BRIDGE -> undoBuyBridge(move);
+            case BUY_TUNNEL -> undoBuyTunnel(move);
+            case BUY_PRIV -> undoBuyPriv(move);
+            case FLOAT -> undoFloat(move);
+            case FAIL_FLOAT -> undoFailFloat(move);
+            case PAY_TOKEN -> undoPayToken(move);
+            case PAY_TILE -> undoPayTile(move);
+            case DESTINATION -> undoDestination(move);
+            case RUN -> undoLastRun(move);
+            case INTEREST -> undoInterest(move);
+            case PAYOUT -> undoPayout(move);
+            case WITHHOLD -> undoWithhold(move);
+            case BUY_BANK_TRAIN -> undoBankTrain(move);
+            case END_OP_TURN -> undoEndOpTurn(move);
+            case NEXT_CORP -> undoNextCorp(move);
+            case END_OP_ROUND -> undoEndOpRound(move);
+            default -> { return false; }
         }
+        return true;
     }
 
     public void doBankTrain(TrainMove move, boolean rawMove) {
