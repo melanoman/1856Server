@@ -999,7 +999,6 @@ public class Game1856 extends AbstractGame {
     }
 
     public void doPrezInterest(TrainMove move) {
-        System.out.println("amount = "+move.getAmount());
         Corp c = findCorp(move.getCorp());
         Wallet w = findWallet(c.getPrez());
         board.setTilePlayed(false);
