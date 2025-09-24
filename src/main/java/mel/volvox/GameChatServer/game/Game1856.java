@@ -340,8 +340,13 @@ public class Game1856 extends AbstractGame {
     private void payPrivs() {
         for(Wallet w: board.getWallets()) {
             for (Priv priv: w.getPrivates()) {
-                if(priv.getAmount() > 3) continue;  //TODO check for closed
+                if(priv.getAmount() > 3) continue;
                 payBankToWallet(w, priv2div.get(priv.getCorp()));
+            }
+        }
+        for(Corp c:board.getCorps()) {
+            for (Priv p: c.getPrivates()) {
+                payBankToCorp(c, priv2div.get(p.getCorp()));
             }
         }
     }
@@ -362,6 +367,11 @@ public class Game1856 extends AbstractGame {
             for (Priv priv: w.getPrivates()) {
                 if(priv.getAmount() > 3) continue; //TODO check for closed
                 payWalletToBank(w, priv2div.get(priv.getCorp()));
+            }
+        }
+        for(Corp c:board.getCorps()) {
+            for (Priv p: c.getPrivates()) {
+                payCorpToBank(c, priv2div.get(p.getCorp()));
             }
         }
     }
@@ -637,6 +647,7 @@ public class Game1856 extends AbstractGame {
         } else {
             board.setCurrentOpRound(board.getCurrentOpRound() + 1);
             board.setCurrentCorp(board.getCorps().get(0).getName());
+            payPrivs();
         }
     }
 
@@ -649,6 +660,7 @@ public class Game1856 extends AbstractGame {
         getCurrentCorp().setHasOperated(false);
         if (board.getPhase().equals(Era.OP.name())) {
             board.setCurrentOpRound(board.getCurrentOpRound() - 1);
+            unpayPrivs();
         } else {
             board.setCurrentOpRound(move.getAmount() > 0 ? move.getAmount() : -move.getAmount());
             board.setMaxOpRounds(board.getCurrentOpRound());
