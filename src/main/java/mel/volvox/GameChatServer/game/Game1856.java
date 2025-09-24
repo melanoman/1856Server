@@ -1055,6 +1055,7 @@ public class Game1856 extends AbstractGame {
         c.setCash(c.getCash() + move.getAmount());
         c.setEscrow(0);
         c.setReachedDest(true);
+        c.setFundingType(Corp.INCREMENTAL_TYPE);
         board.setBankCash(board.getBankCash() - move.getAmount());
     }
 
@@ -1063,6 +1064,7 @@ public class Game1856 extends AbstractGame {
         c.setCash(c.getCash() - move.getAmount());
         c.setEscrow(move.getAmount());
         c.setReachedDest(false);
+        c.setFundingType(Corp.DESTINATION_TYPE);
         board.setBankCash(board.getBankCash() + move.getAmount());
     }
 
@@ -1948,7 +1950,7 @@ public class Game1856 extends AbstractGame {
         enforceEvent(PRE_REV_EVENT);
         Corp corp = getCurrentCorp();
         if (corp.isReachedDest()) throw new IllegalStateException("Already at destination");
-        if (corp.getFundingType() != Corp.DESTINATION_TYPE) throw new IllegalStateException("No destination");
+        if (corp.getFundingType() != Corp.DESTINATION_TYPE) throw new IllegalStateException("No destination to reach");
         makePrimaryMove(DESTINATION, "", corp.getName(), corp.getEscrow());
         return board;
     }
@@ -1988,7 +1990,7 @@ public class Game1856 extends AbstractGame {
         if (c.getTrains().size() >= trainLimit(board, c)) throw new IllegalStateException("Too many trains");
         if (price > c.getCash()) throw new IllegalStateException(FUNDS);
         // TODO SOON REMOVE THIS HACK, IMPLEMENT RUST
-        if(c.getTrains().size() == 2 || c.getTrains().size() == 9 || c.getTrains().size() == 5) {
+        if(board.getTrains().size() == 2 || board.getTrains().size() == 9 || board.getTrains().size() == 5) {
             throw new IllegalStateException("TODO IMPLEMENT RUST");
         }
         makePrimaryMove(BUY_BANK_TRAIN, "", c.getName(), size);
