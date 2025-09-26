@@ -77,6 +77,7 @@ public class Game1856 extends AbstractGame {
     public static final String RUST = "rust";
     public static final String RUST_TRAIN = "rustTrain";
     public static final String CLOSE_PRIVS = "closePrivs";
+    public static final String REMOVE_PRIV = "removePriv";
     public static final String END_OP_TURN = "endOpTurn";
     public static final String NEXT_CORP = "nextCorp";
     public static final String END_OP_ROUND = "endOpRound";
@@ -433,10 +434,60 @@ public class Game1856 extends AbstractGame {
             case BUY_BANK_TRAIN -> doBankTrain(move, rawMove);
             case RUST -> doRust(move, rawMove);
             case RUST_TRAIN -> doRustTrain(move);
+            case CLOSE_PRIVS -> doClosePriv(move, rawMove);
+            case REMOVE_PRIV -> doRemovePriv(move);
             case END_OP_TURN -> doEndOpTurn(move, rawMove);
             case NEXT_CORP -> doNextCorp(move);
             case END_OP_ROUND -> doEndOpRound(move);
             default -> throw new IllegalStateException("unknown move action: "+move.getAction());
+        }
+    }
+
+    /**
+     * ClosePriv and RemovePriv work as a pair.
+     * ClosePriv records where the privs has been by creating Remove follows, then wipes the lists.
+     * Remove Priv does nothing on do, but then has all then info on undo.
+     * This avoids mutating the list while ClosePriv is still iterating on do
+     */
+    private void doClosePriv(TrainMove move, boolean rawMove) {
+        for(Wallet w: board.getWallets()) {
+            if (rawMove) for(Priv p: w.getPrivates()) {
+                makeFollowMove(REMOVE_PRIV, w.getName(), p.getCorp(), p.getAmount()+1);
+                if(p.getCorp().equals(PRIVATE_NIAG)) board.setBridgeTokens(3);
+                if(p.getCorp().equals(PRIVATE_STC)) board.setTunnelTokens(3);
+            }
+            w.setPrivates(new ArrayList<>());
+        }
+        for(Corp c: board.getCorps()) {
+            if (rawMove) for(Priv p: c.getPrivates()) {
+                makeFollowMove(REMOVE_PRIV, c.getName(), p.getCorp(), -p.getAmount()-1);
+            }
+            c.setPrivates(new ArrayList<>());
+        }
+    }
+
+    private void undoClosePriv(TrainMove move) {
+        // nothing to do here
+    }
+
+    private void doRemovePriv(TrainMove move) {
+        // nothing to do here
+    }
+
+    /**
+     * CORP ==> name of priv
+     * AMOUNT ==> positiv from player, negative from corp (abs(x)-1 ==> priv.amount)
+     * PLAYER ==> name of player or corp losing the priv
+     */
+    private void undoRemovePriv(TrainMove move) {
+        if(move.getAmount() > 0) { //player
+            Wallet w = findWallet(move.getPlayer());
+            w.getPrivates().add(0, new Priv(move.getCorp(), move.getAmount()-1));
+            if(move.getCorp().equals(PRIVATE_NIAG)) board.setBridgeTokens(0);
+            if(move.getCorp().equals(PRIVATE_STC)) board.setTunnelTokens(0);
+        } else { // corp
+            Corp c = findCorp(move.getPlayer());
+            c.getPrivates().add(0, new Priv(move.getCorp(), -move.getAmount()-1));
         }
     }
 
@@ -1035,6 +1086,8 @@ public class Game1856 extends AbstractGame {
             case BUY_BANK_TRAIN -> undoBankTrain(move);
             case RUST -> undoRust(move);
             case RUST_TRAIN -> undoRustTrain(move);
+            case CLOSE_PRIVS -> undoClosePriv(move);
+            case REMOVE_PRIV -> undoRemovePriv(move);
             case END_OP_TURN -> undoEndOpTurn(move);
             case NEXT_CORP -> undoNextCorp(move);
             case END_OP_ROUND -> undoEndOpRound(move);
@@ -1069,7 +1122,7 @@ public class Game1856 extends AbstractGame {
         if (rawMove) { // TODO first Diesel
             switch(board.getTrains().size()) {
                 case 1: makeFollowMove(RUST, "", "", 3); break;
-                case 4: makeFollowMove(CLOSE_PRIVS, "", "", 0);
+                case 4: makeFollowMove(CLOSE_PRIVS, "", "", 0); break;
                 case 8: makeFollowMove(RUST, "", "", 2); break;
             }
         }
