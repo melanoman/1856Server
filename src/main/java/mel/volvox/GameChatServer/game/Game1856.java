@@ -1925,7 +1925,7 @@ public class Game1856 extends AbstractGame {
         return value;
     }
 
-    synchronized public Board1856 sellBuy(String buyType, String corpName, int par, List<StockSale> sales) {
+    synchronized public Board1856 sellBuy(String buyType, String buyCorpName, int par, List<StockSale> sales) {
         boolean isBank = false;
         boolean isPar = false;
         switch (buyType) {
@@ -1935,7 +1935,10 @@ public class Game1856 extends AbstractGame {
             default -> throw new IllegalStateException("Unknown Buy Type "+buyType);
         }
         Wallet w = findWallet(board.getCurrentPlayer());
-        Corp c = findCorp(corpName);
+        for(StockSale s: sales) {
+            if(s.getName().equals(buyCorpName)) throw new IllegalStateException("No buy after sell same round");
+        }
+        Corp c = findCorp(buyCorpName);
         checkSalesList(sales);
         int extraCash = salesValue(sales);
         if (isBank) canBuyBank(c, w, extraCash);
