@@ -11,5 +11,4 @@ public class Stock {
     String corp;
     int amount;
     boolean isPresident;
-    boolean hasSold;
 }

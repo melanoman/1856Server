@@ -836,6 +836,7 @@ public class Game1856 extends AbstractGame {
         Corp c = findCorp(move.getCorp());
         sharesWalletToPool(w, c, move.getAmount());
         payBankToWallet(w, move.getAmount() * c.getPrice().getPrice());
+        w.getBlocks().add(move.getCorp()); // one per xaction
         if(rawMove) {
             int drop = c.getPrice().previewDrop(move.getAmount());
             if (drop > 0) makeFollowMove(DROP_STOCK_PRICE, "", move.getCorp(), drop);
@@ -849,16 +850,33 @@ public class Game1856 extends AbstractGame {
         Corp c = findCorp(move.getCorp());
         sharesPoolToWallet(w, c, move.getAmount());
         payWalletToBank(w, move.getAmount() * c.getPrice().getPrice());
+        w.getBlocks().remove(move.getCorp()); // only remove one!
     }
 
     private void doUpdatePrez(TrainMove move) {
         Corp c = findCorp(move.getCorp());
+        Wallet w = findWallet(c.getPrez());
+        for (Stock s: w.getStocks()) {
+            if(s.getCorp().equals(c.getName())) s.setPresident(false);
+        }
         c.setPrez(move.getPlayer());
+        w = findWallet(c.getPrez());
+        for(Stock s: w.getStocks()) {
+            if(s.getCorp().equals(c.getName())) s.setPresident(true);
+        }
     }
 
     private void undoUpdatePrez(TrainMove move) {
         Corp c = findCorp(move.getCorp());
+        Wallet w = findWallet(c.getPrez());
+        for (Stock s: w.getStocks()) {
+            if(s.getCorp().equals(c.getName())) s.setPresident(false);
+        }
         c.setPrez(board.getPlayers().get(move.getAmount()));
+        w = findWallet(c.getPrez());
+        for(Stock s: w.getStocks()) {
+            if(s.getCorp().equals(c.getName())) s.setPresident(true);
+        }
     }
 
     private void doAuctionGiveaway(TrainMove move, boolean rawMove) {
@@ -1223,13 +1241,13 @@ public class Game1856 extends AbstractGame {
             }
         }
         if (wipe) w.getStocks().removeIf(x -> corpName.equals(x.getCorp()));
-        if (create) w.getStocks().add(new Stock(corpName, shares, false, false));
+        if (create) w.getStocks().add(new Stock(corpName, shares, false));
     }
 
     private void updatePrez(String corpName) {
         Corp c = findCorp(corpName);
         int prezCount = 0;
-        int maxCount = 2;
+        int maxCount = 1;
         String newPrez = "";
         for(Wallet w: board.getWallets()) {
             boolean prez = false;
@@ -1413,7 +1431,7 @@ public class Game1856 extends AbstractGame {
         } else {
             payWalletToBank(w, 2 * move.getAmount()); //bank holds escrow
         }
-        w.getStocks().add(new Stock(move.getCorp(), 2, true, false));
+        w.getStocks().add(new Stock(move.getCorp(), 2, true));
     }
 
     private int maxRounds() {
@@ -1839,8 +1857,8 @@ public class Game1856 extends AbstractGame {
         enforcePhase(Era.STOCK, Era.INITIAL);
         if (c.getBankShares() < 1) throw new IllegalStateException("No Bank Shares Remain");
         if (w.getCash() + extraCash < c.getPar()) throw new IllegalStateException(FUNDS);
+        if (w.getBlocks().contains(c.getName())) throw new IllegalStateException("No buy after sell same round");
         // TODO enforce cert limits
-        // TODO enforce buy block after sale same round
     }
 
     synchronized public Board1856 buyBank(String corpName) {
@@ -1853,12 +1871,11 @@ public class Game1856 extends AbstractGame {
     }
 
     private void canBuyPool(Corp c, Wallet w, int extraCash) {
-        System.out.println("player cash = "+w.getCash()+" pool price = "+c.getPrice().getPrice());
         enforcePhase(Era.STOCK, Era.INITIAL);
         if (c.getPoolShares() < 1) throw new IllegalStateException("No pool shares available");
         if(w.getCash() + extraCash < c.getPrice().getPrice()) throw new IllegalStateException(FUNDS);
+        if (w.getBlocks().contains(c.getName())) throw new IllegalStateException("No buy after sell same round");
         // TODO enforce cert limits
-        // TODO enforce no buy after sale same round
     }
 
     synchronized public Board1856 buyPool(String corpName) {
@@ -2074,7 +2091,6 @@ public class Game1856 extends AbstractGame {
         Corp c = getCurrentCorp();
         if (c.getTrains().size() >= trainLimit(board, c)) throw new IllegalStateException("Too many trains");
         if (price > c.getCash()) throw new IllegalStateException(FUNDS);
-        // TODO SOON REMOVE THIS HACK, IMPLEMENT RUST
         makePrimaryMove(BUY_BANK_TRAIN, "", c.getName(), size);
         return board;
     }

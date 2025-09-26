@@ -13,6 +13,7 @@ public class Wallet {
     int cash;
     List<Priv> privates = new ArrayList<>();
     List<Stock> stocks = new ArrayList<>();
+    List<String> blocks = new ArrayList<>();
 
     public int countCerts() {
         int count = privates.size();
