@@ -1847,6 +1847,7 @@ public class Game1856 extends AbstractGame {
         Wallet w = findWallet(board.getCurrentPlayer());
         Corp corp = findCorp(corpName);
         canPar(corp, par, w, 0);
+        if (certCount(w) + 2 > certLimit()) throw new IllegalStateException("Certificate Limit Violation");
         //TODO enforce cert limits (+2)
         makePrimaryMove(STOCK_SET_PAR, board.getCurrentPlayer(), corpName, par);
         makeFollowMove(END_STOCK_ACTION, board.getCurrentPlayer(), "", 0);
@@ -1858,13 +1859,17 @@ public class Game1856 extends AbstractGame {
         if (c.getBankShares() < 1) throw new IllegalStateException("No Bank Shares Remain");
         if (w.getCash() + extraCash < c.getPar()) throw new IllegalStateException(FUNDS);
         if (w.getBlocks().contains(c.getName())) throw new IllegalStateException("No buy after sell same round");
-        // TODO enforce cert limits
+        for (Stock s: w.getStocks()) { //TODO exception for low price sections
+            if(!s.getCorp().equals(c.getName())) continue;
+            if(s.getAmount() >= 6) throw new IllegalStateException("Max 60% of company");
+        }
     }
 
     synchronized public Board1856 buyBank(String corpName) {
         Wallet w = findWallet(board.getCurrentPlayer());
         Corp c = findCorp(corpName);
         canBuyBank(c, w, 0);
+        if (certCount(w) + 1 > certLimit()) throw new IllegalStateException("Certificate Limit Violation");
         makePrimaryMove(STOCK_BUY_BANK, board.getCurrentPlayer(), corpName, c.getPar());
         makeFollowMove(END_STOCK_ACTION, board.getCurrentPlayer(), "", 0);
         return board;
@@ -1875,13 +1880,17 @@ public class Game1856 extends AbstractGame {
         if (c.getPoolShares() < 1) throw new IllegalStateException("No pool shares available");
         if(w.getCash() + extraCash < c.getPrice().getPrice()) throw new IllegalStateException(FUNDS);
         if (w.getBlocks().contains(c.getName())) throw new IllegalStateException("No buy after sell same round");
-        // TODO enforce cert limits
+        for (Stock s: w.getStocks()) { //TODO exception for low price sections
+            if(!s.getCorp().equals(c.getName())) continue;
+            if(s.getAmount() >= 6) throw new IllegalStateException("Max 60% of company");
+        }
     }
 
     synchronized public Board1856 buyPool(String corpName) {
         Wallet w = findWallet(board.getCurrentPlayer());
         Corp c = findCorp(corpName);
         canBuyPool(c, w, 0);
+        if (certCount(w) + 1 > certLimit()) throw new IllegalStateException("Certificate Limit Violation");
         makePrimaryMove(STOCK_BUY_POOL, board.getCurrentPlayer(), corpName, c.getPrice().getPrice());
         makeFollowMove(END_STOCK_ACTION, board.getCurrentPlayer(), "", 0);
         return board;
@@ -1902,8 +1911,7 @@ public class Game1856 extends AbstractGame {
         else if (isPar) canPar(c, par, w, 0);
         else canBuyPool(c, w, 0);
         checkSalesList(sales);
-        // TODO SOON test buySell
-        //TODO SOON make sure this works with intervening buy
+        if (certCount(w) + ((isPar) ? 2 : 1) > certLimit()) throw new IllegalStateException("Certificate Limit Violation");
         makePrimaryMove(STOCK_HEADER, board.getCurrentPlayer(), "", 0);
         if (isBank) makeFollowMove(STOCK_BUY_BANK, w.getName(), c.getName(), c.getPar());
         else if (isPar) makeFollowMove(STOCK_SET_PAR, w.getName(), c.getName(), par);
@@ -1911,7 +1919,6 @@ public class Game1856 extends AbstractGame {
         for(StockSale sale: sales) {
             makeFollowMove(STOCK_SALE, board.getCurrentPlayer(), sale.getName(), sale.getAmount());
         }
-        //TODO SOON make sure this works with intervening buy
         makeFollowMove(END_STOCK_ACTION, board.getCurrentPlayer(), "", 0);
         return board;
     }
@@ -1941,10 +1948,13 @@ public class Game1856 extends AbstractGame {
         Corp c = findCorp(buyCorpName);
         checkSalesList(sales);
         int extraCash = salesValue(sales);
+        int extraCerts = certValue(sales);
+        if (certCount(w) + ((isPar) ? 2 : 1) > certLimit() - extraCerts) {
+            throw new IllegalStateException("Certificate Limit Violation");
+        }
         if (isBank) canBuyBank(c, w, extraCash);
         else if (isPar) canPar(c, par, w, extraCash);
         else canBuyPool(c, w, extraCash);
-        //TODO SOON test sellBuy a lot
         makePrimaryMove(STOCK_HEADER, board.getCurrentPlayer(), "", 0);
         for(StockSale sale: sales) {
             makeFollowMove(STOCK_SALE, board.getCurrentPlayer(), sale.getName(), sale.getAmount());
@@ -1952,9 +1962,26 @@ public class Game1856 extends AbstractGame {
         if (isBank) makeFollowMove(STOCK_BUY_BANK, w.getName(), c.getName(), c.getPar());
         else if (isPar) makeFollowMove(STOCK_SET_PAR, w.getName(), c.getName(), par);
         else makeFollowMove(STOCK_BUY_POOL, w.getName(), c.getName(), c.getPrice().getPrice());
-        //TODO SOON make sure this works with intervening buy
         makeFollowMove(END_STOCK_ACTION, board.getCurrentPlayer(), "", 0);
         return board;
+    }
+
+    private int certCount(Wallet w) {
+        int out = 0;
+        for (Stock s: w.getStocks()) {
+            out += s.getAmount();
+            if (s.isPresident()) out --;
+        }
+        return out;
+    }
+
+    private int certValue(List<StockSale> sales) {
+        int out = 0;
+        for(StockSale s: sales) {
+            out += s.getAmount();
+            //if (prezWillChange()) out++; TODO anticipate change in prez
+        }
+        return out;
     }
 
     synchronized public Board1856 payToken() {
@@ -2065,6 +2092,21 @@ public class Game1856 extends AbstractGame {
     private int trainLimit(Board1856 board, Corp corp) {
         if(corp.getName().equals("CGR")) return 3;
         return TRAIN_LIMIT[highestTrainSold()];
+    }
+
+    int[] EARLY_CERT_LIMIT = {20, 16, 13, 11};
+    int[][] LATE_CERT_LIMIT = {
+            {10, 13, 15, 18, 20, 22, 25, 28},
+            {8, 10, 12, 14, 16, 18, 20, 22},
+            {7, 8, 10, 11, 13, 15, 16, 18},
+            {6, 7, 8, 10, 11, 12, 14, 15}
+    };
+
+    private int certLimit() {
+        if(board.getTrains().size() > 1) {
+            return EARLY_CERT_LIMIT[board.getPlayers().size() - 3];
+        }
+        return LATE_CERT_LIMIT[board.getPlayers().size() - 3][board.getCorps().size() - 4];
     }
 
     private void enforcePhase(Era e1, Era e2) {
