@@ -75,6 +75,7 @@ public class Game1856 extends AbstractGame {
     public static final String WITHHOLD = "withhold";
     public static final String BUY_BANK_TRAIN = "buyBankTrain";
     public static final String RUST = "rust";
+    public static final String RUST_TRAIN = "rustTrain";
     public static final String CLOSE_PRIVS = "closePrivs";
     public static final String END_OP_TURN = "endOpTurn";
     public static final String NEXT_CORP = "nextCorp";
@@ -365,7 +366,7 @@ public class Game1856 extends AbstractGame {
     private void unpayPrivs() {
         for(Wallet w: board.getWallets()) {
             for (Priv priv: w.getPrivates()) {
-                if(priv.getAmount() > 3) continue; //TODO check for closed
+                if(priv.getAmount() > 3) continue;
                 payWalletToBank(w, priv2div.get(priv.getCorp()));
             }
         }
@@ -430,11 +431,41 @@ public class Game1856 extends AbstractGame {
             case PAYOUT -> doPayout(move);
             case WITHHOLD -> doWithhold(move);
             case BUY_BANK_TRAIN -> doBankTrain(move, rawMove);
+            case RUST -> doRust(move, rawMove);
+            case RUST_TRAIN -> doRustTrain(move);
             case END_OP_TURN -> doEndOpTurn(move, rawMove);
             case NEXT_CORP -> doNextCorp(move);
             case END_OP_ROUND -> doEndOpRound(move);
             default -> throw new IllegalStateException("unknown move action: "+move.getAction());
         }
+    }
+
+    private void doRust(TrainMove move, boolean rawMove) {
+        for(Corp corp: board.getCorps()) {
+            int count = 0;
+            for(Integer train: corp.getTrains()) {
+                if(train == move.getAmount()) { // only remove the
+                    count++;
+                }
+            }
+            for(int i=0; i<count; i++) {
+                makeFollowMove(RUST_TRAIN, "", corp.getName(), move.getAmount());
+            }
+        }
+    }
+
+    private void undoRust(TrainMove move) {
+        //nothing to do
+    }
+
+    private void doRustTrain(TrainMove move) {
+        Corp c = findCorp(move.getCorp());
+        c.getTrains().removeIf(x -> x == move.getAmount());
+    }
+
+    private void undoRustTrain(TrainMove move) {
+        Corp c = findCorp(move.getCorp());
+        c.getTrains().add(0, move.getAmount());
     }
 
     private void doUseWS(TrainMove move) {
@@ -1002,6 +1033,8 @@ public class Game1856 extends AbstractGame {
             case PAYOUT -> undoPayout(move);
             case WITHHOLD -> undoWithhold(move);
             case BUY_BANK_TRAIN -> undoBankTrain(move);
+            case RUST -> undoRust(move);
+            case RUST_TRAIN -> undoRustTrain(move);
             case END_OP_TURN -> undoEndOpTurn(move);
             case NEXT_CORP -> undoNextCorp(move);
             case END_OP_ROUND -> undoEndOpRound(move);
@@ -1035,7 +1068,6 @@ public class Game1856 extends AbstractGame {
         c.getTrains().add(board.getTrains().remove(0));
         if (rawMove) { // TODO first Diesel
             switch(board.getTrains().size()) {
-                //TODO use player and corp for undo
                 case 1: makeFollowMove(RUST, "", "", 3); break;
                 case 4: makeFollowMove(CLOSE_PRIVS, "", "", 0);
                 case 8: makeFollowMove(RUST, "", "", 2); break;
@@ -1990,9 +2022,6 @@ public class Game1856 extends AbstractGame {
         if (c.getTrains().size() >= trainLimit(board, c)) throw new IllegalStateException("Too many trains");
         if (price > c.getCash()) throw new IllegalStateException(FUNDS);
         // TODO SOON REMOVE THIS HACK, IMPLEMENT RUST
-        if(board.getTrains().size() == 2 || board.getTrains().size() == 9 || board.getTrains().size() == 5) {
-            throw new IllegalStateException("TODO IMPLEMENT RUST");
-        }
         makePrimaryMove(BUY_BANK_TRAIN, "", c.getName(), size);
         return board;
     }
