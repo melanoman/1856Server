@@ -1450,12 +1450,17 @@ public class Game1856 extends AbstractGame {
         for(Corp c: board.getCorps()) {
             c.setHasOperated(false);
         }
+
         if (rawMove) {
-           for(Corp c: board.getCorps()) {
-               if(c.getPoolShares() == 0 && c.getBankShares() == 0 && !c.getPrice().ceiling()) {
-                   makeFollowMove(PRICE_UP, "", c.getName(), 1);
-               }
-           }
+            List<Corp> risers = new ArrayList<>();
+            for(Corp c: board.getCorps()) {
+                if(c.getPoolShares() == 0 && c.getBankShares() == 0 && !c.getPrice().ceiling()) {
+                    risers.add(c);
+                }
+            }
+            for (Corp c: risers) {
+                makeFollowMove(PRICE_UP, "", c.getName(), 1);
+            }
         }
         payPrivs();
         if (rawMove) setNextOpCorp();
@@ -1972,7 +1977,7 @@ public class Game1856 extends AbstractGame {
             out += s.getAmount();
             if (s.isPresident()) out --;
         }
-        return out;
+        return out + w.getPrivates().size();
     }
 
     private int certValue(List<StockSale> sales) {
