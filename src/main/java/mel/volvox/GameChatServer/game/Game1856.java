@@ -81,6 +81,7 @@ public class Game1856 extends AbstractGame {
     public static final String END_OP_TURN = "endOpTurn";
     public static final String NEXT_CORP = "nextCorp";
     public static final String END_OP_ROUND = "endOpRound";
+    public static final String CLEAR_BLOCKS = "clearBlocks";
 
     // event constants
     // TODO move error message substrings out of constants to insulate clients
@@ -439,6 +440,7 @@ public class Game1856 extends AbstractGame {
             case END_OP_TURN -> doEndOpTurn(move, rawMove);
             case NEXT_CORP -> doNextCorp(move);
             case END_OP_ROUND -> doEndOpRound(move);
+            case CLEAR_BLOCKS -> doClearBlocks(move);
             default -> throw new IllegalStateException("unknown move action: "+move.getAction());
         }
     }
@@ -1109,9 +1111,20 @@ public class Game1856 extends AbstractGame {
             case END_OP_TURN -> undoEndOpTurn(move);
             case NEXT_CORP -> undoNextCorp(move);
             case END_OP_ROUND -> undoEndOpRound(move);
+            case CLEAR_BLOCKS -> undoClearBlocks(move);
             default -> { return false; }
         }
         return true;
+    }
+
+    public void doClearBlocks(TrainMove move) {
+        Wallet w = findWallet(move.getPlayer());
+        w.setBlocks(new ArrayList<>());
+    }
+
+    public void undoClearBlocks(TrainMove move) {
+        Wallet w = findWallet(move.getPlayer());
+        w.setBlocks(new ArrayList<String>(Arrays.asList(move.getCorp().split(" "))));
     }
 
     public void doPrezInterest(TrainMove move) {
@@ -1460,6 +1473,11 @@ public class Game1856 extends AbstractGame {
             }
             for (Corp c: risers) {
                 makeFollowMove(PRICE_UP, "", c.getName(), 1);
+            }
+            for (Wallet w: board.getWallets()) {
+                if(!w.getBlocks().isEmpty()) {
+                    makeFollowMove(CLEAR_BLOCKS, w.getName(), String.join(" ", w.getBlocks()), 0);
+                }
             }
         }
         payPrivs();
