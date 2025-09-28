@@ -776,8 +776,6 @@ public class Game1856 extends AbstractGame {
         }
     }
 
-    //TODO if bridge/tunnel rust in player hands, put 3 tokens in bank
-
     private void doReorderCorp(TrainMove move) {
         Corp c = findCorp(move.getCorp());
         board.getCorps().remove(c);
@@ -1871,7 +1869,6 @@ public class Game1856 extends AbstractGame {
         Corp corp = findCorp(corpName);
         canPar(corp, par, w, 0);
         if (certCount(w) + 2 > certLimit()) throw new IllegalStateException("Certificate Limit Violation");
-        //TODO enforce cert limits (+2)
         makePrimaryMove(STOCK_SET_PAR, board.getCurrentPlayer(), corpName, par);
         makeFollowMove(END_STOCK_ACTION, board.getCurrentPlayer(), "", 0);
         return board;
@@ -2151,7 +2148,6 @@ public class Game1856 extends AbstractGame {
 
     synchronized public Board1856 buyBankTrain() {
         // TODO TRADE-INS
-        // TODO FORCED CONTRIBUTIONS
         // TODO ENFORCE LIMIT DROP TO POOL
         enforcePhase(Era.OP);
         int size = (board.getTrains().isEmpty()) ? 8 : board.getTrains().get(0);
