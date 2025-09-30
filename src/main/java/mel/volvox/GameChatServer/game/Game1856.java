@@ -79,6 +79,8 @@ public class Game1856 extends AbstractGame {
     public static final String CLOSE_PRIVS = "closePrivs";
     public static final String REMOVE_PRIV = "removePriv";
     public static final String END_OP_TURN = "endOpTurn";
+    public static final String FORCED_BANK_TRAIN = "forcedBankTrainBuy";
+    public static final String FORCED_TRAIN_STOCK_SALE = "forcedTrainStockSale";
     public static final String NEXT_CORP = "nextCorp";
     public static final String END_OP_ROUND = "endOpRound";
     public static final String CLEAR_BLOCKS = "clearBlocks";
@@ -89,7 +91,7 @@ public class Game1856 extends AbstractGame {
     public static final String BIDOFF_EVENT = "resolving conflicting bids";
     public static final String PRE_REV_EVENT = "before revenue";
     public static final String POST_REV_EVENT = "done with revenue";
-    public static final String FORCED_INTEREST_SALE = "InterestSale";
+    public static final String FORCED_INTEREST_STOCK_SALE = "InterestSale";
 
     // private companies
     public static final String PRIVATE_FLOS = "flos";
@@ -438,6 +440,7 @@ public class Game1856 extends AbstractGame {
             case CLOSE_PRIVS -> doClosePriv(move, rawMove);
             case REMOVE_PRIV -> doRemovePriv(move);
             case END_OP_TURN -> doEndOpTurn(move, rawMove);
+            case FORCED_BANK_TRAIN -> doForcedBankTrainBuy(move, rawMove);
             case NEXT_CORP -> doNextCorp(move);
             case END_OP_ROUND -> doEndOpRound(move);
             case CLEAR_BLOCKS -> doClearBlocks(move);
@@ -1107,12 +1110,38 @@ public class Game1856 extends AbstractGame {
             case CLOSE_PRIVS -> undoClosePriv(move);
             case REMOVE_PRIV -> undoRemovePriv(move);
             case END_OP_TURN -> undoEndOpTurn(move);
+            case FORCED_BANK_TRAIN -> undoForcedBankTrainBuy(move); //bank buy
             case NEXT_CORP -> undoNextCorp(move);
             case END_OP_ROUND -> undoEndOpRound(move);
             case CLEAR_BLOCKS -> undoClearBlocks(move);
             default -> { return false; }
         }
         return true;
+    }
+
+    // this is for bank buys only
+    public void doForcedBankTrainBuy(TrainMove move, boolean rawMove) {
+        Corp c = getCurrentCorp();
+        Wallet w = findWallet(move.getPlayer());
+        payCorpToBank(c, c.getCash());
+        payWalletToBank(w, move.getAmount());
+        int size = board.getTrains().get(0);
+        c.getTrains().add(0, size);
+        board.getTrains().remove(0);
+        if (w.getCash() < 0) {
+            board.setEvent(FORCED_TRAIN_STOCK_SALE);
+        }
+    }
+
+    public void undoForcedBankTrainBuy(TrainMove move) {
+        Corp c = findCorp(move.getCorp());
+        Wallet w = findWallet(move.getPlayer());
+        payBankToWallet(w, move.getAmount());
+        int size = c.getTrains().get(0);
+        c.getTrains().clear();
+        board.getTrains().add(0, size);
+        payBankToCorp(c, TRAIN_PRICE[size] - move.getAmount());
+        board.setEvent(POST_REV_EVENT);
     }
 
     public void doClearBlocks(TrainMove move) {
@@ -1131,7 +1160,7 @@ public class Game1856 extends AbstractGame {
         board.setTilePlayed(false);
         board.setTokenPlayed(false);
         payWalletToBank(w, move.getAmount());
-        if (w.getCash() < 0) board.setEvent(FORCED_INTEREST_SALE);
+        if (w.getCash() < 0) board.setEvent(FORCED_INTEREST_STOCK_SALE);
         else board.setEvent(POST_REV_EVENT);
     }
 
@@ -2221,12 +2250,14 @@ public class Game1856 extends AbstractGame {
         makePrimaryMove(BUY_TUNNEL, "", c.getName(), 0);
     }
 
-    private Priv findPriv(String privName) {
-        for(Corp c: board.getCorps()) {
-            for(Priv p: c.getPrivates()) {
-                if(p.getCorp().equals(privName)) return p;
-            }
-        }
-        return null;
+    public Board1856 forcedBankBuy() {
+        Corp c = getCurrentCorp();
+        int size = (board.getTrains().isEmpty()) ? 8 : board.getTrains().get(0);
+        int price =  TRAIN_PRICE[size];
+        int remainder = price - c.getCash();
+        if (remainder < 0) throw new IllegalStateException("Buy a train normally before ending your turn");
+        if (!c.getTrains().isEmpty()) throw new IllegalStateException("Prez may not contribute voluntarily");
+        makePrimaryMove(FORCED_BANK_TRAIN, c.getPrez(), c.getName(), remainder);
+        return board;
     }
 }

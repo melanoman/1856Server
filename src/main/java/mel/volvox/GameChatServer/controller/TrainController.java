@@ -248,4 +248,10 @@ public class TrainController {
                                    @PathVariable boolean option) {
         return loadGame(table).usePriv(priv, option);
     }
+
+    @PutMapping("1856/forcedTrain/{table}/bank")
+    @ResponseBody
+    synchronized Board1856 forcedBankBuy(@PathVariable String table) { //TODO pool option
+        return loadGame(table).forcedBankBuy();
+    }
 }
