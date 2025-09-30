@@ -81,6 +81,7 @@ public class Game1856 extends AbstractGame {
     public static final String END_OP_TURN = "endOpTurn";
     public static final String FORCED_BANK_TRAIN = "forcedBankTrainBuy";
     public static final String FORCED_TRAIN_STOCK_SALE = "forcedTrainStockSale";
+    public static final String DROP_TRAIN = "dropTrain";
     public static final String NEXT_CORP = "nextCorp";
     public static final String END_OP_ROUND = "endOpRound";
     public static final String CLEAR_BLOCKS = "clearBlocks";
@@ -92,6 +93,7 @@ public class Game1856 extends AbstractGame {
     public static final String PRE_REV_EVENT = "before revenue";
     public static final String POST_REV_EVENT = "done with revenue";
     public static final String FORCED_INTEREST_STOCK_SALE = "InterestSale";
+    public static final String TRAIN_DROP_EVENT = "TrainDrop";
 
     // private companies
     public static final String PRIVATE_FLOS = "flos";
@@ -442,6 +444,7 @@ public class Game1856 extends AbstractGame {
             case END_OP_TURN -> doEndOpTurn(move, rawMove);
             case FORCED_BANK_TRAIN -> doForcedBankTrainBuy(move, rawMove);
             case NEXT_CORP -> doNextCorp(move);
+            case DROP_TRAIN -> doDropTrain(move);
             case END_OP_ROUND -> doEndOpRound(move);
             case CLEAR_BLOCKS -> doClearBlocks(move);
             default -> throw new IllegalStateException("unknown move action: "+move.getAction());
@@ -505,13 +508,18 @@ public class Game1856 extends AbstractGame {
                 }
             }
             for(int i=0; i<count; i++) {
-                makeFollowMove(RUST_TRAIN, "", corp.getName(), move.getAmount());
+                if (rawMove) makeFollowMove(RUST_TRAIN, "", corp.getName(), move.getAmount());
+            }
+        }
+        for(Corp c: board.getCorps()) { //TODO general limit
+            if(c.getTrains().size() > trainLimit(board, c)) { //TODO auto-choose if all the same
+                board.setEvent(TRAIN_DROP_EVENT);
             }
         }
     }
 
     private void undoRust(TrainMove move) {
-        //nothing to do
+        board.setEvent(POST_REV_EVENT);
     }
 
     private void doRustTrain(TrainMove move) {
@@ -1110,6 +1118,7 @@ public class Game1856 extends AbstractGame {
             case CLOSE_PRIVS -> undoClosePriv(move);
             case REMOVE_PRIV -> undoRemovePriv(move);
             case END_OP_TURN -> undoEndOpTurn(move);
+            case DROP_TRAIN -> undoDropTrain(move);
             case FORCED_BANK_TRAIN -> undoForcedBankTrainBuy(move); //bank buy
             case NEXT_CORP -> undoNextCorp(move);
             case END_OP_ROUND -> undoEndOpRound(move);
@@ -1117,6 +1126,24 @@ public class Game1856 extends AbstractGame {
             default -> { return false; }
         }
         return true;
+    }
+
+    public void doDropTrain(TrainMove move) { //TODO preserve train ordering on undo
+        Corp c = findCorp(move.getCorp());
+        c.getTrains().remove(Integer.valueOf(move.getAmount()));
+        board.getTrainPool().add(Integer.valueOf(move.getAmount()));
+        boolean noMoreDrops = true;
+        for(Corp corp: board.getCorps()) {
+            if(corp.getTrains().size() > trainLimit(board, corp)) noMoreDrops = false;
+        }
+        if (noMoreDrops) board.setEvent(POST_REV_EVENT);
+    }
+
+    public void undoDropTrain(TrainMove move) {
+        Corp c = findCorp(move.getCorp());
+        board.getTrainPool().remove(Integer.valueOf(move.getAmount()));
+        c.getTrains().add(0, Integer.valueOf(move.getAmount()));
+        board.setEvent(TRAIN_DROP_EVENT);
     }
 
     // this is for bank buys only
@@ -2237,6 +2264,7 @@ public class Game1856 extends AbstractGame {
     }
 
     private void buyBridge(Corp c) {
+        enforcePhase(Era.OP);
         if(c.isBridgeRights()) throw new IllegalStateException("Already have bridge rights");
         if(c.getCash() < 50) throw new IllegalStateException(FUNDS);
         if(board.getBridgeTokens() < 1) throw new IllegalStateException("No more bridge tokens");
@@ -2244,6 +2272,7 @@ public class Game1856 extends AbstractGame {
     }
 
     private void buyTunnel(Corp c) {
+        enforcePhase(Era.OP);
         if(c.isTunnelRights()) throw new IllegalStateException("Already have tunnel rights");
         if(c.getCash() < 50) throw new IllegalStateException(FUNDS);
         if(board.getTunnelTokens() < 1) throw new IllegalStateException("No Tunnel Tokens Left");
@@ -2251,6 +2280,8 @@ public class Game1856 extends AbstractGame {
     }
 
     public Board1856 forcedBankBuy() {
+        enforcePhase(Era.OP);
+        enforceEvent(POST_REV_EVENT);
         Corp c = getCurrentCorp();
         int size = (board.getTrains().isEmpty()) ? 8 : board.getTrains().get(0);
         int price =  TRAIN_PRICE[size];
@@ -2258,6 +2289,17 @@ public class Game1856 extends AbstractGame {
         if (remainder < 0) throw new IllegalStateException("Buy a train normally before ending your turn");
         if (!c.getTrains().isEmpty()) throw new IllegalStateException("Prez may not contribute voluntarily");
         makePrimaryMove(FORCED_BANK_TRAIN, c.getPrez(), c.getName(), remainder);
+        return board;
+    }
+
+    public Board1856 dropTrain(String corpName, int size) {
+        enforcePhase(Era.OP);
+        enforceEvent(TRAIN_DROP_EVENT);
+        Corp c = findCorp(corpName);
+        if (!c.getTrains().contains(size)) {
+            throw new IllegalStateException("No train of that size to drop");
+        }
+        makePrimaryMove(DROP_TRAIN, "", corpName, size);
         return board;
     }
 }
