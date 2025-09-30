@@ -1130,8 +1130,7 @@ public class Game1856 extends AbstractGame {
 
     public void doDropTrain(TrainMove move) { //TODO preserve train ordering on undo
         Corp c = findCorp(move.getCorp());
-        c.getTrains().remove(Integer.valueOf(move.getAmount()));
-        board.getTrainPool().add(Integer.valueOf(move.getAmount()));
+        board.getTrainPool().add(c.getTrains().remove(move.getAmount()));
         boolean noMoreDrops = true;
         for(Corp corp: board.getCorps()) {
             if(corp.getTrains().size() > trainLimit(board, corp)) noMoreDrops = false;
@@ -1141,8 +1140,7 @@ public class Game1856 extends AbstractGame {
 
     public void undoDropTrain(TrainMove move) {
         Corp c = findCorp(move.getCorp());
-        board.getTrainPool().remove(Integer.valueOf(move.getAmount()));
-        c.getTrains().add(0, Integer.valueOf(move.getAmount()));
+        c.getTrains().add(move.getAmount(), board.getTrainPool().remove(0));
         board.setEvent(TRAIN_DROP_EVENT);
     }
 
@@ -2296,10 +2294,9 @@ public class Game1856 extends AbstractGame {
         enforcePhase(Era.OP);
         enforceEvent(TRAIN_DROP_EVENT);
         Corp c = findCorp(corpName);
-        if (!c.getTrains().contains(size)) {
-            throw new IllegalStateException("No train of that size to drop");
-        }
-        makePrimaryMove(DROP_TRAIN, "", corpName, size);
+        int index = c.getTrains().indexOf(size);
+        if (index < 0) throw new IllegalStateException("No train of that size to drop");
+        makePrimaryMove(DROP_TRAIN, "", corpName, index);
         return board;
     }
 }
