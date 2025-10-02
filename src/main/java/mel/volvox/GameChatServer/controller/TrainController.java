@@ -262,4 +262,12 @@ public class TrainController {
                                      @PathVariable int size) {
         return loadGame(table).dropTrain(corp, size);
     }
+
+    @PutMapping("1856/forcedSale/{table}/{corp}/{qty}")
+    @ResponseBody
+    synchronized Board1856 forcedSale(@PathVariable String table,
+                                      @PathVariable String corp,
+                                      @PathVariable int qty) {
+        return loadGame(table).forcedSale(corp, qty);
+    }
 }

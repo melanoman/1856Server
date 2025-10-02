@@ -80,7 +80,7 @@ public class Game1856 extends AbstractGame {
     public static final String REMOVE_PRIV = "removePriv";
     public static final String END_OP_TURN = "endOpTurn";
     public static final String FORCED_BANK_TRAIN = "forcedBankTrainBuy";
-    public static final String FORCED_TRAIN_STOCK_SALE = "forcedTrainStockSale";
+    public static final String FORCED_SALE = "forcedSale";
     public static final String DROP_TRAIN = "dropTrain";
     public static final String NEXT_CORP = "nextCorp";
     public static final String END_OP_ROUND = "endOpRound";
@@ -92,7 +92,7 @@ public class Game1856 extends AbstractGame {
     public static final String BIDOFF_EVENT = "resolving conflicting bids";
     public static final String PRE_REV_EVENT = "before revenue";
     public static final String POST_REV_EVENT = "done with revenue";
-    public static final String FORCED_INTEREST_STOCK_SALE = "InterestSale";
+    public static final String FORCED_SALE_EVENT = "forcedSaleEvent";
     public static final String TRAIN_DROP_EVENT = "TrainDrop";
 
     // private companies
@@ -443,6 +443,7 @@ public class Game1856 extends AbstractGame {
             case REMOVE_PRIV -> doRemovePriv(move);
             case END_OP_TURN -> doEndOpTurn(move, rawMove);
             case FORCED_BANK_TRAIN -> doForcedBankTrainBuy(move, rawMove);
+            case FORCED_SALE -> doForcedSale(move, rawMove);
             case NEXT_CORP -> doNextCorp(move);
             case DROP_TRAIN -> doDropTrain(move);
             case END_OP_ROUND -> doEndOpRound(move);
@@ -1120,12 +1121,42 @@ public class Game1856 extends AbstractGame {
             case END_OP_TURN -> undoEndOpTurn(move);
             case DROP_TRAIN -> undoDropTrain(move);
             case FORCED_BANK_TRAIN -> undoForcedBankTrainBuy(move); //bank buy
+            case FORCED_SALE -> undoForcedSale(move);
             case NEXT_CORP -> undoNextCorp(move);
             case END_OP_ROUND -> undoEndOpRound(move);
             case CLEAR_BLOCKS -> undoClearBlocks(move);
             default -> { return false; }
         }
         return true;
+    }
+
+    public void doForcedSale(TrainMove move, boolean rawMove) {
+        Corp c = findCorp(move.getCorp());
+        Wallet w = findWallet(move.getPlayer());
+        w.getBlocks().add(c.getName());
+        sharesWalletToPool(w, c, move.getAmount());
+        payBankToWallet(w, c.getPrice().getPrice() * move.getAmount());
+        if(rawMove) {
+            int drop = c.getPrice().previewDrop(move.getAmount());
+            if (drop > 0) makeFollowMove(DROP_STOCK_PRICE, "", move.getCorp(), drop);
+            updatePrez(move.getCorp());
+            makeFollowMove(REORDER_CORP, "", move.getCorp(), board.getCorps().indexOf(c));
+        }
+        if (w.getCash() > 0) {
+            board.setEvent(POST_REV_EVENT);
+            makeFollowMove(CLEAR_BLOCKS, w.getName(), String.join(" ", w.getBlocks()), 0);
+        } else {
+            //TODO check bankruptcy
+        }
+    }
+
+    public void undoForcedSale(TrainMove move) {
+        Corp c = findCorp(move.getCorp());
+        Wallet w = findWallet(move.getPlayer());
+        w.getBlocks().remove(c.getName());
+        sharesPoolToWallet(w, c, move.getAmount());
+        payWalletToBank(w, c.getPrice().getPrice() * move.getAmount());
+        board.setEvent(FORCED_SALE_EVENT);
     }
 
     public void doDropTrain(TrainMove move) { //TODO preserve train ordering on undo
@@ -1154,7 +1185,7 @@ public class Game1856 extends AbstractGame {
         c.getTrains().add(0, size);
         board.getTrains().remove(0);
         if (w.getCash() < 0) {
-            board.setEvent(FORCED_TRAIN_STOCK_SALE);
+            board.setEvent(FORCED_SALE_EVENT);
         }
     }
 
@@ -1185,7 +1216,7 @@ public class Game1856 extends AbstractGame {
         board.setTilePlayed(false);
         board.setTokenPlayed(false);
         payWalletToBank(w, move.getAmount());
-        if (w.getCash() < 0) board.setEvent(FORCED_INTEREST_STOCK_SALE);
+        if (w.getCash() < 0) board.setEvent(FORCED_SALE_EVENT);
         else board.setEvent(POST_REV_EVENT);
     }
 
@@ -2297,6 +2328,52 @@ public class Game1856 extends AbstractGame {
         int index = c.getTrains().indexOf(size);
         if (index < 0) throw new IllegalStateException("No train of that size to drop");
         makePrimaryMove(DROP_TRAIN, "", corpName, index);
+        return board;
+    }
+
+    private int topRivalShares(Corp c) {
+        int max = 0;
+        for(Wallet w: board.getWallets()) {
+            if (w.getName().equals(c.getPrez())) continue;
+            for(Stock s:w.getStocks()) {
+                if(s.getCorp().equals(c.getName())) {
+                    if(s.getAmount() > max) max = s.getAmount();
+                }
+            }
+        }
+        return max;
+    }
+
+    public Board1856 forcedSale(String corpName, int amount) {
+        enforceEvent(FORCED_SALE_EVENT);
+        Corp c = findCorp(corpName);
+        Wallet w = findWallet(getCurrentCorp().getPrez());
+        if(w.getBlocks().contains(corpName)) throw new IllegalStateException("Cannot split sale into two blocks-undo?");
+        for(Stock s:w.getStocks()) {
+            if(s.getCorp().equals(corpName)) {
+                if (corpName.equals(board.getCurrentCorp()) && (topRivalShares(c) > s.getAmount() - amount)) {
+                    throw new IllegalStateException("Cannot change debtor Prez");
+                }
+                if (amount > s.getAmount()) throw new IllegalStateException("Not enough shares");
+                if (c.getPoolShares() + amount > 5) throw new IllegalStateException("max 50% in pool");
+                if(s.isPresident() && s.getAmount() - amount < 2) {
+                    boolean noPrez = true;
+                    for (Wallet w2: board.getWallets()) {
+                        if(w2 == w) continue;
+                        for (Stock ss: w2.getStocks()) {
+                            if (ss.getCorp().equals(corpName)) {
+                                if(ss.getAmount() > 1) noPrez = false;
+                            }
+                        }
+                    }
+                    if(noPrez) throw new IllegalStateException("No one to become president of "+corpName);
+                }
+            }
+        }
+        int value = c.getPrice().getPrice() * amount;
+        int overage = w.getCash() + value;
+        if (overage > c.getPrice().getPrice()) throw new IllegalStateException("Extra sales not allowed");
+        makePrimaryMove(FORCED_SALE, w.getName(), c.getName(), amount);
         return board;
     }
 }
