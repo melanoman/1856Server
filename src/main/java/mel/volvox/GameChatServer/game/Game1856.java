@@ -1131,6 +1131,15 @@ public class Game1856 extends AbstractGame {
         return true;
     }
 
+    private boolean canForceSell(Wallet w, Stock s) {
+        if(w.getBlocks().contains(s.getCorp())) return false;
+        Corp c = findCorp(s.getCorp());
+        if (c.getPoolShares() >= 5) return false;
+        int rival = topRivalShares(c);
+        if (rival == s.getAmount() && s.getCorp().equals(board.getCurrentCorp())) return false;
+        return rival >= 2 || s.getAmount() != 2;
+    }
+
     public void doForcedSale(TrainMove move, boolean rawMove) {
         Corp c = findCorp(move.getCorp());
         Wallet w = findWallet(move.getPlayer());
@@ -1147,7 +1156,13 @@ public class Game1856 extends AbstractGame {
             board.setEvent(POST_REV_EVENT);
             makeFollowMove(CLEAR_BLOCKS, w.getName(), String.join(" ", w.getBlocks()), 0);
         } else {
-            //TODO check bankruptcy
+            boolean bankrupt = true;
+            for (Stock s: w.getStocks()) {
+                if (canForceSell(w, s)) {
+                     bankrupt = false;
+                }
+            }
+            if(bankrupt) board.setPhase(Era.DONE.name());
         }
     }
 
@@ -2060,7 +2075,7 @@ public class Game1856 extends AbstractGame {
         checkSalesList(sales);
         int extraCash = salesValue(sales);
         int extraCerts = certValue(sales);
-        if (certCount(w) + ((isPar) ? 2 : 1) > certLimit() - extraCerts) {
+        if (certCount(w) + ((isPar) ? 2 : 1) > certLimit() + extraCerts) {
             throw new IllegalStateException("Certificate Limit Violation");
         }
         if (isBank) canBuyBank(c, w, extraCash);
@@ -2086,11 +2101,28 @@ public class Game1856 extends AbstractGame {
         return out + w.getPrivates().size();
     }
 
+    /**
+     * for use previewing a stock sale during the stock round. will not work for forced sales
+     */
+    private boolean prezWillChange(StockSale sale) {
+        Corp c = findCorp(sale.getName());
+        if(!board.getCurrentPlayer().equals(c.getPrez())) return false;
+        Wallet w = findWallet(board.getCurrentPlayer());
+        for(Stock stock: w.getStocks()) {
+            if(sale.getName().equals(stock.getCorp())) {
+                int rival = topRivalShares(c);
+                int after = stock.getAmount() - sale.getAmount();
+                return rival > after;
+            }
+        }
+        return false;
+    }
+
     private int certValue(List<StockSale> sales) {
         int out = 0;
         for(StockSale s: sales) {
             out += s.getAmount();
-            //if (prezWillChange()) out++; TODO anticipate change in prez
+            if (prezWillChange(s)) out--;
         }
         return out;
     }
