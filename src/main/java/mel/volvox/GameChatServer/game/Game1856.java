@@ -1132,12 +1132,17 @@ public class Game1856 extends AbstractGame {
     }
 
     private boolean canForceSell(Wallet w, Stock s) {
+        System.out.println("Stock in "+s.getCorp());
         if(w.getBlocks().contains(s.getCorp())) return false;
         Corp c = findCorp(s.getCorp());
         if (c.getPoolShares() >= 5) return false;
-        int rival = topRivalShares(c);
-        if (rival == s.getAmount() && s.getCorp().equals(board.getCurrentCorp())) return false;
-        return rival >= 2 || s.getAmount() != 2;
+        if (s.isPresident()) {
+            int rival = topRivalShares(c);
+            if (rival == s.getAmount() && s.getCorp().equals(board.getCurrentCorp())) return false;
+            if (rival < 2 && s.getAmount() == 2) return false;
+        }
+        System.out.println("...can be sold");
+        return true;
     }
 
     public void doForcedSale(TrainMove move, boolean rawMove) {
@@ -1156,14 +1161,18 @@ public class Game1856 extends AbstractGame {
             board.setEvent(POST_REV_EVENT);
             makeFollowMove(CLEAR_BLOCKS, w.getName(), String.join(" ", w.getBlocks()), 0);
         } else {
-            boolean bankrupt = true;
-            for (Stock s: w.getStocks()) {
-                if (canForceSell(w, s)) {
-                     bankrupt = false;
-                }
-            }
-            if(bankrupt) board.setPhase(Era.DONE.name());
+            checkBankrupt(w);
         }
+    }
+
+    private void checkBankrupt(Wallet w) {
+        boolean bankrupt = true;
+        for (Stock s: w.getStocks()) {
+            if (canForceSell(w, s)) {
+                bankrupt = false;
+            }
+        }
+        if(bankrupt) board.setPhase(Era.DONE.name());
     }
 
     public void undoForcedSale(TrainMove move) {
@@ -1202,6 +1211,7 @@ public class Game1856 extends AbstractGame {
         board.getTrains().remove(0);
         if (w.getCash() < 0) {
             board.setEvent(FORCED_SALE_EVENT);
+            checkBankrupt(w);
         }
     }
 
@@ -1232,7 +1242,10 @@ public class Game1856 extends AbstractGame {
         board.setTilePlayed(false);
         board.setTokenPlayed(false);
         payWalletToBank(w, move.getAmount());
-        if (w.getCash() < 0) board.setEvent(FORCED_SALE_EVENT);
+        if (w.getCash() < 0) {
+            board.setEvent(FORCED_SALE_EVENT);
+            checkBankrupt(w);
+        }
         else board.setEvent(POST_REV_EVENT);
     }
 
