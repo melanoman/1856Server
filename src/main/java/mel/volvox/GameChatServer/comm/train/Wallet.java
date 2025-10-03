@@ -11,6 +11,7 @@ import java.util.List;
 public class Wallet {
     String name;
     int cash;
+    int value; //since last update
     List<Priv> privates = new ArrayList<>();
     List<Stock> stocks = new ArrayList<>();
     List<String> blocks = new ArrayList<>();

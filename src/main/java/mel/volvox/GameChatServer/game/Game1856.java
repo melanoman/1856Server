@@ -239,6 +239,7 @@ public class Game1856 extends AbstractGame {
         for(TrainMove move: moves) {
             loadMove(move);
         }
+        recaculateStandings();
     }
 
     public void loadMove(TrainMove move) {
@@ -1735,6 +1736,7 @@ public class Game1856 extends AbstractGame {
     }
     private void makePrimaryMove(String action, String player, String corp, int amount) {
         makeMove(action, player, corp, amount, false);
+        recaculateStandings();
     }
 
     private void makeFollowMove(String action, String player, String corp, int amount) {
@@ -1772,7 +1774,9 @@ public class Game1856 extends AbstractGame {
         return board;
     }
 
-    synchronized public Board1856 redo() {
+    public Board1856 redo() { return redo(true); }
+
+    synchronized public Board1856 redo(boolean recalc) {
         if (board.getUndoCount() < 1) return board;
         TrainMove currentMove = history.get(board.getMoveNumber()-board.getUndoCount());
         doMove(currentMove, false);
@@ -1781,13 +1785,15 @@ public class Game1856 extends AbstractGame {
             TrainMove nextMove = history.get(board.getMoveNumber() - board.getUndoCount());
             if (nextMove.isFollow()) return redo();
         }
+        if(recalc) recaculateStandings();
         return board;
     }
 
     synchronized public Board1856 redoAll() {
         while (board.getUndoCount() > 0) {
-            redo();
+            redo(false);
         }
+        recaculateStandings();
         return board;
     }
 
@@ -2375,5 +2381,16 @@ public class Game1856 extends AbstractGame {
         if (overage > c.getPrice().getPrice()) throw new IllegalStateException("Extra sales not allowed");
         makePrimaryMove(FORCED_SALE, w.getName(), c.getName(), amount);
         return board;
+    }
+
+    private void recaculateStandings() {
+        for(Wallet w: board.getWallets()) {
+            int value = w.getCash();
+            for(Priv p: w.getPrivates()) value += priv2price.get(p.getCorp());
+            for(Stock s: w.getStocks()) {
+                value += findCorp(s.getCorp()).getPrice().getPrice() * s.getAmount();
+            }
+            w.setValue(value);
+        }
     }
 }
