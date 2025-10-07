@@ -26,7 +26,7 @@ public class Corp {
         return new Corp(name, par, bankShares, price, poolShares, cash, escrow,
                 tokensMax, tokensUsed, prez, fundingType, loans, lastRun,
                 newPrivs, newTrains, portRights, bridgeRights, tunnelRights,
-                hasOperated, hasFloated, reachedDest);
+                hasOperated, hasFloated, reachedDest, closing);
     }
 
     String name; // 2-3 letter abbreviation. not full text
@@ -50,4 +50,5 @@ public class Corp {
     boolean hasOperated = false; //this round
     boolean hasFloated = false;
     boolean reachedDest = false;
+    boolean closing = false; //during CGR formation
 }

@@ -270,4 +270,20 @@ public class TrainController {
                                       @PathVariable int qty) {
         return loadGame(table).forcedSale(corp, qty);
     }
+
+    @PutMapping("1856/redeemFromCGR/{table}/{corp}")
+    @ResponseBody
+    synchronized Board1856 redeemFromCGR(@PathVariable String table,
+                                         @PathVariable String corp) {
+        return loadGame(table).redeemFromCGR(corp);
+    }
+
+    /**
+     * abandons all remaining corps with loans to the CGR for the current player
+     */
+    @PutMapping("1856/abandonToCGR/{table}")
+    @ResponseBody
+    synchronized Board1856 abandonToCGR(@PathVariable String table) {
+        return loadGame(table).abandonToCGR();
+    }
 }

@@ -10,6 +10,11 @@ import java.util.List;
 @NoArgsConstructor
 @Data
 public class Board1856 {
+   public static int CGR_PRE_FORMATION = 0;
+   public static int CGR_PENDING = 1;
+   public static int CGR_TEN_SHARES = 10;
+   public static int CGR_TWENTY_SHARES = 20;
+
    String name;
    int moveNumber;
    int undoCount;
@@ -32,6 +37,7 @@ public class Board1856 {
    int auctionDiscount = 0; //$5 off per allpass
    int currentOpRound = 0; // count DOWN not up
    int maxOpRounds = 0;
+   int CGRsize = CGR_PRE_FORMATION;
 
    //operating scratchpad
    boolean loanTaken = false; // clear after each corp, prevent 2xloan same turn

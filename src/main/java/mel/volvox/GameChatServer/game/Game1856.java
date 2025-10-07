@@ -83,6 +83,12 @@ public class Game1856 extends AbstractGame {
     public static final String FORCED_SALE = "forcedSale";
     public static final String DROP_TRAIN = "dropTrain";
     public static final String NEXT_CORP = "nextCorp";
+    public static final String START_CGR_REDEMPTIONS = "startCGR";
+    public static final String ASK_REDEMPTION = "askRedemption";
+    public static final String REDEEM_FROM_CGR = "redeemCGR";
+    public static final String ABANDON_TO_CGR = "abandonCGR";
+    public static final String ABANDON_CORP = "abandonCorp";
+    public static final String FORM_CGR = "formCGR";
     public static final String END_OP_ROUND = "endOpRound";
     public static final String CLEAR_BLOCKS = "clearBlocks";
 
@@ -94,6 +100,7 @@ public class Game1856 extends AbstractGame {
     public static final String POST_REV_EVENT = "done with revenue";
     public static final String FORCED_SALE_EVENT = "forcedSaleEvent";
     public static final String TRAIN_DROP_EVENT = "TrainDrop";
+    public static final String ASK_REDEMPTION_EVENT = "AskRedemptionEvent";
 
     // private companies
     public static final String PRIVATE_FLOS = "flos";
@@ -446,6 +453,12 @@ public class Game1856 extends AbstractGame {
             case FORCED_BANK_TRAIN -> doForcedBankTrainBuy(move, rawMove);
             case FORCED_SALE -> doForcedSale(move, rawMove);
             case NEXT_CORP -> doNextCorp(move);
+            case START_CGR_REDEMPTIONS -> doStartCGRRedemptions(move);
+            case ASK_REDEMPTION -> doAskRedemption(move, rawMove);
+            case REDEEM_FROM_CGR -> doRedeemFromCGR(move, rawMove);
+            case ABANDON_TO_CGR -> doAbandonToCGR(move, rawMove);
+            case ABANDON_CORP -> doAbandonCorp(move);
+            case FORM_CGR -> doFormCGR(move, rawMove);
             case DROP_TRAIN -> doDropTrain(move);
             case END_OP_ROUND -> doEndOpRound(move);
             case CLEAR_BLOCKS -> doClearBlocks(move);
@@ -502,6 +515,7 @@ public class Game1856 extends AbstractGame {
     }
 
     private void doRust(TrainMove move, boolean rawMove) {
+        if (move.getAmount() == 3) board.setCGRsize(Board1856.CGR_PENDING);
         for(Corp corp: board.getCorps()) {
             int count = 0;
             for(Integer train: corp.getTrains()) {
@@ -521,6 +535,7 @@ public class Game1856 extends AbstractGame {
     }
 
     private void undoRust(TrainMove move) {
+        if (move.getAmount() == 3) board.setCGRsize(Board1856.CGR_PRE_FORMATION);
         board.setEvent(POST_REV_EVENT);
     }
 
@@ -714,7 +729,7 @@ public class Game1856 extends AbstractGame {
     private void doEndOpTurn(TrainMove move, boolean rawMove) {
         board.setEvent(PRE_REV_EVENT);
         findCorp(move.getCorp()).setHasOperated(true);
-        if (rawMove) setNextOpCorp();
+        setNextOpCorp(rawMove);
     }
 
     private void undoEndOpTurn(TrainMove move) {
@@ -1124,11 +1139,42 @@ public class Game1856 extends AbstractGame {
             case FORCED_BANK_TRAIN -> undoForcedBankTrainBuy(move); //bank buy
             case FORCED_SALE -> undoForcedSale(move);
             case NEXT_CORP -> undoNextCorp(move);
+            case START_CGR_REDEMPTIONS -> undoStartCGRRedemptions(move);
+            case ASK_REDEMPTION -> undoAskRedemption(move);
+            case REDEEM_FROM_CGR -> undoRedeemFromCGR(move);
+            case ABANDON_TO_CGR -> undoAbandonToCGR(move);
+            case ABANDON_CORP -> undoAbandonCorp(move);
+            case FORM_CGR ->undoFormCGR(move);
             case END_OP_ROUND -> undoEndOpRound(move);
             case CLEAR_BLOCKS -> undoClearBlocks(move);
             default -> { return false; }
         }
         return true;
+    }
+
+    private void doStartCGRRedemptions(TrainMove move) {
+        board.setEvent(ASK_REDEMPTION_EVENT);
+    }
+
+    private void undoStartCGRRedemptions(TrainMove move) {
+        board.setEvent(PRE_REV_EVENT);
+    }
+
+    private void doAskRedemption(TrainMove move, boolean rawMove) {
+        board.setCurrentPlayer(move.getPlayer());
+    }
+
+    private void undoAskRedemption(TrainMove move) {
+        board.setCurrentPlayer(move.getCorp());
+    }
+
+    private void doFormCGR(TrainMove move, boolean rawMove) {
+        //TODO FORM CGR
+    }
+
+    private void undoFormCGR(TrainMove move) {
+        board.setCurrentPlayer(move.getPlayer());
+        board.setCurrentCorp(move.getCorp());
     }
 
     private boolean canForceSell(Wallet w, Stock s) {
@@ -1264,11 +1310,15 @@ public class Game1856 extends AbstractGame {
         c.getTrains().add(board.getTrains().remove(0));
         if (rawMove) { // TODO first Diesel
             switch(board.getTrains().size()) {
-                case 1: makeFollowMove(RUST, "", "", 3); break;
+                case 1: prepCGR(); break;
                 case 4: makeFollowMove(CLOSE_PRIVS, "", "", 0); break;
                 case 8: makeFollowMove(RUST, "", "", 2); break;
             }
         }
+    }
+
+    private void prepCGR() {
+        makeFollowMove(RUST, "", "", 3);
     }
 
     public void undoBankTrain(TrainMove move) {
@@ -1593,15 +1643,56 @@ public class Game1856 extends AbstractGame {
             }
         }
         payPrivs();
-        if (rawMove) setNextOpCorp();
+        setNextOpCorp(rawMove);
     }
 
-    private void setNextOpCorp() {
+    private int playerIndex(int startIndex, int checks) {
+        int out = startIndex + checks;
+        if (out >= board.getPlayers().size()) out -= board.getPlayers().size();
+        return out;
+    }
+
+    private int calculateChecks(String playerName) {
+        int playerIndex = board.getPlayers().indexOf(board.getCurrentPlayer());
+        int startIndex = board.getPlayers().indexOf(getCurrentCorp().getPrez());
+        if (playerIndex > startIndex) return playerIndex - startIndex;
+        return board.getPlayers().size() - startIndex + playerIndex;
+    }
+
+    private void makeRedemptionMove(int checks) {
+        int startIndex = board.getPlayers().indexOf(getCurrentCorp().getPrez());
+        int currentIndex  = playerIndex(startIndex, checks);
+        Wallet w = board.getWallets().get(currentIndex);
+        for(Stock s: w.getStocks()) {
+            if(s.isPresident()) {
+                Corp c = findCorp(s.getCorp());
+                if(c.getLoans() == 0 || c.isClosing()) continue;
+                makeFollowMove(ASK_REDEMPTION, w.getName(), board.getCurrentPlayer(), checks);
+                return;
+            }
+        }
+        checks++;
+        if (checks < board.getPlayers().size()) {
+            makeRedemptionMove(checks);
+        } else {
+            makeFollowMove(FORM_CGR, board.getPlayers().get(startIndex), board.getEvent(), 0);
+        }
+    }
+
+    private void setNextOpCorp(boolean rawMove) {
+        if (!rawMove) return;
+        if (board.getCGRsize() == Board1856.CGR_PENDING) {
+            String prez = getCurrentCorp().getPrez();
+            int prezIndex = board.getPlayers().indexOf(prez);
+            makeFollowMove(START_CGR_REDEMPTIONS, board.getCurrentPlayer(), board.getCurrentCorp(), prezIndex);
+            makeRedemptionMove( 0);
+            return;
+        }
         for (Corp corp: board.getCorps()) {
             if (corp.isHasOperated()) continue;
             if (!corp.isHasFloated()) {
                 int min = availableTrainLevel();
-                if (10-corp.getBankShares() < min) {
+                if (10 - corp.getBankShares() < min) {
                     makeFollowMove(FAIL_FLOAT, "", corp.getName(), 0);
                     continue;
                 } else {
@@ -2437,5 +2528,70 @@ public class Game1856 extends AbstractGame {
             }
             w.setValue(value);
         }
+    }
+
+    public Board1856 redeemFromCGR(String corpName) {
+        Corp c = findCorp(corpName);
+        Wallet w = getCurrentWallet();
+
+        if(!w.getName().equals(c.getPrez())) throw new IllegalStateException("Not your turn");
+        if(c.isClosing()) throw new IllegalStateException("Already abandoned -- undo?");
+        if(c.getLoans() == 0) throw new IllegalStateException("No loans to redeem");
+
+        int debt = 100 * c.getLoans();
+        int assets = w.getCash() + c.getCash();
+        if (debt > assets) throw new IllegalStateException(FUNDS);
+        makePrimaryMove(REDEEM_FROM_CGR, ""+c.getCash(), c.getName(), c.getLoans());
+        return board;
+    }
+
+    public Board1856 abandonToCGR() {
+        makePrimaryMove(ABANDON_TO_CGR, board.getCurrentPlayer(), "", 0);
+        return board;
+    }
+
+    private void doAbandonToCGR(TrainMove move, boolean rawMove) {
+        if(!rawMove) return;
+        boolean first = true;
+        for(Corp c: board.getCorps()) {
+            if(c.getPrez().equals(board.getCurrentPlayer())) {
+                if(c.isClosing()) continue;
+                if(c.getLoans() == 0) continue;
+                makeFollowMove(ABANDON_CORP, c.getPrez(), c.getName(), 0);
+            }
+        }
+        makeRedemptionMove(calculateChecks(board.getCurrentPlayer()));
+    }
+
+    private void undoAbandonToCGR(TrainMove move) {
+        board.setCurrentPlayer(move.getPlayer());
+        board.setEvent(ASK_REDEMPTION_EVENT);
+    }
+
+    private void doRedeemFromCGR(TrainMove move, boolean rawMove) {
+        Corp c = findCorp(move.getCorp());
+        Wallet w = findWallet(move.getPlayer());
+        payCorpToBank(c, move.getAmount()); //should equal corp cash
+        payWalletToBank(w, 100 * c.getLoans() - move.getAmount());
+        c.setLoans(0);
+    }
+
+    private void undoRedeemFromCGR(TrainMove move) {
+        Corp c = findCorp(move.getCorp());
+        Wallet w = findWallet(c.getPrez());
+        payBankToCorp(c, move.getAmount());
+        int loans = Integer.parseInt(move.getPlayer());
+        payBankToWallet(w, 100 * loans - move.getAmount());
+        c.setLoans(loans);
+    }
+
+    private void doAbandonCorp(TrainMove move) {
+        Corp c = findCorp(move.getCorp());
+        c.setClosing(true);
+    }
+
+    private void undoAbandonCorp(TrainMove move) {
+        Corp c = findCorp(move.getCorp());
+        c.setClosing(false);
     }
 }
