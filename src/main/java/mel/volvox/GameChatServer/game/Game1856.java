@@ -1288,7 +1288,6 @@ public class Game1856 extends AbstractGame {
 
         board.setCGRsize(CGRtotalCount > 20 ? Board1856.CGR_TWENTY_SHARES : Board1856.CGR_TEN_SHARES);
         String currentPlayer = getCurrentCorp().getPrez();
-        //TODO determine prez and mark stock
         Wallet w = findWallet(currentPlayer);
         Wallet prez = null;
         int prezCount = 0;
