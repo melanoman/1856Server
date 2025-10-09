@@ -14,6 +14,7 @@ public class Corp {
     public static final int DESTINATION_TYPE = 10;
     public static final int INCREMENTAL_TYPE = 11;
     public static final int ALL_AT_ONCE_TYPE = 12;
+    public static final int CGR_TYPE = 13;
     public Corp(String name, int startTokens) {
         this.name = name;
         this.tokensMax = startTokens;

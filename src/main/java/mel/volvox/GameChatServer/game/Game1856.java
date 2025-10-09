@@ -83,6 +83,8 @@ public class Game1856 extends AbstractGame {
     public static final String FORCED_SALE = "forcedSale";
     public static final String DROP_TRAIN = "dropTrain";
     public static final String NEXT_CORP = "nextCorp";
+    public static final String END_OP_ROUND = "endOpRound";
+
     public static final String START_CGR_REDEMPTIONS = "startCGR";
     public static final String AUTOPAY_CGR_LOANS = "autoPayCGR";
     public static final String ASK_REDEMPTION = "askRedemption";
@@ -90,8 +92,12 @@ public class Game1856 extends AbstractGame {
     public static final String ABANDON_TO_CGR = "abandonCGR";
     public static final String ABANDON_CORP = "abandonCorp";
     public static final String FORM_CGR = "formCGR";
-    public static final String END_OP_ROUND = "endOpRound";
     public static final String CLEAR_BLOCKS = "clearBlocks";
+    public static final String CGR_CASH = "CGRcash";
+    public static final String CGR_TOKEN = "CGRtoken";
+    public static final String CGR_TRAIN = "CGRtrain";
+    public static final String TRADE = "trade"; //trade for cgr shares
+    public static final String TRADE_PREZ = "tradePrez";
 
     // event constants
     // TODO move error message substrings out of constants to insulate clients
@@ -102,6 +108,7 @@ public class Game1856 extends AbstractGame {
     public static final String FORCED_SALE_EVENT = "forcedSaleEvent";
     public static final String TRAIN_DROP_EVENT = "TrainDrop";
     public static final String ASK_REDEMPTION_EVENT = "AskRedemptionEvent";
+    public static final String ASK_CGR_TRAIN_DROP = "CGRdrop";
 
     // private companies
     public static final String PRIVATE_FLOS = "flos";
@@ -240,7 +247,7 @@ public class Game1856 extends AbstractGame {
         return board;
     }
 
-    public enum Era { GATHER, AUCTION, INITIAL, STOCK, OP, CGRFORM, DONE }
+    public enum Era { GATHER, AUCTION, INITIAL, STOCK, OP, DONE }
 
     synchronized public void loadMoves(List<TrainMove> moves) {
         history = moves;
@@ -464,6 +471,11 @@ public class Game1856 extends AbstractGame {
             case DROP_TRAIN -> doDropTrain(move);
             case END_OP_ROUND -> doEndOpRound(move);
             case CLEAR_BLOCKS -> doClearBlocks(move);
+            case CGR_CASH -> doCGRCash(move);
+            case CGR_TOKEN -> doCGRToken(move);
+            case CGR_TRAIN -> doCGRTrain(move);
+            case TRADE -> doCGRTrade(move, false);
+            case TRADE_PREZ -> doCGRTrade(move, true);
             default -> throw new IllegalStateException("unknown move action: "+move.getAction());
         }
     }
@@ -1159,12 +1171,40 @@ public class Game1856 extends AbstractGame {
             case REDEEM_FROM_CGR -> undoRedeemFromCGR(move);
             case ABANDON_TO_CGR -> undoAbandonToCGR(move);
             case ABANDON_CORP -> undoAbandonCorp(move);
-            case FORM_CGR ->undoFormCGR(move);
+            case FORM_CGR -> undoFormCGR(move);
             case END_OP_ROUND -> undoEndOpRound(move);
             case CLEAR_BLOCKS -> undoClearBlocks(move);
+            case CGR_CASH -> undoCGRCash(move);
+            case CGR_TOKEN -> undoCGRToken(move);
+            case CGR_TRAIN -> undoCGRTrain(move);
+            case TRADE -> undoCGRTrade(move, false);
+            case TRADE_PREZ -> undoCGRTrade(move, true);
             default -> { return false; }
         }
         return true;
+    }
+
+    //no do actions -- recording source of initial CGR assets so they can be returned
+    private void doCGRCash(TrainMove move) {}
+    private void doCGRToken(TrainMove move) {}
+    private void doCGRTrain(TrainMove move) {}
+    private void doCGRTrade(TrainMove move, boolean isPrez) {}
+
+    private void undoCGRCash(TrainMove move){
+        findCorp(move.getCorp()).setCash(move.getAmount());
+    }
+
+    private void undoCGRToken(TrainMove move){
+        findCorp(move.getCorp()).setTokensUsed(move.getAmount());
+        findCorp(move.getCorp()).setTokensMax(Integer.parseInt(move.getPlayer()));
+    }
+    private void undoCGRTrain(TrainMove move){
+        findCorp(move.getCorp()).getTrains().add(0, move.getAmount());
+    }
+
+    private void undoCGRTrade(TrainMove move, boolean isPrez) {
+        Wallet w = findWallet(move.getPlayer());
+        w.getStocks().add(new Stock(move.getCorp(), move.getAmount(), isPrez));
     }
 
     private void doStartCGRRedemptions(TrainMove move, boolean rawMove) {
@@ -1190,17 +1230,115 @@ public class Game1856 extends AbstractGame {
         board.setCurrentPlayer(move.getCorp());
     }
 
-    private void doFormCGR(TrainMove move, boolean rawMove) {
-        //TODO FORM CGR
+    private StockPrice calculateCGRpar(int total, int min, int size) {
+        return new StockPrice(100, StockPrice.PAR_COLUMN, 0); //TODO actually math this
     }
+
+    private void doFormCGR(TrainMove move, boolean rawMove) {
+        //calculate pool shares and share size
+        int CGRpoolCount = 0;
+        int CGRtotalCount = 0;
+        Set<String> dead = new HashSet<>();
+        Map<String, Integer> player2CGRcount = new HashMap<>();
+        int CGRpriceTotal = 0;
+        int CGRpriceMin = Integer.MAX_VALUE;
+        int CGRcash = 0;
+        boolean CGRtunnel = false;
+        boolean CGRbridge = false;
+        boolean hasOperated = false;
+        List<Integer> CGRtrains = new ArrayList<>();
+        for(Corp c : board.getCorps()) {
+            if(c.isClosing()) {
+                dead.add(c.getName());
+                CGRpoolCount += c.getPoolShares();
+                CGRtotalCount += c.getPoolShares();
+                CGRpriceTotal += c.getPrice().getPrice();
+                CGRpriceMin = Math.min(CGRpriceMin, c.getPrice().getPrice());
+                CGRcash += c.getCash();
+                makeFollowMove(CGR_CASH, "", c.getName(), c.getCash());
+                makeFollowMove(CGR_TOKEN, ""+c.getTokensMax(), c.getName(), c.getTokensUsed());
+                for(Integer train:c.getTrains()) {
+                    makeFollowMove(CGR_TRAIN, "", c.getName(), train);
+                    CGRtrains.add(train);
+                }
+                if(c.isBridgeRights()) CGRbridge = true;
+                if(c.isTunnelRights()) CGRtunnel = true;
+                if(c.isHasOperated()) hasOperated = true;
+            }
+        }
+        if(dead.isEmpty()) {
+            //TODO abort CGR formation -- no loans defaulted
+            throw new IllegalStateException("TODO CGR not formed");
+        }
+        for(Wallet w: board.getWallets()) { //phase I record what will need to be restored
+            int CGRcount = 0;
+            for(Stock s:w.getStocks()) {
+                if(dead.contains(s.getCorp())) {
+                    CGRcount += s.getAmount();
+                    makeFollowMove(s.isPresident()? TRADE_PREZ : TRADE, w.getName(), s.getCorp(), s.getAmount());
+                }
+            }
+            if(CGRcount%2>0) {
+                CGRpoolCount++;
+                CGRcount--;
+            }
+            CGRtotalCount += CGRcount;
+            player2CGRcount.put(w.getName(), CGRcount);
+        }
+
+        board.setCGRsize(CGRtotalCount > 20 ? Board1856.CGR_TWENTY_SHARES : Board1856.CGR_TEN_SHARES);
+        String currentPlayer = getCurrentCorp().getPrez();
+        //TODO determine prez and mark stock
+        Wallet w = findWallet(currentPlayer);
+        Wallet prez = null;
+        int prezCount = 1;
+        for(int i=0; i<board.getPlayers().size(); w = findWallet(nextPlayer(currentPlayer)),i++) {
+            w.getStocks().removeIf(x -> dead.contains(x.getCorp())); //phase II -- actually delete
+            if(player2CGRcount.containsKey(w.getName())) {
+                int shares = player2CGRcount.get(w.getName()) / 2;
+                shareToWallet(w, "CGR", shares); //TODO CONST
+                if(shares > prezCount) {
+                    prez = w;
+                    prezCount = shares;
+                }
+            }
+        }
+
+        //make CGR object
+        int bankShares = board.getCGRsize() - CGRtotalCount / 2;
+        int poolShares = CGRpoolCount / 2;
+        if(bankShares < 0) {
+            if(poolShares + bankShares > 0) {
+                poolShares = board.getCGRsize() + bankShares;
+                bankShares = 0;
+            } else { //not enough shares for players
+                poolShares = 0;
+                bankShares = 0;
+            }
+        }
+
+        StockPrice par = calculateCGRpar(CGRpriceTotal, CGRpriceMin, dead.size());
+        Corp cgr = new Corp("CGR", par.getPrice(), bankShares, par, poolShares, CGRcash, 0,
+                10, -1, prez.getName(), Corp.CGR_TYPE, 0, 0,
+                new ArrayList<>(), CGRtrains, false, CGRbridge, CGRtunnel,
+                hasOperated, true, true, false);
+        board.getCorps().add(cgr);
+        if(CGRtrains.contains(4)) board.setEvent(ASK_CGR_TRAIN_DROP);
+    }
+
+    //TODO CGR_CASH, TRADE and TRADE_PREZ (nothing on do, restore cash/stock on undo)
 
     private void undoFormCGR(TrainMove move) {
         board.setCurrentPlayer(move.getPlayer());
         board.setCurrentCorp(move.getCorp());
+        board.setCGRsize(Board1856.CGR_PENDING);
+        for(Wallet w: board.getWallets()) {
+            w.getStocks().removeIf(x -> x.getCorp().equals("CGR"));
+        }
+        board.getCorps().removeIf(x -> x.getName().equals("CGR"));
     }
 
     private boolean canForceSell(Wallet w, Stock s) {
-        System.out.println("Stock in "+s.getCorp());
         if(w.getBlocks().contains(s.getCorp())) return false;
         Corp c = findCorp(s.getCorp());
         if (c.getPoolShares() >= 5) return false;
@@ -1209,7 +1347,6 @@ public class Game1856 extends AbstractGame {
             if (rival == s.getAmount() && s.getCorp().equals(board.getCurrentCorp())) return false;
             if (rival < 2 && s.getAmount() == 2) return false;
         }
-        System.out.println("...can be sold");
         return true;
     }
 
