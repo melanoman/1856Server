@@ -1291,7 +1291,7 @@ public class Game1856 extends AbstractGame {
         //TODO determine prez and mark stock
         Wallet w = findWallet(currentPlayer);
         Wallet prez = null;
-        int prezCount = 1;
+        int prezCount = 0;
         for(int i=0; i<board.getPlayers().size(); w = findWallet(nextPlayer(currentPlayer)),i++) {
             w.getStocks().removeIf(x -> dead.contains(x.getCorp())); //phase II -- actually delete
             if(player2CGRcount.containsKey(w.getName())) {
@@ -1302,6 +1302,10 @@ public class Game1856 extends AbstractGame {
                     prezCount = shares;
                 }
             }
+        }
+
+        for(Stock s:prez.getStocks()) {
+            if(s.getCorp().equals("CGR")) s.setPresident(true);
         }
 
         //make CGR object
