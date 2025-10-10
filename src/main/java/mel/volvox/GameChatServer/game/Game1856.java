@@ -93,6 +93,9 @@ public class Game1856 extends AbstractGame {
     public static final String ABANDON_CORP = "abandonCorp";
     public static final String FORM_CGR = "formCGR";
     public static final String CLEAR_BLOCKS = "clearBlocks";
+    public static final String CGR_FOLD = "GCRfold";
+    public static final String CGR_PAR = "CGRpar";
+    public static final String CGR_ESCROW = "CGRescrow";
     public static final String CGR_CASH = "CGRcash";
     public static final String CGR_TOKEN = "CGRtoken";
     public static final String CGR_TRAIN = "CGRtrain";
@@ -471,6 +474,9 @@ public class Game1856 extends AbstractGame {
             case DROP_TRAIN -> doDropTrain(move);
             case END_OP_ROUND -> doEndOpRound(move);
             case CLEAR_BLOCKS -> doClearBlocks(move);
+            case CGR_FOLD -> doCGRfold(move);
+            case CGR_PAR -> doCGRpar(move);
+            case CGR_ESCROW ->doCGRescrow(move);
             case CGR_CASH -> doCGRCash(move);
             case CGR_TOKEN -> doCGRToken(move);
             case CGR_TRAIN -> doCGRTrain(move);
@@ -1174,6 +1180,9 @@ public class Game1856 extends AbstractGame {
             case FORM_CGR -> undoFormCGR(move);
             case END_OP_ROUND -> undoEndOpRound(move);
             case CLEAR_BLOCKS -> undoClearBlocks(move);
+            case CGR_FOLD -> undoCGRfold(move);
+            case CGR_PAR -> undoCGRpar(move);
+            case CGR_ESCROW -> undoCGRescrow(move);
             case CGR_CASH -> undoCGRCash(move);
             case CGR_TOKEN -> undoCGRToken(move);
             case CGR_TRAIN -> undoCGRTrain(move);
@@ -1184,14 +1193,67 @@ public class Game1856 extends AbstractGame {
         return true;
     }
 
+    //TODO make these static and put them in StockPrice
+    private int encodePrice(StockPrice price) {
+        return price.getPrice() +
+                price.getX() * 1000 +
+                price.getY() * 100000;
+    }
+
+    private StockPrice decodePrice(int code) {
+        StockPrice out = new StockPrice();
+        out.setPrice(code%1000);
+        out.setX(code%100000 / 1000);
+        out.setY(code/100000);
+        return out;
+    }
+
     //no do actions -- recording source of initial CGR assets so they can be returned
+    private void doCGRfold(TrainMove move) {}
     private void doCGRCash(TrainMove move) {}
     private void doCGRToken(TrainMove move) {}
     private void doCGRTrain(TrainMove move) {}
     private void doCGRTrade(TrainMove move, boolean isPrez) {}
+    private void doCGRpar(TrainMove move) {}
+    private void doCGRescrow(TrainMove move) {}
+
+    private int encodeLoanAndShares(Corp c) {
+        return c.getLoans() +
+                c.getPoolShares() * 100 +
+                c.getBankShares() * 10000;
+    }
+
+    private void decodeLoanAndShares(Corp c, int x) {
+        c.setLoans(x%100);
+        c.setPoolShares(x%10000/100);
+        c.setBankShares(x/10000);
+    }
+
+    private void undoCGRescrow(TrainMove move) {
+        Corp c = findCorp(move.getCorp());
+        c.setEscrow(move.getAmount());
+        c.setLastRun(Integer.parseInt(move.getPlayer()));
+    }
+
+    private void undoCGRpar(TrainMove move) {
+        Corp c = findCorp(move.getCorp());
+        c.setPar(move.getAmount());
+        decodeLoanAndShares(c, Integer.parseInt(move.getPlayer()));
+    }
+
+    private void undoCGRfold(TrainMove move) {
+        Corp c = new Corp(move.getCorp(), 0);
+        c.setPrez(move.getPlayer());
+        c.setClosing(true);
+        c.setPrice(decodePrice(move.getAmount()));
+        c.setHasFloated(true);
+        board.getCorps().add(cgrStockIndex(c), c);
+    }
 
     private void undoCGRCash(TrainMove move){
-        findCorp(move.getCorp()).setCash(move.getAmount());
+        Corp c = findCorp(move.getCorp());
+        c.setCash(move.getAmount());
+        decodeFlags(c, Integer.parseInt(move.getPlayer()));
     }
 
     private void undoCGRToken(TrainMove move){
@@ -1205,6 +1267,22 @@ public class Game1856 extends AbstractGame {
     private void undoCGRTrade(TrainMove move, boolean isPrez) {
         Wallet w = findWallet(move.getPlayer());
         w.getStocks().add(new Stock(move.getCorp(), move.getAmount(), isPrez));
+    }
+
+    private int encodeFlags(Corp c) {
+        return  (c.isHasOperated() ? 1 : 0) +
+                (c.isReachedDest() ? 2 : 0) +
+                (c.isBridgeRights() ? 4 : 0) +
+                (c.isTunnelRights() ? 8 : 0) +
+                c.getFundingType() * 16;
+    }
+
+    private void decodeFlags(Corp c, int x) {
+        c.setHasOperated((x&1) > 0);
+        c.setReachedDest((x&2) > 0);
+        c.setBridgeRights((x&4) > 0);
+        c.setTunnelRights((x&8) > 0);
+        c.setFundingType(x/16);
     }
 
     private void doStartCGRRedemptions(TrainMove move, boolean rawMove) {
@@ -1255,7 +1333,7 @@ public class Game1856 extends AbstractGame {
                 CGRpriceTotal += c.getPrice().getPrice();
                 CGRpriceMin = Math.min(CGRpriceMin, c.getPrice().getPrice());
                 CGRcash += c.getCash();
-                makeFollowMove(CGR_CASH, "", c.getName(), c.getCash());
+                makeFollowMove(CGR_CASH, ""+encodeFlags(c), c.getName(), c.getCash());
                 makeFollowMove(CGR_TOKEN, ""+c.getTokensMax(), c.getName(), c.getTokensUsed());
                 for(Integer train:c.getTrains()) {
                     makeFollowMove(CGR_TRAIN, "", c.getName(), train);
@@ -1278,12 +1356,11 @@ public class Game1856 extends AbstractGame {
                     makeFollowMove(s.isPresident()? TRADE_PREZ : TRADE, w.getName(), s.getCorp(), s.getAmount());
                 }
             }
+            CGRtotalCount += CGRcount;
             if(CGRcount%2>0) {
                 CGRpoolCount++;
-                CGRcount--;
             }
-            CGRtotalCount += CGRcount;
-            player2CGRcount.put(w.getName(), CGRcount);
+            if (CGRcount > 1) player2CGRcount.put(w.getName(), CGRcount/2);
         }
 
         board.setCGRsize(CGRtotalCount > 20 ? Board1856.CGR_TWENTY_SHARES : Board1856.CGR_TEN_SHARES);
@@ -1291,10 +1368,10 @@ public class Game1856 extends AbstractGame {
         Wallet w = findWallet(currentPlayer);
         Wallet prez = null;
         int prezCount = 0;
-        for(int i=0; i<board.getPlayers().size(); w = findWallet(nextPlayer(currentPlayer)),i++) {
+        for(int i=0; i<board.getPlayers().size(); w = findWallet(nextPlayer(w.getName())),i++) {
             w.getStocks().removeIf(x -> dead.contains(x.getCorp())); //phase II -- actually delete
             if(player2CGRcount.containsKey(w.getName())) {
-                int shares = player2CGRcount.get(w.getName()) / 2;
+                int shares = player2CGRcount.get(w.getName());
                 shareToWallet(w, "CGR", shares); //TODO CONST
                 if(shares > prezCount) {
                     prez = w;
@@ -1307,8 +1384,18 @@ public class Game1856 extends AbstractGame {
             if(s.getCorp().equals("CGR")) s.setPresident(true);
         }
 
+        for(int i = board.getCorps().size() - 1; i >= 0; i--) {
+            Corp c = board.getCorps().get(i);
+            if(c.isClosing()) {
+                makeFollowMove(CGR_ESCROW, ""+c.getLastRun(), c.getName(), c.getEscrow());
+                makeFollowMove(CGR_PAR, ""+encodeLoanAndShares(c), c.getName(), c.getPar());
+                makeFollowMove(CGR_FOLD, c.getPrez(), c.getName(), encodePrice(c.getPrice()));
+            }
+        }
+        board.getCorps().removeIf(Corp::isClosing);
+
         //make CGR object
-        int bankShares = board.getCGRsize() - CGRtotalCount / 2;
+        int bankShares = (board.getCGRsize() * 2 - CGRtotalCount + 1) / 2;
         int poolShares = CGRpoolCount / 2;
         if(bankShares < 0) {
             if(poolShares + bankShares > 0) {
@@ -1325,11 +1412,9 @@ public class Game1856 extends AbstractGame {
                 10, -1, prez.getName(), Corp.CGR_TYPE, 0, 0,
                 new ArrayList<>(), CGRtrains, false, CGRbridge, CGRtunnel,
                 hasOperated, true, true, false);
-        board.getCorps().add(cgr);
+        board.getCorps().add(newStockIndex(cgr), cgr);
         if(CGRtrains.contains(4)) board.setEvent(ASK_CGR_TRAIN_DROP);
     }
-
-    //TODO CGR_CASH, TRADE and TRADE_PREZ (nothing on do, restore cash/stock on undo)
 
     private void undoFormCGR(TrainMove move) {
         board.setCurrentPlayer(move.getPlayer());
@@ -1380,7 +1465,7 @@ public class Game1856 extends AbstractGame {
                 bankrupt = false;
             }
         }
-        if(bankrupt) board.setPhase(Era.DONE.name());
+        if(bankrupt) board.setPhase(Era.DONE.name()); //TODO make undoable
     }
 
     public void undoForcedSale(TrainMove move) {
@@ -1417,6 +1502,13 @@ public class Game1856 extends AbstractGame {
         int size = board.getTrains().get(0);
         c.getTrains().add(0, size);
         board.getTrains().remove(0);
+        if (rawMove) { // TODO first Diesel
+            switch(board.getTrains().size()) {
+                case 1: prepCGR(); break;
+                case 4: makeFollowMove(CLOSE_PRIVS, "", "", 0); break;
+                case 8: makeFollowMove(RUST, "", "", 2); break;
+            }
+        }
         if (w.getCash() < 0) {
             board.setEvent(FORCED_SALE_EVENT);
             checkBankrupt(w);
@@ -1747,7 +1839,26 @@ public class Game1856 extends AbstractGame {
         while (i > 0) {
             i--;
             Corp c2 = board.getCorps().get(i);
-            if (c2.getPrice() == null || c2.getPrice().getPrice() < c.getPrice().getPrice()) continue;
+            if (c2.getPrice() == null) continue;
+            int p = c.getPrice().getPrice();
+            int p2 = c2.getPrice().getPrice();
+            if (p2 < p) continue;
+            if (p2 == p && c2.getPrice().getX() < c.getPrice().getX()) continue;
+            return i+1;
+        }
+        return 0;
+    }
+
+    private int cgrStockIndex(Corp c) {
+        int i = board.getCorps().size();
+        while (i > 0) {
+            i--;
+            Corp c2 = board.getCorps().get(i);
+            if (c2.getPrice() == null) continue;
+            int p = c.getPrice().getPrice();
+            int p2 = c2.getPrice().getPrice();
+            if (p2 < p) continue;
+            if (p2 == p && c2.getPrice().getX() <= c.getPrice().getX()) continue;
             return i+1;
         }
         return 0;
