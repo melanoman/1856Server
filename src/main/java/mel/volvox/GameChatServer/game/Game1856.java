@@ -2169,7 +2169,7 @@ public class Game1856 extends AbstractGame {
         board.setUndoCount(board.getUndoCount()-1);
         if (board.getUndoCount() > 0) {
             TrainMove nextMove = history.get(board.getMoveNumber() - board.getUndoCount());
-            if (nextMove.isFollow()) return redo();
+            if (nextMove.isFollow()) return redo(recalc);
         }
         if(recalc) recaculateStandings();
         return board;
