@@ -2791,7 +2791,8 @@ public class Game1856 extends AbstractGame {
             int value = w.getCash();
             for(Priv p: w.getPrivates()) value += priv2price.get(p.getCorp());
             for(Stock s: w.getStocks()) {
-                value += findCorp(s.getCorp()).getPrice().getPrice() * s.getAmount();
+                Corp c = findCorp(s.getCorp());
+                value += (c.getPrice().getPrice() - 10 * c.getLoans()) * s.getAmount();
             }
             w.setValue(value);
         }
