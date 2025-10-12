@@ -1380,6 +1380,7 @@ public class Game1856 extends AbstractGame {
                 if(c.isHasOperated()) hasOperated = true;
             }
         }
+        CGRtrains.sort(null);
         if(dead.isEmpty()) {
             //TODO abort CGR formation -- no loans defaulted
             throw new IllegalStateException("TODO CGR not formed");
