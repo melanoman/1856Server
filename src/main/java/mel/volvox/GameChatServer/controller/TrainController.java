@@ -286,4 +286,11 @@ public class TrainController {
     synchronized Board1856 abandonToCGR(@PathVariable String table) {
         return loadGame(table).abandonToCGR();
     }
+
+    @PutMapping("1856/buyPoolTrain/{table}/{size}")
+    @ResponseBody
+    synchronized Board1856 buyPoolTrain(@PathVariable String table,
+                                        @PathVariable int size) {
+        return loadGame(table).buyPoolTrain(size);
+    }
 }

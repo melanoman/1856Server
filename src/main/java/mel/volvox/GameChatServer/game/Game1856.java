@@ -60,7 +60,7 @@ public class Game1856 extends AbstractGame {
     public static final String USE_GLS = "useGLS";
     public static final String BUY_BRIDGE = "buyBridge";
     public static final String BUY_TUNNEL = "buyTunnel";
-
+    public static final String BUY_POOL_TRAIN = "buyPoolTrain";
     public static final String TAKE_LOAN = "takeLoan";
     public static final String BUY_PRIV = "buyPriv";
     public static final String FLOAT = "float";
@@ -457,6 +457,7 @@ public class Game1856 extends AbstractGame {
             case PAYOUT -> doPayout(move);
             case WITHHOLD -> doWithhold(move);
             case BUY_BANK_TRAIN -> doBankTrain(move, rawMove);
+            case BUY_POOL_TRAIN -> doPoolTrain(move);
             case RUST -> doRust(move, rawMove);
             case RUST_TRAIN -> doRustTrain(move);
             case CLOSE_PRIVS -> doClosePriv(move, rawMove);
@@ -486,6 +487,26 @@ public class Game1856 extends AbstractGame {
             case TRADE_PREZ -> doCGRTrade(move, true);
             default -> throw new IllegalStateException("unknown move action: "+move.getAction());
         }
+    }
+
+    private void doPoolTrain(TrainMove move) {
+        int size = move.getAmount();
+        int price = TRAIN_PRICE[size];
+        Corp c = findCorp(move.getCorp());
+        payCorpToBank(c, price);
+        board.getTrainPool().remove(Integer.valueOf(size));
+        c.getTrains().add(size);
+        c.getTrains().sort(null);
+    }
+
+    private void undoPoolTrain(TrainMove move) {
+        int size = move.getAmount();
+        int price = TRAIN_PRICE[size];
+        Corp c = findCorp(move.getCorp());
+        payBankToCorp(c, price);
+        board.getTrainPool().add(size);
+        board.getTrainPool().sort(null);
+        c.getTrains().remove(Integer.valueOf(size));
     }
 
     private void doAutopayCGR(TrainMove move) {
@@ -1134,6 +1155,7 @@ public class Game1856 extends AbstractGame {
             case AUCTION_GIVEAWAY -> undoAuctionGiveaway(move);
             case AUCTION_END_PHASE -> undoEndAuctionPhase(move);
             case AUCTION_DISCOUNT_RESET -> undoAuctionDiscountReset(move);
+
             case STOCK_PASS -> undoStockPass(move);
             case STOCK_END_ROUND -> undoEndStockRound(move);
             case STOCK_SET_PAR -> undoSetPar(move);
@@ -1164,6 +1186,7 @@ public class Game1856 extends AbstractGame {
             case PAYOUT -> undoPayout(move);
             case WITHHOLD -> undoWithhold(move);
             case BUY_BANK_TRAIN -> undoBankTrain(move);
+            case BUY_POOL_TRAIN -> undoPoolTrain(move);
             case RUST -> undoRust(move);
             case RUST_TRAIN -> undoRustTrain(move);
             case CLOSE_PRIVS -> undoClosePriv(move);
@@ -1493,6 +1516,7 @@ public class Game1856 extends AbstractGame {
     public void doDropTrain(TrainMove move) { //TODO preserve train ordering on undo
         Corp c = findCorp(move.getCorp());
         board.getTrainPool().add(c.getTrains().remove(move.getAmount()));
+        board.getTrainPool().sort(null);
         boolean noMoreDrops = true;
         for(Corp corp: board.getCorps()) {
             if(corp.getTrains().size() > trainLimit(board, corp)) noMoreDrops = false;
@@ -2668,6 +2692,17 @@ public class Game1856 extends AbstractGame {
         if (c.getTrains().size() >= trainLimit(board, c)) throw new IllegalStateException("Too many trains");
         if (price > c.getCash()) throw new IllegalStateException(FUNDS);
         makePrimaryMove(BUY_BANK_TRAIN, "", c.getName(), size);
+        return board;
+    }
+
+    synchronized public Board1856 buyPoolTrain(int size) {
+        enforcePhase(Era.OP);
+        enforceEvent(POST_REV_EVENT);
+        if (!board.getTrainPool().contains(size)) throw new IllegalStateException("Pool has no trains size "+size);
+        Corp c = getCurrentCorp();
+        if(c.getCash() < TRAIN_PRICE[size]) throw new IllegalStateException(FUNDS);
+        if(c.getTrains().size() >= trainLimit(board, c)) throw new IllegalStateException("Too many trains");
+        makePrimaryMove(BUY_POOL_TRAIN, "", c.getName(), size);
         return board;
     }
 
