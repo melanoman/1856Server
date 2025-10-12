@@ -82,6 +82,7 @@ public class Game1856 extends AbstractGame {
     public static final String FORCED_BANK_TRAIN = "forcedBankTrainBuy";
     public static final String FORCED_SALE = "forcedSale";
     public static final String DROP_TRAIN = "dropTrain";
+    public static final String DROP_PORT = "dropPort";
     public static final String NEXT_CORP = "nextCorp";
     public static final String END_OP_ROUND = "endOpRound";
 
@@ -472,6 +473,7 @@ public class Game1856 extends AbstractGame {
             case ABANDON_CORP -> doAbandonCorp(move);
             case FORM_CGR -> doFormCGR(move, rawMove);
             case DROP_TRAIN -> doDropTrain(move);
+            case DROP_PORT -> doDropPort(move);
             case END_OP_ROUND -> doEndOpRound(move);
             case CLEAR_BLOCKS -> doClearBlocks(move);
             case CGR_FOLD -> doCGRfold(move);
@@ -1168,6 +1170,7 @@ public class Game1856 extends AbstractGame {
             case REMOVE_PRIV -> undoRemovePriv(move);
             case END_OP_TURN -> undoEndOpTurn(move);
             case DROP_TRAIN -> undoDropTrain(move);
+            case DROP_PORT -> undoDropPort(move);
             case FORCED_BANK_TRAIN -> undoForcedBankTrainBuy(move); //bank buy
             case FORCED_SALE -> undoForcedSale(move);
             case NEXT_CORP -> undoNextCorp(move);
@@ -1191,6 +1194,16 @@ public class Game1856 extends AbstractGame {
             default -> { return false; }
         }
         return true;
+    }
+
+    private void doDropPort(TrainMove move) {
+        Corp c = findCorp(move.getCorp());
+        c.setPortRights(false);
+    }
+
+    private void undoDropPort(TrainMove move) {
+        Corp c = findCorp(move.getCorp());
+        c.setPortRights(true);
     }
 
     //TODO make these static and put them in StockPrice
@@ -1573,6 +1586,11 @@ public class Game1856 extends AbstractGame {
 
     private void prepCGR() {
         makeFollowMove(RUST, "", "", 3);
+        for(Corp c: board.getCorps()) {
+            if(c.isPortRights()) {
+                makeFollowMove(DROP_PORT, "", c.getName(), 0);
+            }
+        }
     }
 
     public void undoBankTrain(TrainMove move) {
