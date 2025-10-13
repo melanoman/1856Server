@@ -78,6 +78,7 @@ public class Game1856 extends AbstractGame {
     public static final String RUST_TRAIN = "rustTrain";
     public static final String CLOSE_PRIVS = "closePrivs";
     public static final String REMOVE_PRIV = "removePriv";
+    public static final String REDEEM_LOAN = "redeemLoan";
     public static final String END_OP_TURN = "endOpTurn";
     public static final String FORCED_BANK_TRAIN = "forcedBankTrainBuy";
     public static final String FORCED_SALE = "forcedSale";
@@ -462,6 +463,7 @@ public class Game1856 extends AbstractGame {
             case RUST_TRAIN -> doRustTrain(move);
             case CLOSE_PRIVS -> doClosePriv(move, rawMove);
             case REMOVE_PRIV -> doRemovePriv(move);
+            case REDEEM_LOAN -> doRedeemLoan(move);
             case END_OP_TURN -> doEndOpTurn(move, rawMove);
             case FORCED_BANK_TRAIN -> doForcedBankTrainBuy(move, rawMove);
             case FORCED_SALE -> doForcedSale(move, rawMove);
@@ -487,6 +489,19 @@ public class Game1856 extends AbstractGame {
             case TRADE_PREZ -> doCGRTrade(move, true);
             default -> throw new IllegalStateException("unknown move action: "+move.getAction());
         }
+    }
+
+    private void doRedeemLoan(TrainMove move) {
+        Corp c = findCorp(move.getCorp());
+        payCorpToBank(c, 100);
+        c.setLoans(c.getLoans() - 1);
+        //TODO prevent forced buy after redemption
+    }
+
+    private void undoRedeemLoan(TrainMove move) {
+        Corp c = findCorp(move.getCorp());
+        payBankToCorp(c, 100);
+        c.setLoans(c.getLoans() + 1);
     }
 
     private void doPoolTrain(TrainMove move) {
@@ -1187,6 +1202,7 @@ public class Game1856 extends AbstractGame {
             case WITHHOLD -> undoWithhold(move);
             case BUY_BANK_TRAIN -> undoBankTrain(move);
             case BUY_POOL_TRAIN -> undoPoolTrain(move);
+            case REDEEM_LOAN -> undoRedeemLoan(move);
             case RUST -> undoRust(move);
             case RUST_TRAIN -> undoRustTrain(move);
             case CLOSE_PRIVS -> undoClosePriv(move);
@@ -2916,5 +2932,15 @@ public class Game1856 extends AbstractGame {
     private void undoAbandonCorp(TrainMove move) {
         Corp c = findCorp(move.getCorp());
         c.setClosing(false);
+    }
+
+    public Board1856 redeemLoan() {
+        enforcePhase(Era.OP);
+        Corp c = getCurrentCorp();
+        if(c.getLoans() == 0) throw new IllegalStateException("No loans to redeem");
+        if(c.getTrains().isEmpty()) throw new IllegalStateException("Buy a train first");
+        if(c.getCash() < 100) throw new IllegalStateException(FUNDS);
+        makePrimaryMove(REDEEM_LOAN, "", c.getName(), 0);
+        return board;
     }
 }

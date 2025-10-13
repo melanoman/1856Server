@@ -293,4 +293,10 @@ public class TrainController {
                                         @PathVariable int size) {
         return loadGame(table).buyPoolTrain(size);
     }
+
+    @PutMapping("1856/redeem/{table}")
+    @ResponseBody
+    synchronized Board1856 redeemLoan(@PathVariable String table) {
+        return loadGame(table).redeemLoan();
+    }
 }
