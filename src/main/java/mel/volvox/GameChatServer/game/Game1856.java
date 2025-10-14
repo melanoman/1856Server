@@ -1643,7 +1643,7 @@ public class Game1856 extends AbstractGame {
 
     public void doDestination(TrainMove move) {
         Corp c = findCorp(move.getCorp());
-        c.setCash(c.getCash() + move.getAmount());
+        payBankToCorp(c, move.getAmount());
         c.setEscrow(0);
         c.setReachedDest(true);
         c.setFundingType(Corp.INCREMENTAL_TYPE);
@@ -1652,7 +1652,7 @@ public class Game1856 extends AbstractGame {
 
     public void undoDestination(TrainMove move) {
         Corp c = findCorp(move.getCorp());
-        c.setCash(c.getCash() - move.getAmount());
+        payCorpToBank(c, move.getAmount());
         c.setEscrow(move.getAmount());
         c.setReachedDest(false);
         c.setFundingType(Corp.DESTINATION_TYPE);
