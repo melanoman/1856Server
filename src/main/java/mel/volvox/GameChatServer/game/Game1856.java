@@ -83,6 +83,8 @@ public class Game1856 extends AbstractGame {
     public static final String FORCED_BANK_TRAIN = "forcedBankTrainBuy";
     public static final String FORCED_SALE = "forcedSale";
     public static final String DROP_TRAIN = "dropTrain";
+    public static final String DROP_CGR_TRAIN = "dropCGRTrain";
+    public static final String END_CGR_DROP = "endCGRdrop";
     public static final String DROP_PORT = "dropPort";
     public static final String NEXT_CORP = "nextCorp";
     public static final String END_OP_ROUND = "endOpRound";
@@ -114,6 +116,7 @@ public class Game1856 extends AbstractGame {
     public static final String TRAIN_DROP_EVENT = "TrainDrop";
     public static final String ASK_REDEMPTION_EVENT = "AskRedemptionEvent";
     public static final String ASK_CGR_TRAIN_DROP = "CGRdrop";
+    public static final String ASK_CGR_TOKENS = "CGRtokens";
 
     // private companies
     public static final String PRIVATE_FLOS = "flos";
@@ -122,6 +125,7 @@ public class Game1856 extends AbstractGame {
     public static final String PRIVATE_GLS = "gls";
     public static final String PRIVATE_NIAG = "niag";
     public static final String PRIVATE_STC = "stc";
+    public static final String CORP_CGR = "CGR";
 
     public static final Map<String, Integer> priv2price = Map.of(
             PRIVATE_FLOS, 20,
@@ -476,6 +480,8 @@ public class Game1856 extends AbstractGame {
             case ABANDON_CORP -> doAbandonCorp(move);
             case FORM_CGR -> doFormCGR(move, rawMove);
             case DROP_TRAIN -> doDropTrain(move);
+            case DROP_CGR_TRAIN -> doDropCGRtrain(move, rawMove);
+            case END_CGR_DROP -> doEndCGRdrop(move);
             case DROP_PORT -> doDropPort(move);
             case END_OP_ROUND -> doEndOpRound(move);
             case CLEAR_BLOCKS -> doClearBlocks(move);
@@ -489,6 +495,33 @@ public class Game1856 extends AbstractGame {
             case TRADE_PREZ -> doCGRTrade(move, true);
             default -> throw new IllegalStateException("unknown move action: "+move.getAction());
         }
+    }
+
+    private void doDropCGRtrain(TrainMove move, boolean rawMove) {
+        Corp c = findCorp(CORP_CGR);
+        c.getTrains().remove(move.getAmount());
+        board.getTrainPool().add(move.getAmount());
+        board.getTrainPool().sort(null);
+        if (rawMove) {
+            if(c.getTrains().size() < 4 && Collections.min(c.getTrains()) > 4) {
+                makeFollowMove(END_CGR_DROP, board.getEvent(), "", 0);
+            }
+        }
+    }
+
+    private void undoDropCGRtrain(TrainMove move) {
+        Corp c = findCorp(CORP_CGR);
+        c.getTrains().add(move.getAmount());
+        c.getTrains().sort(null);
+        board.getTrainPool().remove(move.getAmount());
+    }
+
+    private void doEndCGRdrop(TrainMove move) {
+        board.setEvent(ASK_CGR_TOKENS);
+    }
+
+    private void undoEndCGRdrop(TrainMove move) {
+        board.setEvent(move.getPlayer());
     }
 
     private void doRedeemLoan(TrainMove move) {
@@ -1209,6 +1242,8 @@ public class Game1856 extends AbstractGame {
             case REMOVE_PRIV -> undoRemovePriv(move);
             case END_OP_TURN -> undoEndOpTurn(move);
             case DROP_TRAIN -> undoDropTrain(move);
+            case DROP_CGR_TRAIN -> undoDropCGRtrain(move);
+            case END_CGR_DROP -> undoEndCGRdrop(move);
             case DROP_PORT -> undoDropPort(move);
             case FORCED_BANK_TRAIN -> undoForcedBankTrainBuy(move); //bank buy
             case FORCED_SALE -> undoForcedSale(move);
@@ -1466,7 +1501,8 @@ public class Game1856 extends AbstractGame {
                 new ArrayList<>(), CGRtrains, false, CGRbridge, CGRtunnel,
                 hasOperated, true, true, false);
         board.getCorps().add(newStockIndex(cgr), cgr);
-        if(CGRtrains.contains(4)) board.setEvent(ASK_CGR_TRAIN_DROP);
+        if(CGRtrains.contains(4) || CGRtrains.size() > 3) board.setEvent(ASK_CGR_TRAIN_DROP);
+        else if (rawMove) makeFollowMove(END_CGR_DROP, board.getEvent(), "", 0);
     }
 
     private void undoFormCGR(TrainMove move) {
@@ -2941,6 +2977,19 @@ public class Game1856 extends AbstractGame {
         if(c.getTrains().isEmpty()) throw new IllegalStateException("Buy a train first");
         if(c.getCash() < 100) throw new IllegalStateException(FUNDS);
         makePrimaryMove(REDEEM_LOAN, "", c.getName(), 0);
+        return board;
+    }
+
+    public Board1856 dropCGRtrain(int size) {
+        enforcePhase(Era.OP);
+        enforceEvent(ASK_CGR_TRAIN_DROP);
+        Corp c = findCorp(CORP_CGR);
+        if(!c.getTrains().contains(size)) throw new IllegalStateException("No such train to drop");
+        if(size >= 5) {
+            if(Collections.min(c.getTrains()) < 5) throw new IllegalStateException("Non-permanent trains first");
+            if(c.getTrains().size() < 4) throw new IllegalStateException("No voluntary drops of permanent trains");
+        }
+        makePrimaryMove(DROP_CGR_TRAIN, "", "CGR", size);
         return board;
     }
 }

@@ -299,4 +299,11 @@ public class TrainController {
     synchronized Board1856 redeemLoan(@PathVariable String table) {
         return loadGame(table).redeemLoan();
     }
+
+    @PutMapping("1856/CGRdrop/{table}/{size}")
+    @ResponseBody
+    synchronized Board1856 dropCGRtrain(@PathVariable String table,
+                                        @PathVariable int size) {
+        return loadGame(table).dropCGRtrain(size);
+    }
 }
