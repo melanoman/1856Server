@@ -630,11 +630,6 @@ public class Game1856 extends AbstractGame {
                 if (rawMove) makeFollowMove(RUST_TRAIN, "", corp.getName(), move.getAmount());
             }
         }
-        for(Corp c: board.getCorps()) { //TODO general limit
-            if(c.getTrains().size() > trainLimit(board, c)) { //TODO auto-choose if all the same
-                board.setEvent(TRAIN_DROP_EVENT);
-            }
-        }
     }
 
     private void undoRust(TrainMove move) {
@@ -1658,6 +1653,11 @@ public class Game1856 extends AbstractGame {
                 case 4: makeFollowMove(CLOSE_PRIVS, "", "", 0); break;
                 case 8: makeFollowMove(RUST, "", "", 2); break;
             }
+            for(Corp cc: board.getCorps()) { //TODO general limit
+                if(cc.getTrains().size() > trainLimit(board, cc)) { //TODO auto-choose if all the same
+                    board.setEvent(TRAIN_DROP_EVENT);
+                }
+            }
         }
     }
 
@@ -1675,6 +1675,7 @@ public class Game1856 extends AbstractGame {
         payBankToCorp(c, TRAIN_PRICE[move.getAmount()]);
         board.getTrains().add(0, move.getAmount());
         c.getTrains().remove(Integer.valueOf(move.getAmount()));
+        board.setEvent(POST_REV_EVENT);
     }
 
     public void doDestination(TrainMove move) {
