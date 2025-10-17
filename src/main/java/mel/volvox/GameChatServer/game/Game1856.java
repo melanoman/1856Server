@@ -1427,10 +1427,10 @@ public class Game1856 extends AbstractGame {
                 CGRpriceTotal += c.getPrice().getPrice();
                 CGRpriceMin = Math.min(CGRpriceMin, c.getPrice().getPrice());
                 CGRcash += c.getCash();
-                makeFollowMove(CGR_CASH, ""+encodeFlags(c), c.getName(), c.getCash());
-                makeFollowMove(CGR_TOKEN, ""+c.getTokensMax(), c.getName(), c.getTokensUsed());
+                if (rawMove) makeFollowMove(CGR_CASH, ""+encodeFlags(c), c.getName(), c.getCash());
+                if (rawMove) makeFollowMove(CGR_TOKEN, ""+c.getTokensMax(), c.getName(), c.getTokensUsed());
                 for(Integer train:c.getTrains()) {
-                    makeFollowMove(CGR_TRAIN, "", c.getName(), train);
+                    if (rawMove) makeFollowMove(CGR_TRAIN, "", c.getName(), train);
                     CGRtrains.add(train);
                 }
                 if(c.isBridgeRights()) CGRbridge = true;
@@ -1448,7 +1448,7 @@ public class Game1856 extends AbstractGame {
             for(Stock s:w.getStocks()) {
                 if(dead.contains(s.getCorp())) {
                     CGRcount += s.getAmount();
-                    makeFollowMove(s.isPresident()? TRADE_PREZ : TRADE, w.getName(), s.getCorp(), s.getAmount());
+                    if (rawMove) makeFollowMove(s.isPresident()? TRADE_PREZ : TRADE, w.getName(), s.getCorp(), s.getAmount());
                 }
             }
             CGRtotalCount += CGRcount;
@@ -1479,7 +1479,7 @@ public class Game1856 extends AbstractGame {
             if(s.getCorp().equals("CGR")) s.setPresident(true);
         }
 
-        for(int i = board.getCorps().size() - 1; i >= 0; i--) {
+        if (rawMove) for(int i = board.getCorps().size() - 1; i >= 0; i--) {
             Corp c = board.getCorps().get(i);
             if(c.isClosing()) {
                 makeFollowMove(CGR_ESCROW, ""+c.getLastRun(), c.getName(), c.getEscrow());
@@ -2427,10 +2427,16 @@ public class Game1856 extends AbstractGame {
     }
 
     private Corp findCorp(String name) {
+        Corp c = maybeFindCorp(name);
+        if (c == null) throw new IllegalStateException("Unknown Corp: "+name);
+        return c;
+    }
+
+    private Corp maybeFindCorp(String name) {
         for (Corp c: board.getCorps()) {
             if(c.getName().equals(name)) return c;
         }
-        throw new IllegalStateException("Unknown Corp: "+name);
+        return null;
     }
 
     private Wallet findWallet(String name) {
