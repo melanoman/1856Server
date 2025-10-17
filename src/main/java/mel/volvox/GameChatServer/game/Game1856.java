@@ -84,6 +84,7 @@ public class Game1856 extends AbstractGame {
     public static final String FORCED_SALE = "forcedSale";
     public static final String DROP_TRAIN = "dropTrain";
     public static final String DROP_CGR_TRAIN = "dropCGRTrain";
+    public static final String DONE_CGR_DROP = "doneCGRdrop";
     public static final String END_CGR_DROP = "endCGRdrop";
     public static final String DROP_PORT = "dropPort";
     public static final String NEXT_CORP = "nextCorp";
@@ -481,6 +482,7 @@ public class Game1856 extends AbstractGame {
             case FORM_CGR -> doFormCGR(move, rawMove);
             case DROP_TRAIN -> doDropTrain(move);
             case DROP_CGR_TRAIN -> doDropCGRtrain(move, rawMove);
+            case DONE_CGR_DROP -> doDoneCGRdrop(move, rawMove);
             case END_CGR_DROP -> doEndCGRdrop(move);
             case DROP_PORT -> doDropPort(move);
             case END_OP_ROUND -> doEndOpRound(move);
@@ -1238,6 +1240,7 @@ public class Game1856 extends AbstractGame {
             case END_OP_TURN -> undoEndOpTurn(move);
             case DROP_TRAIN -> undoDropTrain(move);
             case DROP_CGR_TRAIN -> undoDropCGRtrain(move);
+            case DONE_CGR_DROP -> undoDoneCGRdrop(move);
             case END_CGR_DROP -> undoEndCGRdrop(move);
             case DROP_PORT -> undoDropPort(move);
             case FORCED_BANK_TRAIN -> undoForcedBankTrainBuy(move); //bank buy
@@ -1263,6 +1266,14 @@ public class Game1856 extends AbstractGame {
             default -> { return false; }
         }
         return true;
+    }
+
+    private void doDoneCGRdrop(TrainMove move, boolean rawMove) {
+        board.setEvent(ASK_CGR_TOKENS);
+    }
+
+    private void undoDoneCGRdrop(TrainMove move) {
+        board.setEvent(ASK_CGR_TRAIN_DROP);
     }
 
     private void doDropPort(TrainMove move) {
@@ -1324,6 +1335,7 @@ public class Game1856 extends AbstractGame {
     }
 
     private void undoCGRfold(TrainMove move) {
+        //TODO if drop has not happened, abort
         Corp c = new Corp(move.getCorp(), 0);
         c.setPrez(move.getPlayer());
         c.setClosing(true);
@@ -1332,7 +1344,7 @@ public class Game1856 extends AbstractGame {
         board.getCorps().add(cgrStockIndex(c), c);
     }
 
-    private void undoCGRCash(TrainMove move){
+    private void undoCGRCash(TrainMove move) {
         Corp c = findCorp(move.getCorp());
         c.setCash(move.getAmount());
         decodeFlags(c, Integer.parseInt(move.getPlayer()));
@@ -2418,7 +2430,7 @@ public class Game1856 extends AbstractGame {
         for (Corp c: board.getCorps()) {
             if(c.getName().equals(name)) return c;
         }
-        throw new IllegalStateException("Unknown Corp");
+        throw new IllegalStateException("Unknown Corp: "+name);
     }
 
     private Wallet findWallet(String name) {
@@ -2999,8 +3011,7 @@ public class Game1856 extends AbstractGame {
         enforceEvent(ASK_CGR_TRAIN_DROP);
         Corp c = findCorp(CORP_CGR);
         if (c.getTrains().size() > 3) throw new IllegalStateException("Too many trains");
-        //makePrimaryMove(DONE_CGR_DROP, "", CORP_CGR, 0);
-        throw new IllegalStateException("TODO done dropping CGR");
-        //return board;
+        makePrimaryMove(DONE_CGR_DROP, "", CORP_CGR, 0);
+        return board;
     }
 }
