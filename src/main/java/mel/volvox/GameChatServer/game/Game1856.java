@@ -499,7 +499,7 @@ public class Game1856 extends AbstractGame {
 
     private void doDropCGRtrain(TrainMove move, boolean rawMove) {
         Corp c = findCorp(CORP_CGR);
-        c.getTrains().remove(move.getAmount());
+        c.getTrains().remove(Integer.valueOf(move.getAmount()));
         board.getTrainPool().add(move.getAmount());
         board.getTrainPool().sort(null);
         if (rawMove) {
@@ -513,7 +513,7 @@ public class Game1856 extends AbstractGame {
         Corp c = findCorp(CORP_CGR);
         c.getTrains().add(move.getAmount());
         c.getTrains().sort(null);
-        board.getTrainPool().remove(move.getAmount());
+        board.getTrainPool().remove(Integer.valueOf(move.getAmount()));
     }
 
     private void doEndCGRdrop(TrainMove move) {
@@ -2990,7 +2990,17 @@ public class Game1856 extends AbstractGame {
             if(Collections.min(c.getTrains()) < 5) throw new IllegalStateException("Non-permanent trains first");
             if(c.getTrains().size() < 4) throw new IllegalStateException("No voluntary drops of permanent trains");
         }
-        makePrimaryMove(DROP_CGR_TRAIN, "", "CGR", size);
+        makePrimaryMove(DROP_CGR_TRAIN, "", CORP_CGR, size);
         return board;
+    }
+
+    public Board1856 stopCGRdrop() {
+        enforcePhase(Era.OP);
+        enforceEvent(ASK_CGR_TRAIN_DROP);
+        Corp c = findCorp(CORP_CGR);
+        if (c.getTrains().size() > 3) throw new IllegalStateException("Too many trains");
+        //makePrimaryMove(DONE_CGR_DROP, "", CORP_CGR, 0);
+        throw new IllegalStateException("TODO done dropping CGR");
+        //return board;
     }
 }

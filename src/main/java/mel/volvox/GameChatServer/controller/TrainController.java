@@ -306,4 +306,10 @@ public class TrainController {
                                         @PathVariable int size) {
         return loadGame(table).dropCGRtrain(size);
     }
+
+    @PutMapping("1856/CGRdoneDrop/{table}")
+    @ResponseBody
+    synchronized Board1856 stopCGRdrop(@PathVariable String table) {
+        return loadGame(table).stopCGRdrop();
+    }
 }
