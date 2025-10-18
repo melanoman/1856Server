@@ -81,6 +81,7 @@ public class Game1856 extends AbstractGame {
     public static final String REDEEM_LOAN = "redeemLoan";
     public static final String END_OP_TURN = "endOpTurn";
     public static final String FORCED_BANK_TRAIN = "forcedBankTrainBuy";
+    public static final String ASK_TRAIN_DROP ="askTrainDrop";
     public static final String FORCED_SALE = "forcedSale";
     public static final String DROP_TRAIN = "dropTrain";
     public static final String DROP_CGR_TRAIN = "dropCGRTrain";
@@ -471,6 +472,7 @@ public class Game1856 extends AbstractGame {
             case REDEEM_LOAN -> doRedeemLoan(move);
             case END_OP_TURN -> doEndOpTurn(move, rawMove);
             case FORCED_BANK_TRAIN -> doForcedBankTrainBuy(move, rawMove);
+            case ASK_TRAIN_DROP -> doAskTrainDrop(move, rawMove);
             case FORCED_SALE -> doForcedSale(move, rawMove);
             case NEXT_CORP -> doNextCorp(move);
             case START_CGR_REDEMPTIONS -> doStartCGRRedemptions(move, rawMove);
@@ -1244,6 +1246,7 @@ public class Game1856 extends AbstractGame {
             case END_CGR_DROP -> undoEndCGRdrop(move);
             case DROP_PORT -> undoDropPort(move);
             case FORCED_BANK_TRAIN -> undoForcedBankTrainBuy(move); //bank buy
+            case ASK_TRAIN_DROP -> undoAskTrainDrop(move);
             case FORCED_SALE -> undoForcedSale(move);
             case NEXT_CORP -> undoNextCorp(move);
             case START_CGR_REDEMPTIONS -> undoStartCGRRedemptions(move);
@@ -1266,6 +1269,15 @@ public class Game1856 extends AbstractGame {
             default -> { return false; }
         }
         return true;
+    }
+
+    private void doAskTrainDrop(TrainMove move, boolean rawMove) {
+        board.setEvent(TRAIN_DROP_EVENT);
+        board.setCurrentCorp(move.getCorp());
+    }
+
+    private void undoAskTrainDrop(TrainMove move) {
+        board.setEvent(move.getPlayer());
     }
 
     private void doDoneCGRdrop(TrainMove move, boolean rawMove) {
@@ -1605,6 +1617,11 @@ public class Game1856 extends AbstractGame {
                 case 4: makeFollowMove(CLOSE_PRIVS, "", "", 0); break;
                 case 8: makeFollowMove(RUST, "", "", 2); break;
             }
+            for(Corp cc: board.getCorps()) { //TODO general limit
+                if(cc.getTrains().size() > trainLimit(board, cc)) { //TODO auto-choose if all the same
+                    makeFollowMove(ASK_TRAIN_DROP, board.getEvent(), c.getName(), 0);
+                }
+            }
         }
         if (w.getCash() < 0) {
             board.setEvent(FORCED_SALE_EVENT);
@@ -1667,7 +1684,7 @@ public class Game1856 extends AbstractGame {
             }
             for(Corp cc: board.getCorps()) { //TODO general limit
                 if(cc.getTrains().size() > trainLimit(board, cc)) { //TODO auto-choose if all the same
-                    board.setEvent(TRAIN_DROP_EVENT);
+                    makeFollowMove(ASK_TRAIN_DROP, board.getEvent(), c.getName(), 0);
                 }
             }
         }
