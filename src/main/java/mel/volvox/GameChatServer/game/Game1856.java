@@ -1590,10 +1590,17 @@ public class Game1856 extends AbstractGame {
         board.getTrainPool().add(c.getTrains().remove(move.getAmount()));
         board.getTrainPool().sort(null);
         boolean noMoreDrops = true;
+        boolean CGRdrop = false;
         for(Corp corp: board.getCorps()) {
-            if(corp.getTrains().size() > trainLimit(board, corp)) noMoreDrops = false;
+            if(corp.getName().equals(CORP_CGR)) continue; // different rules for CGR
+            if(corp.getTrains().size() > trainLimit(board, corp)) {
+                if(corp.getName().equals(CORP_CGR)) CGRdrop = true;
+                else noMoreDrops = false;
+            }
         }
-        if (noMoreDrops) board.setEvent(POST_REV_EVENT);
+        if (noMoreDrops) {
+            board.setEvent(CGRdrop ? ASK_CGR_TRAIN_DROP : POST_REV_EVENT);
+        }
     }
 
     public void undoDropTrain(TrainMove move) {
@@ -1617,7 +1624,8 @@ public class Game1856 extends AbstractGame {
                 case 4: makeFollowMove(CLOSE_PRIVS, "", "", 0); break;
                 case 8: makeFollowMove(RUST, "", "", 2); break;
             }
-            for(Corp cc: board.getCorps()) { //TODO general limit
+            for(Corp cc: board.getCorps()) {
+                if(cc.getName().equals(CORP_CGR)) continue;
                 if(cc.getTrains().size() > trainLimit(board, cc)) { //TODO auto-choose if all the same
                     makeFollowMove(ASK_TRAIN_DROP, board.getEvent(), c.getName(), 0);
                 }
