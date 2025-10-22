@@ -312,4 +312,13 @@ public class TrainController {
     synchronized Board1856 stopCGRdrop(@PathVariable String table) {
         return loadGame(table).stopCGRdrop();
     }
+
+    @PutMapping("1856/c2cTrainBuy/{table}/{sellCorp}/{size}/{price}")
+    @ResponseBody
+    synchronized Board1856 c2cBuy(@PathVariable String table,
+                                  @PathVariable String sellCorp,
+                                  @PathVariable int size,
+                                  @PathVariable int price) {
+        return loadGame(table).c2cBuy(sellCorp, size, price);
+    }
 }

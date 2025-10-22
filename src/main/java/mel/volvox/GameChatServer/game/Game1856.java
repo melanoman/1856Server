@@ -80,6 +80,7 @@ public class Game1856 extends AbstractGame {
     public static final String REMOVE_PRIV = "removePriv";
     public static final String REDEEM_LOAN = "redeemLoan";
     public static final String END_OP_TURN = "endOpTurn";
+    public static final String C2C_TRAIN_BUY = "c2cTrainBuy";
     public static final String FORCED_BANK_TRAIN = "forcedBankTrainBuy";
     public static final String ASK_TRAIN_DROP ="askTrainDrop";
     public static final String FORCED_SALE = "forcedSale";
@@ -472,6 +473,7 @@ public class Game1856 extends AbstractGame {
             case REDEEM_LOAN -> doRedeemLoan(move);
             case END_OP_TURN -> doEndOpTurn(move, rawMove);
             case FORCED_BANK_TRAIN -> doForcedBankTrainBuy(move, rawMove);
+            case C2C_TRAIN_BUY -> doC2CtrainBuy(move);
             case ASK_TRAIN_DROP -> doAskTrainDrop(move, rawMove);
             case FORCED_SALE -> doForcedSale(move, rawMove);
             case NEXT_CORP -> doNextCorp(move);
@@ -1240,6 +1242,7 @@ public class Game1856 extends AbstractGame {
             case CLOSE_PRIVS -> undoClosePriv(move);
             case REMOVE_PRIV -> undoRemovePriv(move);
             case END_OP_TURN -> undoEndOpTurn(move);
+            case C2C_TRAIN_BUY -> undoC2CtrainBuy(move);
             case DROP_TRAIN -> undoDropTrain(move);
             case DROP_CGR_TRAIN -> undoDropCGRtrain(move);
             case DONE_CGR_DROP -> undoDoneCGRdrop(move);
@@ -1269,6 +1272,28 @@ public class Game1856 extends AbstractGame {
             default -> { return false; }
         }
         return true;
+    }
+
+    private void doC2CtrainBuy(TrainMove move) {
+        Corp buyer = getCurrentCorp();
+        Corp seller = findCorp(move.getCorp());
+        Integer size = Integer.valueOf(move.getPlayer());
+        seller.getTrains().remove(size);
+        buyer.getTrains().add(size);
+        buyer.getTrains().sort(null);
+        buyer.setCash(buyer.getCash() - move.getAmount());
+        seller.setCash(seller.getCash() + move.getAmount());
+    }
+
+    private void undoC2CtrainBuy(TrainMove move) {
+        Corp buyer = getCurrentCorp();
+        Corp seller = findCorp(move.getCorp());
+        Integer size = Integer.valueOf(move.getPlayer());
+        buyer.getTrains().remove(size);
+        seller.getTrains().add(size);
+        seller.getTrains().sort(null);
+        seller.setCash(seller.getCash() - move.getAmount());
+        buyer.setCash(buyer.getCash() + move.getAmount());
     }
 
     private void doAskTrainDrop(TrainMove move, boolean rawMove) {
@@ -3043,6 +3068,17 @@ public class Game1856 extends AbstractGame {
         Corp c = findCorp(CORP_CGR);
         if (c.getTrains().size() > 3) throw new IllegalStateException("Too many trains");
         makePrimaryMove(DONE_CGR_DROP, "", CORP_CGR, 0);
+        return board;
+    }
+
+    public Board1856 c2cBuy(String sellCorpName, int size, int price) {
+        enforcePhase(Era.OP);
+        Corp buyer = getCurrentCorp();
+        Corp seller = findCorp(sellCorpName);
+        //TODO special CGR rules for buying trains
+        if(!seller.getTrains().contains(size)) throw new IllegalStateException("Train not found");
+        if(buyer.getCash() < price) throw new IllegalStateException(FUNDS); //TODO can this be a forced buy?
+        makePrimaryMove(C2C_TRAIN_BUY, ""+size, sellCorpName, price);
         return board;
     }
 }
