@@ -13,6 +13,8 @@ import java.util.*;
 public class Game1856 extends AbstractGame {
     @Setter TrainRepo repo; // set by controller
     @Getter private final Board1856 board = new Board1856();
+    @Getter private final Map<String, Integer> corp2price = new HashMap<>();
+
     public static final int[] START_CASH = { 0, 0, 0, 500, 375, 300, 250 };
     public static final String NONE = "";
 
@@ -925,21 +927,24 @@ public class Game1856 extends AbstractGame {
     private void doDropStockPrice(TrainMove move, boolean rawMove) {
         Corp c = findCorp(move.getCorp());
         c.getPrice().drop(move.getAmount());
+        corp2price.put(c.getName(), c.getPrice().getPrice());
     }
 
     private void undoDropStockPrice(TrainMove move) {
         Corp c = findCorp(move.getCorp());
         c.getPrice().drop(-move.getAmount());
+        corp2price.put(c.getName(), c.getPrice().getPrice());
     }
 
    private void doStockStep(TrainMove move, boolean rawMove) {
-        Corp c = findCorp(move.getCorp());
-        switch (move.getAction()) {
-            case PRICE_LEFT -> c.getPrice().left();
-            case PRICE_RIGHT -> c.getPrice().right();
-            case PRICE_DOWN -> c.getPrice().down();
-            case PRICE_UP -> c.getPrice().up();
-        }
+       Corp c = findCorp(move.getCorp());
+       switch (move.getAction()) {
+           case PRICE_LEFT -> c.getPrice().left();
+           case PRICE_RIGHT -> c.getPrice().right();
+           case PRICE_DOWN -> c.getPrice().down();
+           case PRICE_UP -> c.getPrice().up();
+       }
+       corp2price.put(c.getName(), c.getPrice().getPrice());
        if (rawMove) {
            makeFollowMove(REORDER_CORP, "", move.getCorp(), board.getCorps().indexOf(c));
        }
@@ -953,6 +958,7 @@ public class Game1856 extends AbstractGame {
            case PRICE_DOWN -> c.getPrice().up();
            case PRICE_UP -> c.getPrice().down();
        }
+       corp2price.put(c.getName(), c.getPrice().getPrice());
    }
 
     private void sharesPoolToWallet(Wallet w, Corp corp, int amount) {
@@ -1375,12 +1381,12 @@ public class Game1856 extends AbstractGame {
     }
 
     private void undoCGRfold(TrainMove move) {
-        //TODO if drop has not happened, abort
         Corp c = new Corp(move.getCorp(), 0);
         c.setPrez(move.getPlayer());
         c.setClosing(true);
         c.setPrice(decodePrice(move.getAmount()));
         c.setHasFloated(true);
+        corp2price.put(c.getName(), c.getPrice().getPrice());
         board.getCorps().add(cgrStockIndex(c), c);
     }
 
@@ -1997,6 +2003,7 @@ public class Game1856 extends AbstractGame {
     private void undoSetPar(TrainMove move) {
         Corp c = findCorp(move.getCorp());
         c.setPar(0);
+        corp2price.remove(c.getName());
         c.setPrez("");
         c.setBankShares(10);
         c.setPrice(null);
@@ -2056,6 +2063,7 @@ public class Game1856 extends AbstractGame {
     private void doSetPar(TrainMove move) {
         Corp c = findCorp(move.getCorp());
         c.setPar(move.getAmount());
+        corp2price.put(c.getName(), move.getAmount());
         c.setPrez(move.getPlayer());
         c.setBankShares(8);
         c.setPrice(StockPrice.makePar(move.getAmount()));
@@ -2661,6 +2669,7 @@ public class Game1856 extends AbstractGame {
     private int certCount(Wallet w) {
         int out = 0;
         for (Stock s: w.getStocks()) {
+            if(corp2price.get(s.getCorp()) <= 50) continue; // yellow and brown stock don't count
             out += s.getAmount();
             if (s.isPresident()) out --;
         }
