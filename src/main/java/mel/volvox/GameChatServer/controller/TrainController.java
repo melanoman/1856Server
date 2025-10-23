@@ -251,8 +251,14 @@ public class TrainController {
 
     @PutMapping("1856/forcedTrain/{table}/bank")
     @ResponseBody
-    synchronized Board1856 forcedBankBuy(@PathVariable String table) { //TODO pool option
+    synchronized Board1856 forcedBankBuy(@PathVariable String table) {
         return loadGame(table).forcedBankBuy();
+    }
+
+    @PutMapping("1856/forcedTrain/{table}/pool")
+    @ResponseBody
+    synchronized Board1856 forcedPoolBuy(@PathVariable String table) {
+        return loadGame(table).forcedPoolBuy();
     }
 
     @PutMapping("1856/dropTrain/{table}/{corp}/{size}")

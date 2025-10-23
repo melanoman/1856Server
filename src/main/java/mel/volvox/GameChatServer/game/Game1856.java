@@ -82,6 +82,7 @@ public class Game1856 extends AbstractGame {
     public static final String END_OP_TURN = "endOpTurn";
     public static final String C2C_TRAIN_BUY = "c2cTrainBuy";
     public static final String FORCED_BANK_TRAIN = "forcedBankTrainBuy";
+    public static final String FORCED_POOL_BUY = "forcedPoolTrainBuy";
     public static final String ASK_TRAIN_DROP ="askTrainDrop";
     public static final String FORCED_SALE = "forcedSale";
     public static final String DROP_TRAIN = "dropTrain";
@@ -473,6 +474,7 @@ public class Game1856 extends AbstractGame {
             case REDEEM_LOAN -> doRedeemLoan(move);
             case END_OP_TURN -> doEndOpTurn(move, rawMove);
             case FORCED_BANK_TRAIN -> doForcedBankTrainBuy(move, rawMove);
+            case FORCED_POOL_BUY -> doForcedPoolTrainBuy(move);
             case C2C_TRAIN_BUY -> doC2CtrainBuy(move);
             case ASK_TRAIN_DROP -> doAskTrainDrop(move, rawMove);
             case FORCED_SALE -> doForcedSale(move, rawMove);
@@ -1249,6 +1251,7 @@ public class Game1856 extends AbstractGame {
             case END_CGR_DROP -> undoEndCGRdrop(move);
             case DROP_PORT -> undoDropPort(move);
             case FORCED_BANK_TRAIN -> undoForcedBankTrainBuy(move); //bank buy
+            case FORCED_POOL_BUY -> undoForcedPoolTrainBuy(move);
             case ASK_TRAIN_DROP -> undoAskTrainDrop(move);
             case FORCED_SALE -> undoForcedSale(move);
             case NEXT_CORP -> undoNextCorp(move);
@@ -1660,6 +1663,34 @@ public class Game1856 extends AbstractGame {
             board.setEvent(FORCED_SALE_EVENT);
             checkBankrupt(w);
         }
+    }
+
+    public void doForcedPoolTrainBuy(TrainMove move) {
+        Corp c = getCurrentCorp();
+        Wallet w = findWallet(move.getPlayer());
+        payCorpToBank(c, c.getCash());
+        payWalletToBank(w, move.getAmount());
+
+        int size = board.getTrainPool().get(0);
+        c.getTrains().add(size);
+        c.getTrains().sort(null);
+        board.getTrainPool().remove(Integer.valueOf(size));
+        if (w.getCash() < 0) {
+            board.setEvent(FORCED_SALE_EVENT);
+            checkBankrupt(w);
+        }
+    }
+
+    public void undoForcedPoolTrainBuy(TrainMove move) {
+        Corp c = findCorp(move.getCorp());
+        Wallet w = findWallet(move.getPlayer());
+        payBankToWallet(w, move.getAmount());
+        int size = c.getTrains().get(0);
+        c.getTrains().clear();
+        board.getTrainPool().add(size);
+        board.getTrainPool().sort(null);
+        payBankToCorp(c, TRAIN_PRICE[size] - move.getAmount());
+        board.setEvent(POST_REV_EVENT);
     }
 
     public void undoForcedBankTrainBuy(TrainMove move) {
@@ -2896,6 +2927,7 @@ public class Game1856 extends AbstractGame {
         enforcePhase(Era.OP);
         enforceEvent(POST_REV_EVENT);
         Corp c = getCurrentCorp();
+        if (!c.getTrains().isEmpty()) throw new IllegalStateException("Prez may not contribute voluntarily");
         int size = (board.getTrains().isEmpty()) ? 8 : board.getTrains().get(0);
         for(Integer poolTrain: board.getTrainPool()) {
             if(poolTrain < size) throw new IllegalStateException("Must buy smaller train in pool");
@@ -2903,8 +2935,21 @@ public class Game1856 extends AbstractGame {
         int price =  TRAIN_PRICE[size];
         int remainder = price - c.getCash();
         if (remainder < 0) throw new IllegalStateException("Buy a train normally before ending your turn");
-        if (!c.getTrains().isEmpty()) throw new IllegalStateException("Prez may not contribute voluntarily");
         makePrimaryMove(FORCED_BANK_TRAIN, c.getPrez(), c.getName(), remainder);
+        return board;
+    }
+
+    public Board1856 forcedPoolBuy() {
+        enforcePhase(Era.OP);
+        enforceEvent(POST_REV_EVENT);
+        Corp c = getCurrentCorp();
+        if (!c.getTrains().isEmpty()) throw new IllegalStateException("Prez may not contribute voluntarily");
+        if (board.getTrainPool().isEmpty()) throw new IllegalStateException("No trains in pool");
+        int size = board.getTrainPool().get(0);
+        int price = TRAIN_PRICE[size];
+        int remainder = price - c.getCash();
+        if (remainder < 0) throw new IllegalStateException("Buy a train normally before ending your turn");
+        makePrimaryMove(FORCED_POOL_BUY, c.getPrez(), c.getName(), remainder);
         return board;
     }
 
