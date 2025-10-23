@@ -2897,6 +2897,9 @@ public class Game1856 extends AbstractGame {
         enforceEvent(POST_REV_EVENT);
         Corp c = getCurrentCorp();
         int size = (board.getTrains().isEmpty()) ? 8 : board.getTrains().get(0);
+        for(Integer poolTrain: board.getTrainPool()) {
+            if(poolTrain < size) throw new IllegalStateException("Must buy smaller train in pool");
+        }
         int price =  TRAIN_PRICE[size];
         int remainder = price - c.getCash();
         if (remainder < 0) throw new IllegalStateException("Buy a train normally before ending your turn");
