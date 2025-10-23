@@ -2559,9 +2559,11 @@ public class Game1856 extends AbstractGame {
         if (c.getBankShares() < 1) throw new IllegalStateException("No Bank Shares Remain");
         if (w.getCash() + extraCash < c.getPar()) throw new IllegalStateException(FUNDS);
         if (w.getBlocks().contains(c.getName())) throw new IllegalStateException("No buy after sell same round");
-        for (Stock s: w.getStocks()) { //TODO exception for low price sections
+        for (Stock s: w.getStocks()) {
             if(!s.getCorp().equals(c.getName())) continue;
-            if(s.getAmount() >= 6) throw new IllegalStateException("Max 60% of company");
+            if(s.getAmount() >= 6 && c.getPrice().getPrice() > 40) {
+                throw new IllegalStateException("Max 60% of company");
+            }
         }
     }
 
