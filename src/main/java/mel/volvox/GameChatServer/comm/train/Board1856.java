@@ -43,6 +43,7 @@ public class Board1856 {
    boolean loanTaken = false; // clear after each corp, prevent 2xloan same turn
    boolean tilePlayed = false; // clear after revenue, prevent extra tile
    boolean tokenPlayed = false; // clear after revenue, prevent extra token
+   boolean bankBreach = false; //the end is nigh, don't start another stock round
    int bridgeTokens = 0;
    int tunnelTokens = 0;
 }

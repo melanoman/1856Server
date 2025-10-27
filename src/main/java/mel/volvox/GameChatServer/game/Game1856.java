@@ -94,6 +94,7 @@ public class Game1856 extends AbstractGame {
     public static final String DROP_PORT = "dropPort";
     public static final String NEXT_CORP = "nextCorp";
     public static final String END_OP_ROUND = "endOpRound";
+    public static final String BANK_BREACH = "bankBreach";
 
     public static final String START_CGR_REDEMPTIONS = "startCGR";
     public static final String AUTOPAY_CGR_LOANS = "autoPayCGR";
@@ -503,7 +504,11 @@ public class Game1856 extends AbstractGame {
             case CGR_TRAIN -> doCGRTrain(move);
             case TRADE -> doCGRTrade(move, false);
             case TRADE_PREZ -> doCGRTrade(move, true);
+            case BANK_BREACH -> doBankBreach(move);
             default -> throw new IllegalStateException("unknown move action: "+move.getAction());
+        }
+        if (rawMove && board.getBankCash() < 0 && !board.isBankBreach()) {
+            makeFollowMove(BANK_BREACH, "", "", 0);
         }
     }
 
@@ -862,8 +867,12 @@ public class Game1856 extends AbstractGame {
         board.setLoanTaken(false);
         board.setPassCount(0);
         if(board.getCurrentOpRound() == board.getMaxOpRounds()) {
-            board.setPhase(Era.STOCK.name());
-            board.setCurrentCorp("");
+            if(board.isBankBreach()) {
+                board.setPhase(Era.DONE.name());
+            } else {
+                board.setPhase(Era.STOCK.name());
+                board.setCurrentCorp("");
+            }
         } else {
             board.setCurrentOpRound(board.getCurrentOpRound() + 1);
             board.setCurrentCorp(board.getCorps().get(0).getName());
@@ -1278,9 +1287,18 @@ public class Game1856 extends AbstractGame {
             case CGR_TRAIN -> undoCGRTrain(move);
             case TRADE -> undoCGRTrade(move, false);
             case TRADE_PREZ -> undoCGRTrade(move, true);
+            case BANK_BREACH -> undoBankBreach(move);
             default -> { return false; }
         }
         return true;
+    }
+
+    private void doBankBreach(TrainMove move) {
+        board.setBankBreach(true);
+    }
+
+    private void undoBankBreach(TrainMove move) {
+        board.setBankBreach(false);
     }
 
     private void doC2CtrainBuy(TrainMove move) {
