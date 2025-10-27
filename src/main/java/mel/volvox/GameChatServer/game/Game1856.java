@@ -1466,8 +1466,19 @@ public class Game1856 extends AbstractGame {
         board.setCurrentPlayer(move.getCorp());
     }
 
-    private StockPrice calculateCGRpar(int total, int min, int size) {
-        return new StockPrice(100, StockPrice.PAR_COLUMN, 0); //TODO actually math this
+    public static StockPrice calculateCGRpar(int total, int min, int size) {
+        int avg = (size > 2) ? (total - min) / (size - 1) : (total / size);
+        if (avg > 117) {
+            int column = 2;
+            for(int i = avg - 142; i > 0; i -= 25) {
+                column ++;
+            }
+            return new StockPrice( 75 + 25*column, StockPrice.PAR_COLUMN + column, 0);
+        } else if (avg > 104) {
+            return new StockPrice( 110, StockPrice.PAR_COLUMN + 1, 0);
+        } else {
+            return new StockPrice(100, StockPrice.PAR_COLUMN, 0);
+        }
     }
 
     private void doFormCGR(TrainMove move, boolean rawMove) {
@@ -1612,7 +1623,7 @@ public class Game1856 extends AbstractGame {
         }
         if (w.getCash() > 0) {
             board.setEvent(POST_REV_EVENT);
-            makeFollowMove(CLEAR_BLOCKS, w.getName(), String.join(" ", w.getBlocks()), 0);
+            if (rawMove) makeFollowMove(CLEAR_BLOCKS, w.getName(), String.join(" ", w.getBlocks()), 0);
         } else {
             checkBankrupt(w);
         }
