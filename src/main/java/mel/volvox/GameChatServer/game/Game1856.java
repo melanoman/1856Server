@@ -518,7 +518,9 @@ public class Game1856 extends AbstractGame {
         board.getTrainPool().add(move.getAmount());
         board.getTrainPool().sort(null);
         if (rawMove) {
-            if(c.getTrains().size() < 4 && Collections.min(c.getTrains()) > 4) {
+            if(c.getTrains().isEmpty() ||
+                    (c.getTrains().size() < 4 && Collections.min(c.getTrains()) > 4)
+            ) {
                 makeFollowMove(END_CGR_DROP, board.getEvent(), "", 0);
             }
         }
