@@ -327,4 +327,11 @@ public class TrainController {
                                   @PathVariable int price) {
         return loadGame(table).c2cBuy(sellCorp, size, price);
     }
+
+    @PutMapping("1856/CGRtoken/{table}/{amount}")
+    @ResponseBody
+    synchronized Board1856 CGRtoken(@PathVariable String table,
+                                    @PathVariable String amount) {
+        return loadGame(table).CGRtoken(Integer.parseInt(amount));
+    }
 }

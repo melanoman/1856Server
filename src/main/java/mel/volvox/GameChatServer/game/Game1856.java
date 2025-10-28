@@ -91,6 +91,7 @@ public class Game1856 extends AbstractGame {
     public static final String DROP_CGR_TRAIN = "dropCGRTrain";
     public static final String DONE_CGR_DROP = "doneCGRdrop";
     public static final String END_CGR_DROP = "endCGRdrop";
+    public static final String SET_CGR_TOKENS = "setCGRtokens";
     public static final String DROP_PORT = "dropPort";
     public static final String NEXT_CORP = "nextCorp";
     public static final String END_OP_ROUND = "endOpRound";
@@ -493,6 +494,7 @@ public class Game1856 extends AbstractGame {
             case DROP_CGR_TRAIN -> doDropCGRtrain(move, rawMove);
             case DONE_CGR_DROP -> doDoneCGRdrop(move, rawMove);
             case END_CGR_DROP -> doEndCGRdrop(move);
+            case SET_CGR_TOKENS -> doCGRtokens(move, rawMove);
             case DROP_PORT -> doDropPort(move);
             case END_OP_ROUND -> doEndOpRound(move);
             case CLEAR_BLOCKS -> doClearBlocks(move);
@@ -1266,6 +1268,7 @@ public class Game1856 extends AbstractGame {
             case DROP_CGR_TRAIN -> undoDropCGRtrain(move);
             case DONE_CGR_DROP -> undoDoneCGRdrop(move);
             case END_CGR_DROP -> undoEndCGRdrop(move);
+            case SET_CGR_TOKENS -> undoCGRtokens(move);
             case DROP_PORT -> undoDropPort(move);
             case FORCED_BANK_TRAIN -> undoForcedBankTrainBuy(move); //bank buy
             case FORCED_POOL_BUY -> undoForcedPoolTrainBuy(move);
@@ -1293,6 +1296,17 @@ public class Game1856 extends AbstractGame {
             default -> { return false; }
         }
         return true;
+    }
+
+    private void doCGRtokens(TrainMove move, boolean rawMove) {
+        Corp cgr = findCorp(CORP_CGR);
+        cgr.setTokensUsed(move.getAmount());
+        board.setEvent(PRE_REV_EVENT);
+        setNextOpCorp(rawMove);
+    }
+
+    private void undoCGRtokens(TrainMove move) {
+        board.setEvent(ASK_CGR_TOKENS);
     }
 
     private void doBankBreach(TrainMove move) {
@@ -3169,6 +3183,15 @@ public class Game1856 extends AbstractGame {
         if(!seller.getTrains().contains(size)) throw new IllegalStateException("Train not found");
         if(buyer.getCash() < price) throw new IllegalStateException(FUNDS); //TODO can this be a forced buy?
         makePrimaryMove(C2C_TRAIN_BUY, ""+size, sellCorpName, price);
+        return board;
+    }
+
+    public Board1856 CGRtoken(int amount) {
+        enforcePhase(Era.OP);
+        enforceEvent(ASK_CGR_TOKENS);
+        if (amount < 1) throw new IllegalStateException("Must be at least one token");
+        if (amount > 10) throw new IllegalStateException("Cannot be more than 10 tokens");
+        makePrimaryMove(SET_CGR_TOKENS, "", "", amount);
         return board;
     }
 }
