@@ -334,4 +334,10 @@ public class TrainController {
                                     @PathVariable String amount) {
         return loadGame(table).CGRtoken(Integer.parseInt(amount));
     }
+
+    @PutMapping("1856/buyBankDiesel/{table}")
+    @ResponseBody
+    synchronized Board1856 bankDiesel(@PathVariable String table) {
+        return loadGame(table).bankDiesel();
+    }
 }

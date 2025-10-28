@@ -17,6 +17,7 @@ public class Game1856 extends AbstractGame {
 
     public static final int[] START_CASH = { 0, 0, 0, 500, 375, 300, 250 };
     public static final String NONE = "";
+    public static int DIESEL_TRAIN = 99;
 
     // error constants
     public static final String FUNDS = "Insufficient Funds";
@@ -76,6 +77,7 @@ public class Game1856 extends AbstractGame {
     public static final String PAYOUT = "payout";
     public static final String WITHHOLD = "withhold";
     public static final String BUY_BANK_TRAIN = "buyBankTrain";
+    public static final String BANK_DIESEL = "bankDiesel";
     public static final String RUST = "rust";
     public static final String RUST_TRAIN = "rustTrain";
     public static final String CLOSE_PRIVS = "closePrivs";
@@ -470,6 +472,7 @@ public class Game1856 extends AbstractGame {
             case PAYOUT -> doPayout(move);
             case WITHHOLD -> doWithhold(move);
             case BUY_BANK_TRAIN -> doBankTrain(move, rawMove);
+            case BANK_DIESEL -> doBankDiesel(move, rawMove);
             case BUY_POOL_TRAIN -> doPoolTrain(move);
             case RUST -> doRust(move, rawMove);
             case RUST_TRAIN -> doRustTrain(move);
@@ -649,6 +652,7 @@ public class Game1856 extends AbstractGame {
                 if (rawMove) makeFollowMove(RUST_TRAIN, "", corp.getName(), move.getAmount());
             }
         }
+        //TODO RUST POOL TRAIN
     }
 
     private void undoRust(TrainMove move) {
@@ -1256,6 +1260,7 @@ public class Game1856 extends AbstractGame {
             case PAYOUT -> undoPayout(move);
             case WITHHOLD -> undoWithhold(move);
             case BUY_BANK_TRAIN -> undoBankTrain(move);
+            case BANK_DIESEL -> undoBankDiesel(move);
             case BUY_POOL_TRAIN -> undoPoolTrain(move);
             case REDEEM_LOAN -> undoRedeemLoan(move);
             case RUST -> undoRust(move);
@@ -1814,6 +1819,21 @@ public class Game1856 extends AbstractGame {
         }
     }
 
+    public void doBankDiesel(TrainMove move, boolean rawMove) {
+        Corp c = getCurrentCorp();
+        c.getTrains().add(DIESEL_TRAIN);
+        payCorpToBank(c, 1100);
+        if (rawMove) {
+            //TODO detect first Diesel
+        }
+    }
+
+    public void undoBankDiesel(TrainMove move) {
+        Corp c = getCurrentCorp();
+        c.getTrains().remove(Integer.valueOf(DIESEL_TRAIN));
+        payBankToCorp(c, 1100);
+    }
+
     public void undoBankTrain(TrainMove move) {
         Corp c = findCorp(move.getCorp());
         payBankToCorp(c, TRAIN_PRICE[move.getAmount()]);
@@ -1961,7 +1981,7 @@ public class Game1856 extends AbstractGame {
     private void fundCorpIfSix(Wallet w, Corp c, int amount) {
         payWalletToBank(w, amount); // bank holds escrow
         if(c.getBankShares() == 4) { //release escrow
-            payBankToCorp(c, amount*10); //TODO TEST ALL_AT_ONCE FUNDING
+            payBankToCorp(c, amount*10);
         }
     }
 
@@ -3181,7 +3201,7 @@ public class Game1856 extends AbstractGame {
         Corp seller = findCorp(sellCorpName);
         //TODO special CGR rules for buying trains
         if(!seller.getTrains().contains(size)) throw new IllegalStateException("Train not found");
-        if(buyer.getCash() < price) throw new IllegalStateException(FUNDS); //TODO can this be a forced buy?
+        if(buyer.getCash() < price) throw new IllegalStateException(FUNDS);
         makePrimaryMove(C2C_TRAIN_BUY, ""+size, sellCorpName, price);
         return board;
     }
@@ -3192,6 +3212,17 @@ public class Game1856 extends AbstractGame {
         if (amount < 1) throw new IllegalStateException("Must be at least one token");
         if (amount > 10) throw new IllegalStateException("Cannot be more than 10 tokens");
         makePrimaryMove(SET_CGR_TOKENS, "", "", amount);
+        return board;
+    }
+
+    public Board1856 bankDiesel() {
+        enforcePhase(Era.OP);
+        enforceEvent(POST_REV_EVENT);
+        if(board.getTrains().size() > 1) throw new IllegalStateException("Diesels not available");
+        Corp c = getCurrentCorp();
+        if (c.getCash() < 1100) throw new IllegalStateException(FUNDS);
+        if (c.getTrains().size() >= trainLimit(board, c)) throw new IllegalStateException("Too many trains");
+        makePrimaryMove(BANK_DIESEL, "", c.getName(), 0);
         return board;
     }
 }
