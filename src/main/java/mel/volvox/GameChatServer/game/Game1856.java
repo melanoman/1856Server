@@ -1544,11 +1544,12 @@ public class Game1856 extends AbstractGame {
                 if(c.isHasOperated()) hasOperated = true;
             }
         }
-        CGRtrains.sort(null);
         if(dead.isEmpty()) {
-            //TODO abort CGR formation -- no loans defaulted
-            throw new IllegalStateException("TODO CGR not formed");
+            board.setCGRsize(Board1856.CGR_ABSENT);
+            setNextOpCorp(rawMove);
+            return;
         }
+        CGRtrains.sort(null);
         for(Wallet w: board.getWallets()) { //phase I record what will need to be restored
             int CGRcount = 0;
             for(Stock s:w.getStocks()) {

@@ -14,6 +14,7 @@ public class Board1856 {
    public static int CGR_PENDING = 1;
    public static int CGR_TEN_SHARES = 10;
    public static int CGR_TWENTY_SHARES = 20;
+   public static int CGR_ABSENT = -1;
 
    String name;
    int moveNumber;
