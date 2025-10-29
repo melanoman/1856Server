@@ -1776,7 +1776,7 @@ public class Game1856 extends AbstractGame {
 
     public void undoClearBlocks(TrainMove move) {
         Wallet w = findWallet(move.getPlayer());
-        w.setBlocks(new ArrayList<String>(Arrays.asList(move.getCorp().split(" "))));
+        w.setBlocks(new ArrayList<>(Arrays.asList(move.getCorp().split(" "))));
     }
 
     public void doPrezInterest(TrainMove move) {
@@ -2051,29 +2051,21 @@ public class Game1856 extends AbstractGame {
      * @return The highest level of train sold
      */
     private int highestTrainSold() {
-        switch (board.getTrains().size()) {
-            case 0: case 1:
-                return 6; //TODO figure out if a D has been sold
-            case 2: case 3: case 4:
-                return 5;
-            case 5: case 6: case 7: case 8:
-                return 4;
-            case 9: case 10: case 11: case 12: case 13:
-                return 3;
-            default:
-                return 2;
-        }
+        return switch (board.getTrains().size()) {
+            case 0, 1 -> board.isDieselBought() ? 8 : 6;
+            case 2, 3, 4 -> 5;
+            case 5, 6, 7, 8 -> 4;
+            case 9, 10, 11, 12, 13 -> 3;
+            default -> 2;
+        };
     }
 
     private int currentFloatType() {
-        switch (availableTrainLevel()) {
-            case 2: case 3: case 4:
-                return Corp.DESTINATION_TYPE;
-            case 5:
-                return Corp.INCREMENTAL_TYPE;
-            default:
-                return Corp.ALL_AT_ONCE_TYPE;
-        }
+        return switch (availableTrainLevel()) {
+            case 2, 3, 4 -> Corp.DESTINATION_TYPE;
+            case 5 -> Corp.INCREMENTAL_TYPE;
+            default -> Corp.ALL_AT_ONCE_TYPE;
+        };
     }
 
     private void undoSetPar(TrainMove move) {
@@ -2156,11 +2148,11 @@ public class Game1856 extends AbstractGame {
     }
 
     private int maxRounds() {
-        switch (highestTrainSold()) {
-            case 2:         return 1;
-            case 3: case 4: return 2;
-            default:        return 3;
-        }
+        return switch (highestTrainSold()) {
+            case 2 -> 1;
+            case 3, 4 -> 2;
+            default -> 3;
+        };
     }
 
     private void doEndStockRound(TrainMove move, boolean rawMove) {
