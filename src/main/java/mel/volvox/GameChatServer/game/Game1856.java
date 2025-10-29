@@ -641,33 +641,49 @@ public class Game1856 extends AbstractGame {
 
     private void doRust(TrainMove move, boolean rawMove) {
         if (move.getAmount() == 3) board.setCGRsize(Board1856.CGR_PENDING);
+        if (move.getAmount() == 4) board.setDieselBought(true);
         for(Corp corp: board.getCorps()) {
             int count = 0;
             for(Integer train: corp.getTrains()) {
-                if(train == move.getAmount()) { // only remove the
-                    count++;
-                }
+                if(train == move.getAmount()) count++;
             }
             for(int i=0; i<count; i++) {
                 if (rawMove) makeFollowMove(RUST_TRAIN, "", corp.getName(), move.getAmount());
             }
         }
-        //TODO RUST POOL TRAIN
+        if (rawMove) {
+            int count = 0;
+            for (Integer train : board.getTrainPool()) {
+                if (train == move.getAmount()) count++;
+            }
+            for(int i=0; i<count; i++) {
+                makeFollowMove(RUST_TRAIN, "", "", move.getAmount());
+            }
+        }
     }
 
     private void undoRust(TrainMove move) {
         if (move.getAmount() == 3) board.setCGRsize(Board1856.CGR_PRE_FORMATION);
+        if (move.getAmount() == 4) board.setDieselBought(false);
         board.setEvent(POST_REV_EVENT);
     }
 
     private void doRustTrain(TrainMove move) {
-        Corp c = findCorp(move.getCorp());
-        c.getTrains().removeIf(x -> x == move.getAmount());
+        if(!move.getCorp().isEmpty()) {
+            Corp c = findCorp(move.getCorp());
+            c.getTrains().removeIf(x -> x == move.getAmount());
+        } else {
+            board.getTrainPool().removeIf(x -> x == move.getAmount());
+        }
     }
 
     private void undoRustTrain(TrainMove move) {
-        Corp c = findCorp(move.getCorp());
-        c.getTrains().add(0, move.getAmount());
+        if (!move.getCorp().isEmpty()) {
+            Corp c = findCorp(move.getCorp());
+            c.getTrains().add(0, move.getAmount());
+        } else {
+            board.getTrainPool().add(0, move.getAmount());
+        }
     }
 
     private void doUseWS(TrainMove move) {
@@ -1824,7 +1840,9 @@ public class Game1856 extends AbstractGame {
         c.getTrains().add(DIESEL_TRAIN);
         payCorpToBank(c, 1100);
         if (rawMove) {
-            //TODO detect first Diesel
+            if(!board.isDieselBought()) {
+                makeFollowMove(RUST, "", "", 4);
+            }
         }
     }
 
