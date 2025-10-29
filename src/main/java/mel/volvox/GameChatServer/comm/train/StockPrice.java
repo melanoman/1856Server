@@ -92,4 +92,18 @@ public class StockPrice {
             return distance;
         }
     }
+
+    public static int encodePrice(StockPrice price) {
+        return price.getPrice() +
+                price.getX() * 1000 +
+                price.getY() * 100000;
+    }
+
+    public static StockPrice decodePrice(int code) {
+        StockPrice out = new StockPrice();
+        out.setPrice(code%1000);
+        out.setX(code%100000 / 1000);
+        out.setY(code/100000);
+        return out;
+    }
 }

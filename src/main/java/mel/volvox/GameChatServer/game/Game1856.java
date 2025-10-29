@@ -8,6 +8,9 @@ import mel.volvox.GameChatServer.model.train.TrainMoveID;
 import mel.volvox.GameChatServer.repository.TrainRepo;
 import mel.volvox.GameChatServer.service.DiceService;
 
+import static mel.volvox.GameChatServer.comm.train.StockPrice.encodePrice;
+import static mel.volvox.GameChatServer.comm.train.StockPrice.decodePrice;
+
 import java.util.*;
 
 public class Game1856 extends AbstractGame {
@@ -1389,21 +1392,6 @@ public class Game1856 extends AbstractGame {
     private void undoDropPort(TrainMove move) {
         Corp c = findCorp(move.getCorp());
         c.setPortRights(true);
-    }
-
-    //TODO make these static and put them in StockPrice
-    private int encodePrice(StockPrice price) {
-        return price.getPrice() +
-                price.getX() * 1000 +
-                price.getY() * 100000;
-    }
-
-    private StockPrice decodePrice(int code) {
-        StockPrice out = new StockPrice();
-        out.setPrice(code%1000);
-        out.setX(code%100000 / 1000);
-        out.setY(code/100000);
-        return out;
     }
 
     //no do actions -- recording source of initial CGR assets so they can be returned
