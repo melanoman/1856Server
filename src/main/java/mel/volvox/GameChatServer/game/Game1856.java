@@ -798,8 +798,10 @@ public class Game1856 extends AbstractGame {
         payBankToCorp(c, c.getPoolShares() * move.getAmount());
         for(Wallet w: board.getWallets()) {
             for(Stock stock: w.getStocks()) {
-                if (stock.getCorp().equals(move.getCorp())) { //TODO special CGR payouts
-                    payBankToWallet(w, move.getAmount() * stock.getAmount());
+                if (stock.getCorp().equals(move.getCorp())) {
+                    int amount = move.getAmount() * stock.getAmount();
+                    if (board.getCGRsize() == 20 && stock.getCorp().equals(CORP_CGR)) amount /=2;
+                    payBankToWallet(w, amount);
                 }
             }
         }
@@ -814,8 +816,10 @@ public class Game1856 extends AbstractGame {
         payCorpToBank(c, c.getPoolShares() * move.getAmount());
         for(Wallet w: board.getWallets()) {
             for(Stock stock: w.getStocks()) {
-                if (stock.getCorp().equals(move.getCorp())) { //TODO special CGR payouts
-                    payWalletToBank(w, move.getAmount() * stock.getAmount());
+                if (stock.getCorp().equals(move.getCorp())) {
+                    int amount = move.getAmount() * stock.getAmount();
+                    if (board.getCGRsize() == 20 && stock.getCorp().equals(CORP_CGR)) amount /=2;
+                    payWalletToBank(w, amount);
                 }
             }
         }
