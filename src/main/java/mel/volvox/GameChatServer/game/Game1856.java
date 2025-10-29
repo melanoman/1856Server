@@ -25,7 +25,7 @@ public class Game1856 extends AbstractGame {
     // error constants
     public static final String FUNDS = "Insufficient Funds";
 
-    // action constants --- these make the database table human readable
+    // action constants --- these make the database table human-readable
     public static final String ADD_PLAYER = "addPlayer";
     public static final String RENAME_PLAYER = "renamePlayer";
     public static final String START_GAME = "startGame";
@@ -276,7 +276,7 @@ public class Game1856 extends AbstractGame {
         for(TrainMove move: moves) {
             loadMove(move);
         }
-        recaculateStandings();
+        recalculateStandings();
     }
 
     public void loadMove(TrainMove move) {
@@ -1950,8 +1950,7 @@ public class Game1856 extends AbstractGame {
         int maxCount = 1;
         String newPrez = "";
         for(Wallet w: board.getWallets()) {
-            boolean prez = false;
-            if (w.getName().equals(c.getPrez())) prez = true;
+            boolean prez = w.getName().equals(c.getPrez());
             for(Stock s: w.getStocks()) {
                 if (s.getCorp().equals(corpName)) {
                     if (prez) prezCount = s.getAmount();
@@ -2205,12 +2204,6 @@ public class Game1856 extends AbstractGame {
         }
     }
 
-    private int playerIndex(int startIndex, int checks) {
-        int out = startIndex + checks;
-        if (out >= board.getPlayers().size()) out -= board.getPlayers().size();
-        return out;
-    }
-
     private void setNextOpCorp(boolean rawMove) {
         if (!rawMove) return;
         if (board.getCGRsize() == Board1856.CGR_PENDING) {
@@ -2387,7 +2380,7 @@ public class Game1856 extends AbstractGame {
     }
     private void makePrimaryMove(String action, String player, String corp, int amount) {
         makeMove(action, player, corp, amount, false);
-        recaculateStandings();
+        recalculateStandings();
     }
 
     private void makeFollowMove(String action, String player, String corp, int amount) {
@@ -2436,7 +2429,7 @@ public class Game1856 extends AbstractGame {
             TrainMove nextMove = history.get(board.getMoveNumber() - board.getUndoCount());
             if (nextMove.isFollow()) return redo(recalc);
         }
-        if(recalc) recaculateStandings();
+        if(recalc) recalculateStandings();
         return board;
     }
 
@@ -2444,7 +2437,7 @@ public class Game1856 extends AbstractGame {
         while (board.getUndoCount() > 0) {
             redo(false);
         }
-        recaculateStandings();
+        recalculateStandings();
         return board;
     }
 
@@ -3091,7 +3084,7 @@ public class Game1856 extends AbstractGame {
         return board;
     }
 
-    private void recaculateStandings() {
+    private void recalculateStandings() {
         for(Wallet w: board.getWallets()) {
             int value = w.getCash();
             for(Priv p: w.getPrivates()) value += priv2price.get(p.getCorp());
