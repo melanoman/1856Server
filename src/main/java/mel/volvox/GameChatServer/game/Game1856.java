@@ -808,7 +808,6 @@ public class Game1856 extends AbstractGame {
                 }
             }
         }
-        //TODO special CGR movements
     }
 
     private void undoPayout(TrainMove move) {
@@ -1018,7 +1017,10 @@ public class Game1856 extends AbstractGame {
         payBankToWallet(w, move.getAmount() * c.getPrice().getPrice());
         w.getBlocks().add(move.getCorp()); // one per xaction
         if(rawMove) {
-            int drop = c.getPrice().previewDrop(move.getAmount());
+            int tenths = (board.getCGRsize() == 20 && move.getCorp().equals(CORP_CGR)) ?
+                    move.getAmount() / 2 : move.getAmount();
+            int drop = c.getPrice().previewDrop(tenths);
+            //TODO if loaner diesel no CGR move
             if (drop > 0) makeFollowMove(DROP_STOCK_PRICE, "", move.getCorp(), drop);
             updatePrez(move.getCorp());
             makeFollowMove(REORDER_CORP, "", move.getCorp(), board.getCorps().indexOf(c));
@@ -2830,6 +2832,7 @@ public class Game1856 extends AbstractGame {
             makeFollowMove(INTEREST, "", c.getName(), downPayment);
             makeFollowMove(PAYOUT, restorePreRev(), c.getName(), (amount - remainder) / 10);
         }
+        //TODO if loanerDiesel don't move
         if(c.getPrice().rightEdge()) {
             if (!c.getPrice().ceiling()) {
                 makeFollowMove(PRICE_UP, "", c.getName(), 1);
@@ -2862,6 +2865,7 @@ public class Game1856 extends AbstractGame {
             if (interest > 0) makeFollowMove(INTEREST, "", c.getName(), interest);
             makeFollowMove(WITHHOLD, restorePreRev(), c.getName(), amount);
         }
+        //TODO if loanerDiesel don't move
         if(c.getPrice().leftEdge()) {
             if (!c.getPrice().floor()) { //TODO check closure (where?) price == 30, notfloor?
                 makeFollowMove(PRICE_DOWN, "", c.getName(), 1);
