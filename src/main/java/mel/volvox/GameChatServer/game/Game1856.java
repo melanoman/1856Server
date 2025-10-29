@@ -596,7 +596,7 @@ public class Game1856 extends AbstractGame {
 
     /**
      * ClosePriv and RemovePriv work as a pair.
-     * ClosePriv records where the privs has been by creating Remove follows, then wipes the lists.
+     * ClosePriv records where the priv has been by creating Remove follows, then wipes the lists.
      * Remove Priv does nothing on do, but then has all then info on undo.
      * This avoids mutating the list while ClosePriv is still iterating on do
      */
@@ -627,7 +627,7 @@ public class Game1856 extends AbstractGame {
 
     /**
      * CORP ==> name of priv
-     * AMOUNT ==> positiv from player, negative from corp (abs(x)-1 ==> priv.amount)
+     * AMOUNT ==> positive from player, negative from corp (abs(x)-1 ==> priv.amount)
      * PLAYER ==> name of player or corp losing the priv
      */
     private void undoRemovePriv(TrainMove move) {
@@ -2852,7 +2852,7 @@ public class Game1856 extends AbstractGame {
         }
         //TODO if loanerDiesel don't move
         if(c.getPrice().leftEdge()) {
-            if (!c.getPrice().floor()) { //TODO check closure (where?) price == 30, notfloor?
+            if (!c.getPrice().floor()) { //TODO check closure (where?) price == 30, not floor?
                 makeFollowMove(PRICE_DOWN, "", c.getName(), 1);
             }
         } else {
