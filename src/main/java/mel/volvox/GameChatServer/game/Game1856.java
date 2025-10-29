@@ -1354,8 +1354,7 @@ public class Game1856 extends AbstractGame {
         seller.getTrains().remove(size);
         buyer.getTrains().add(size);
         buyer.getTrains().sort(null);
-        buyer.setCash(buyer.getCash() - move.getAmount());
-        seller.setCash(seller.getCash() + move.getAmount());
+        payCorpToCorp(buyer, seller, move.getAmount());
     }
 
     private void undoC2CtrainBuy(TrainMove move) {
@@ -1365,8 +1364,7 @@ public class Game1856 extends AbstractGame {
         buyer.getTrains().remove(size);
         seller.getTrains().add(size);
         seller.getTrains().sort(null);
-        seller.setCash(seller.getCash() - move.getAmount());
-        buyer.setCash(buyer.getCash() + move.getAmount());
+        payCorpToCorp(seller, buyer, move.getAmount());
     }
 
     private void doAskTrainDrop(TrainMove move, boolean rawMove) {
@@ -2750,6 +2748,7 @@ public class Game1856 extends AbstractGame {
         int out = 0;
         for (Stock s: w.getStocks()) {
             if(corp2price.get(s.getCorp()) <= 50) continue; // yellow and brown stock don't count
+            //TODO if big CGR count half rounded UP
             out += s.getAmount();
             if (s.isPresident()) out --;
         }
