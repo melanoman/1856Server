@@ -2130,7 +2130,7 @@ public class Game1856 extends AbstractGame {
         while (i > 0) {
             i--;
             Corp c2 = board.getCorps().get(i);
-            if (c2.getPrice() != null || c2.getName().compareTo(c.getName()) > 0) continue;
+            if (c2.getPar() == 0 && c2.getName().compareTo(c.getName()) > 0) continue;
             return i+1;
         }
         return 0;
