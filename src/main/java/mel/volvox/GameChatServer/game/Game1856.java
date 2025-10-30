@@ -2740,8 +2740,9 @@ public class Game1856 extends AbstractGame {
         //TODO NOW if sell can buy?
         int count = 0;
         boolean odd = false;
+        boolean big = board.getCGRsize() == 20;
         for (Stock s: w.getStocks()) {
-            if(s.getCorp().equals(CORP_CGR)) {
+            if(big && s.getCorp().equals(CORP_CGR)) {
                 count += s.getAmount() / 2;
                 if (s.getAmount() % 2 == 1) odd = true;
             } else {
@@ -2750,7 +2751,7 @@ public class Game1856 extends AbstractGame {
             if(s.isPresident()) count--;
         }
         for (StockSale ss: sales) {
-            if(ss.getName().equals(CORP_CGR)) {
+            if(big && ss.getName().equals(CORP_CGR)) {
                 count -= ss.getAmount() / 2;
                 if (ss.getAmount() % 2 == 1) odd = ! odd;
             } else {
@@ -2758,7 +2759,7 @@ public class Game1856 extends AbstractGame {
             }
             if(prezWillChange(ss)) count ++;
         }
-        int incr = (cgr && odd) ? 0 : 1;
+        int incr = odd ? (cgr ? 0 : 2) : 1;
         if (count + incr > certLimit()) throw new IllegalStateException("Certificate Limit Violation");
     }
 
