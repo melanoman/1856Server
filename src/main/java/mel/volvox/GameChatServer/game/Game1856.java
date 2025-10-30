@@ -2658,20 +2658,26 @@ public class Game1856 extends AbstractGame {
         enforcePhase(Era.STOCK, Era.INITIAL);
         if (c.getBankShares() < 1) throw new IllegalStateException("No Bank Shares Remain");
         if (w.getCash() + extraCash < c.getPar()) throw new IllegalStateException(FUNDS);
+        canBuyAny(c, w);
+    }
+
+    private void canBuyAny(Corp c, Wallet w) {
         if (w.getBlocks().contains(c.getName())) throw new IllegalStateException("No buy after sell same round");
+        boolean bigCGR = c.getName().equals(CORP_CGR) && board.getCGRsize() == 20;
         for (Stock s: w.getStocks()) {
             if(!s.getCorp().equals(c.getName())) continue;
-            if(s.getAmount() >= 6 && c.getPrice().getPrice() > 40) {
+            if(s.getAmount() >= (bigCGR ? 12 : 6) && c.getPrice().getPrice() > 40) {
                 throw new IllegalStateException("Max 60% of company");
             }
         }
+        enforceCertLimit(new ArrayList<>(), w, bigCGR);
     }
 
     synchronized public Board1856 buyBank(String corpName) {
         Wallet w = findWallet(board.getCurrentPlayer());
         Corp c = findCorp(corpName);
         canBuyBank(c, w, 0);
-        if (certCount(w) + 1 > certLimit()) throw new IllegalStateException("Certificate Limit Violation");
+        boolean bigCGR = corpName.equals(CORP_CGR) && board.getCGRsize() == 20;
         makePrimaryMove(STOCK_BUY_BANK, board.getCurrentPlayer(), corpName, c.getPar());
         makeFollowMove(END_STOCK_ACTION, board.getCurrentPlayer(), "", 0);
         return board;
@@ -2681,18 +2687,14 @@ public class Game1856 extends AbstractGame {
         enforcePhase(Era.STOCK, Era.INITIAL);
         if (c.getPoolShares() < 1) throw new IllegalStateException("No pool shares available");
         if(w.getCash() + extraCash < c.getPrice().getPrice()) throw new IllegalStateException(FUNDS);
-        if (w.getBlocks().contains(c.getName())) throw new IllegalStateException("No buy after sell same round");
-        for (Stock s: w.getStocks()) { //TODO exception for low price sections
-            if(!s.getCorp().equals(c.getName())) continue;
-            if(s.getAmount() >= 6) throw new IllegalStateException("Max 60% of company");
-        }
+        canBuyAny(c, w);
     }
 
     synchronized public Board1856 buyPool(String corpName) {
         Wallet w = findWallet(board.getCurrentPlayer());
         Corp c = findCorp(corpName);
         canBuyPool(c, w, 0);
-        if (certCount(w) + 1 > certLimit()) throw new IllegalStateException("Certificate Limit Violation");
+        enforceCertLimit(new ArrayList<>(), w, corpName.equals(CORP_CGR));
         makePrimaryMove(STOCK_BUY_POOL, board.getCurrentPlayer(), corpName, c.getPrice().getPrice());
         makeFollowMove(END_STOCK_ACTION, board.getCurrentPlayer(), "", 0);
         return board;
@@ -2734,6 +2736,32 @@ public class Game1856 extends AbstractGame {
         return value;
     }
 
+    private void enforceCertLimit(List<StockSale> sales, Wallet w, boolean cgr) {
+        //TODO NOW if sell can buy?
+        int count = 0;
+        boolean odd = false;
+        for (Stock s: w.getStocks()) {
+            if(s.getCorp().equals(CORP_CGR)) {
+                count += s.getAmount() / 2;
+                if (s.getAmount() % 2 == 1) odd = true;
+            } else {
+                count += s.getAmount();
+            }
+            if(s.isPresident()) count--;
+        }
+        for (StockSale ss: sales) {
+            if(ss.getName().equals(CORP_CGR)) {
+                count -= ss.getAmount() / 2;
+                if (ss.getAmount() % 2 == 1) odd = ! odd;
+            } else {
+                count -= ss.getAmount();
+            }
+            if(prezWillChange(ss)) count ++;
+        }
+        int incr = (cgr && odd) ? 0 : 1;
+        if (count + incr > certLimit()) throw new IllegalStateException("Certificate Limit Violation");
+    }
+
     synchronized public Board1856 sellBuy(String buyType, String buyCorpName, int par, List<StockSale> sales) {
         boolean isBank = false;
         boolean isPar = false;
@@ -2749,11 +2777,9 @@ public class Game1856 extends AbstractGame {
         }
         Corp c = findCorp(buyCorpName);
         checkSalesList(sales);
+        enforceCertLimit(sales, w, board.getCGRsize() == 20 && buyCorpName.equals(CORP_CGR));
+
         int extraCash = salesValue(sales);
-        int extraCerts = certValue(sales);
-        if (certCount(w) + ((isPar) ? 2 : 1) > certLimit() + extraCerts) {
-            throw new IllegalStateException("Certificate Limit Violation");
-        }
         if (isBank) canBuyBank(c, w, extraCash);
         else if (isPar) canPar(c, par, w, extraCash);
         else canBuyPool(c, w, extraCash);
