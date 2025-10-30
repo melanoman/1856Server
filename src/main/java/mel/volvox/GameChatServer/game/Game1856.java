@@ -2737,7 +2737,6 @@ public class Game1856 extends AbstractGame {
     }
 
     private void enforceCertLimit(List<StockSale> sales, Wallet w, boolean cgr) {
-        //TODO NOW if sell can buy?
         int count = 0;
         boolean odd = false;
         boolean big = board.getCGRsize() == 20;
