@@ -2772,8 +2772,11 @@ public class Game1856 extends AbstractGame {
         int out = 0;
         for (Stock s: w.getStocks()) {
             if(corp2price.get(s.getCorp()) <= 50) continue; // yellow and brown stock don't count
-            //TODO if big CGR count half rounded UP
-            out += s.getAmount();
+            if(board.getCGRsize() > 10 && s.getCorp().equals(CORP_CGR)) {
+                out += (s.getAmount() + 1) / 2;
+            } else {
+                out += s.getAmount();
+            }
             if (s.isPresident()) out --;
         }
         return out + w.getPrivates().size();
