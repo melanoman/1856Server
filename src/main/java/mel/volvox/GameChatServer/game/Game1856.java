@@ -20,7 +20,7 @@ public class Game1856 extends AbstractGame {
 
     public static final int[] START_CASH = { 0, 0, 0, 500, 375, 300, 250 };
     public static final String NONE = "";
-    public static int DIESEL_TRAIN = 8;
+    public static Integer DIESEL_TRAIN = 8;
 
     // error constants
     public static final String FUNDS = "Insufficient Funds";
@@ -81,6 +81,7 @@ public class Game1856 extends AbstractGame {
     public static final String WITHHOLD = "withhold";
     public static final String BUY_BANK_TRAIN = "buyBankTrain";
     public static final String BANK_DIESEL = "bankDiesel";
+    public static final String TRADEIN = "tradein";
     public static final String RUST = "rust";
     public static final String RUST_TRAIN = "rustTrain";
     public static final String CLOSE_PRIVS = "closePrivs";
@@ -477,6 +478,7 @@ public class Game1856 extends AbstractGame {
             case WITHHOLD -> doWithhold(move);
             case BUY_BANK_TRAIN -> doBankTrain(move, rawMove);
             case BANK_DIESEL -> doBankDiesel(move, rawMove);
+            case TRADEIN -> doTradein(move, rawMove);
             case BUY_POOL_TRAIN -> doPoolTrain(move);
             case RUST -> doRust(move, rawMove);
             case RUST_TRAIN -> doRustTrain(move);
@@ -1279,6 +1281,7 @@ public class Game1856 extends AbstractGame {
             case WITHHOLD -> undoWithhold(move);
             case BUY_BANK_TRAIN -> undoBankTrain(move);
             case BANK_DIESEL -> undoBankDiesel(move);
+            case TRADEIN -> undoTradein(move);
             case BUY_POOL_TRAIN -> undoPoolTrain(move);
             case REDEEM_LOAN -> undoRedeemLoan(move);
             case RUST -> undoRust(move);
@@ -1319,6 +1322,32 @@ public class Game1856 extends AbstractGame {
             default -> { return false; }
         }
         return true;
+    }
+
+    private void doTradein(TrainMove move, boolean rawMove) {
+        Corp c = findCorp(move.getCorp());
+        c.getTrains().remove(Integer.valueOf(move.getAmount()));
+        board.getTrainPool().add(move.getAmount());
+        c.getTrains().add(DIESEL_TRAIN);
+        c.getTrains().sort(null);
+        payCorpToBank(c, 750);
+        if (rawMove) {
+            if (board.isCGRfreeze() && c.getName().equals(CORP_CGR)) {
+                makeFollowMove(UNFREEZE, "", "", 0);
+            }
+            if (!board.isDieselBought()) {
+                makeFollowMove(RUST, "", "", 4);
+            }
+        }
+    }
+
+    private void undoTradein(TrainMove move) {
+        Corp c = findCorp(move.getCorp());
+        c.getTrains().remove(DIESEL_TRAIN);
+        c.getTrains().add(move.getAmount());
+        c.getTrains().sort(null);
+        board.getTrainPool().remove(Integer.valueOf(move.getAmount()));
+        payBankToCorp(c, 750);
     }
 
     private void doUnfreeze() {
@@ -3233,6 +3262,16 @@ public class Game1856 extends AbstractGame {
         if (c.getCash() < 1100) throw new IllegalStateException(FUNDS);
         if (c.getTrains().size() >= trainLimit(board, c)) throw new IllegalStateException("Too many trains");
         makePrimaryMove(BANK_DIESEL, "", c.getName(), 0);
+        return board;
+    }
+
+    public Board1856 tradein(int size) {
+        enforcePhase(Era.OP);
+        enforceEvent(POST_REV_EVENT);
+        Corp c = getCurrentCorp();
+        if(!c.getTrains().contains(size)) throw new IllegalStateException("No such train");
+        if(c.getCash() < 750) throw new IllegalStateException(FUNDS);
+        makePrimaryMove(TRADEIN, "", c.getName(), size);
         return board;
     }
 }

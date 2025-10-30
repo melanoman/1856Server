@@ -340,4 +340,11 @@ public class TrainController {
     synchronized Board1856 bankDiesel(@PathVariable String table) {
         return loadGame(table).bankDiesel();
     }
+
+    @PutMapping("1856/tradein/{table}/{size}")
+    @ResponseBody
+    synchronized Board1856 tradein(@PathVariable String table,
+                                   @PathVariable int size) {
+        return loadGame(table).tradein(size);
+    }
 }
