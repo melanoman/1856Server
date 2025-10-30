@@ -46,6 +46,7 @@ public class Board1856 {
    boolean tokenPlayed = false; // clear after revenue, prevent extra token
    boolean bankBreach = false; //the end is nigh, don't start another stock round
    boolean dieselBought = false;
+   boolean CGRfreeze = false;
    int bridgeTokens = 0;
    int tunnelTokens = 0;
 }

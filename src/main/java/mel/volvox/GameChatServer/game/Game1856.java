@@ -20,7 +20,7 @@ public class Game1856 extends AbstractGame {
 
     public static final int[] START_CASH = { 0, 0, 0, 500, 375, 300, 250 };
     public static final String NONE = "";
-    public static int DIESEL_TRAIN = 99;
+    public static int DIESEL_TRAIN = 8;
 
     // error constants
     public static final String FUNDS = "Insufficient Funds";
@@ -96,6 +96,7 @@ public class Game1856 extends AbstractGame {
     public static final String DROP_CGR_TRAIN = "dropCGRTrain";
     public static final String DONE_CGR_DROP = "doneCGRdrop";
     public static final String END_CGR_DROP = "endCGRdrop";
+    public static final String UNFREEZE = "unfreeze";
     public static final String SET_CGR_TOKENS = "setCGRtokens";
     public static final String DROP_PORT = "dropPort";
     public static final String NEXT_CORP = "nextCorp";
@@ -498,8 +499,8 @@ public class Game1856 extends AbstractGame {
             case FORM_CGR -> doFormCGR(move, rawMove);
             case DROP_TRAIN -> doDropTrain(move);
             case DROP_CGR_TRAIN -> doDropCGRtrain(move, rawMove);
-            case DONE_CGR_DROP -> doDoneCGRdrop(move, rawMove);
-            case END_CGR_DROP -> doEndCGRdrop(move);
+            case DONE_CGR_DROP, END_CGR_DROP -> doDoneCGRdrop(move);
+            case UNFREEZE -> doUnfreeze();
             case SET_CGR_TOKENS -> doCGRtokens(move, rawMove);
             case DROP_PORT -> doDropPort(move);
             case END_OP_ROUND -> doEndOpRound(move);
@@ -539,14 +540,6 @@ public class Game1856 extends AbstractGame {
         c.getTrains().add(move.getAmount());
         c.getTrains().sort(null);
         board.getTrainPool().remove(Integer.valueOf(move.getAmount()));
-    }
-
-    private void doEndCGRdrop(TrainMove move) {
-        board.setEvent(ASK_CGR_TOKENS);
-    }
-
-    private void undoEndCGRdrop(TrainMove move) {
-        board.setEvent(move.getPlayer());
     }
 
     private void doRedeemLoan(TrainMove move) {
@@ -1020,9 +1013,9 @@ public class Game1856 extends AbstractGame {
             int tenths = (board.getCGRsize() == 20 && move.getCorp().equals(CORP_CGR)) ?
                     move.getAmount() / 2 : move.getAmount();
             int drop = c.getPrice().previewDrop(tenths);
-            //TODO if loaner diesel no CGR move
-            if (drop > 0) makeFollowMove(DROP_STOCK_PRICE, "", move.getCorp(), drop);
             updatePrez(move.getCorp());
+            if(c.getName().equals(CORP_CGR) && board.isCGRfreeze()) return;
+            if (drop > 0) makeFollowMove(DROP_STOCK_PRICE, "", move.getCorp(), drop);
             makeFollowMove(REORDER_CORP, "", move.getCorp(), board.getCorps().indexOf(c));
         }
     }
@@ -1296,8 +1289,8 @@ public class Game1856 extends AbstractGame {
             case C2C_TRAIN_BUY -> undoC2CtrainBuy(move);
             case DROP_TRAIN -> undoDropTrain(move);
             case DROP_CGR_TRAIN -> undoDropCGRtrain(move);
-            case DONE_CGR_DROP -> undoDoneCGRdrop(move);
-            case END_CGR_DROP -> undoEndCGRdrop(move);
+            case DONE_CGR_DROP, END_CGR_DROP -> undoDoneCGRdrop(move);
+            case UNFREEZE -> undoUnfreeze();
             case SET_CGR_TOKENS -> undoCGRtokens(move);
             case DROP_PORT -> undoDropPort(move);
             case FORCED_BANK_TRAIN -> undoForcedBankTrainBuy(move); //bank buy
@@ -1326,6 +1319,14 @@ public class Game1856 extends AbstractGame {
             default -> { return false; }
         }
         return true;
+    }
+
+    private void doUnfreeze() {
+        board.setCGRfreeze(false);
+    }
+
+    private void undoUnfreeze() {
+        board.setCGRfreeze(true);
     }
 
     private void doCGRtokens(TrainMove move, boolean rawMove) {
@@ -1376,12 +1377,16 @@ public class Game1856 extends AbstractGame {
         board.setEvent(move.getPlayer());
     }
 
-    private void doDoneCGRdrop(TrainMove move, boolean rawMove) {
+    private void doDoneCGRdrop(TrainMove move) {
         board.setEvent(ASK_CGR_TOKENS);
+        Corp c = findCorp(CORP_CGR);
+        for(Integer train:c.getTrains()) if(train > 4) return;
+        board.setCGRfreeze(true);
     }
 
     private void undoDoneCGRdrop(TrainMove move) {
         board.setEvent(ASK_CGR_TRAIN_DROP);
+        board.setCGRfreeze(false);
     }
 
     private void doDropPort(TrainMove move) {
@@ -1645,7 +1650,7 @@ public class Game1856 extends AbstractGame {
         w.getBlocks().add(c.getName());
         sharesWalletToPool(w, c, move.getAmount());
         payBankToWallet(w, c.getPrice().getPrice() * move.getAmount());
-        if(rawMove) {
+        if(rawMove && (!board.isCGRfreeze() || !c.getName().equals(CORP_CGR))) {
             int drop = c.getPrice().previewDrop(move.getAmount());
             if (drop > 0) makeFollowMove(DROP_STOCK_PRICE, "", move.getCorp(), drop);
             updatePrez(move.getCorp());
@@ -1678,7 +1683,7 @@ public class Game1856 extends AbstractGame {
         board.setEvent(FORCED_SALE_EVENT);
     }
 
-    public void doDropTrain(TrainMove move) { //TODO preserve train ordering on undo
+    public void doDropTrain(TrainMove move) {
         Corp c = findCorp(move.getCorp());
         board.getTrainPool().add(c.getTrains().remove(move.getAmount()));
         board.getTrainPool().sort(null);
@@ -1702,16 +1707,15 @@ public class Game1856 extends AbstractGame {
         board.setEvent(TRAIN_DROP_EVENT);
     }
 
-    // this is for bank buys only
     public void doForcedBankTrainBuy(TrainMove move, boolean rawMove) {
         Corp c = getCurrentCorp();
         Wallet w = findWallet(move.getPlayer());
         payCorpToBank(c, c.getCash());
         payWalletToBank(w, move.getAmount());
-        int size = board.getTrains().get(0);
+        int size = board.getTrains().get(0); //TODO buy D if empty
         c.getTrains().add(0, size);
         board.getTrains().remove(0);
-        if (rawMove) { // TODO first Diesel
+        if (rawMove) {
             switch(board.getTrains().size()) {
                 case 1: prepCGR(); break;
                 case 4: makeFollowMove(CLOSE_PRIVS, "", "", 0); break;
@@ -1806,6 +1810,9 @@ public class Game1856 extends AbstractGame {
         payCorpToBank(c, TRAIN_PRICE[move.getAmount()]);
         c.getTrains().add(board.getTrains().remove(0));
         if (rawMove) { // TODO first Diesel
+            if(move.getAmount() > 4 && c.getName().equals(CORP_CGR) && board.isCGRfreeze()) {
+                makeFollowMove(UNFREEZE, "", "", 0);
+            }
             switch(board.getTrains().size()) {
                 case 1: prepCGR(); break;
                 case 4: makeFollowMove(CLOSE_PRIVS, "", "", 0); break;
@@ -1833,6 +1840,9 @@ public class Game1856 extends AbstractGame {
         c.getTrains().add(DIESEL_TRAIN);
         payCorpToBank(c, 1100);
         if (rawMove) {
+            if(board.isCGRfreeze() && move.getCorp().equals(CORP_CGR)) {
+                makeFollowMove(UNFREEZE, "", "", 0);
+            }
             if(!board.isDieselBought()) {
                 makeFollowMove(RUST, "", "", 4);
             }
@@ -2817,7 +2827,7 @@ public class Game1856 extends AbstractGame {
             makeFollowMove(INTEREST, "", c.getName(), downPayment);
             makeFollowMove(PAYOUT, restorePreRev(), c.getName(), (amount - remainder) / 10);
         }
-        //TODO if loanerDiesel don't move
+        if(c.getName().equals(CORP_CGR) && board.isCGRfreeze()) return board;
         if(c.getPrice().rightEdge()) {
             if (!c.getPrice().ceiling()) {
                 makeFollowMove(PRICE_UP, "", c.getName(), 1);
@@ -2850,7 +2860,7 @@ public class Game1856 extends AbstractGame {
             if (interest > 0) makeFollowMove(INTEREST, "", c.getName(), interest);
             makeFollowMove(WITHHOLD, restorePreRev(), c.getName(), amount);
         }
-        //TODO if loanerDiesel don't move
+        if(c.getName().equals(CORP_CGR) && board.isCGRfreeze()) return board;
         if(c.getPrice().leftEdge()) {
             if (!c.getPrice().floor()) { //TODO check closure (where?) price == 30, not floor?
                 makeFollowMove(PRICE_DOWN, "", c.getName(), 1);
@@ -3198,7 +3208,8 @@ public class Game1856 extends AbstractGame {
         enforcePhase(Era.OP);
         Corp buyer = getCurrentCorp();
         Corp seller = findCorp(sellCorpName);
-        //TODO special CGR rules for buying trains
+        boolean cgrInvoled = buyer.getName().equals(CORP_CGR) || seller.getName().equals(CORP_CGR);
+        if (cgrInvoled && price != TRAIN_PRICE[size]) throw new IllegalStateException("CGR must use face price");
         if(!seller.getTrains().contains(size)) throw new IllegalStateException("Train not found");
         if(buyer.getCash() < price) throw new IllegalStateException(FUNDS);
         makePrimaryMove(C2C_TRAIN_BUY, ""+size, sellCorpName, price);
