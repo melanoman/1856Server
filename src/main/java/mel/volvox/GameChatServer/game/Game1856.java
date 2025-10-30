@@ -2779,6 +2779,7 @@ public class Game1856 extends AbstractGame {
             }
             if (s.isPresident()) out --;
         }
+        System.out.println(w.getName()+":"+out);
         return out + w.getPrivates().size();
     }
 
