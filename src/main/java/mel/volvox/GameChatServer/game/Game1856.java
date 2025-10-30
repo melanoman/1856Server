@@ -1741,9 +1741,9 @@ public class Game1856 extends AbstractGame {
         Wallet w = findWallet(move.getPlayer());
         payCorpToBank(c, c.getCash());
         payWalletToBank(w, move.getAmount());
-        int size = board.getTrains().get(0); //TODO buy D if empty
+        int size = board.getTrains().isEmpty() ? DIESEL_TRAIN : board.getTrains().get(0);
         c.getTrains().add(0, size);
-        board.getTrains().remove(0);
+        if (size < DIESEL_TRAIN) board.getTrains().remove(0);
         if (rawMove) {
             switch(board.getTrains().size()) {
                 case 1: prepCGR(); break;
@@ -2773,13 +2773,12 @@ public class Game1856 extends AbstractGame {
         for (Stock s: w.getStocks()) {
             if(corp2price.get(s.getCorp()) <= 50) continue; // yellow and brown stock don't count
             if(board.getCGRsize() > 10 && s.getCorp().equals(CORP_CGR)) {
-                out += (s.getAmount() + 1) / 2;
+                out += s.getAmount() / 2;
             } else {
                 out += s.getAmount();
             }
             if (s.isPresident()) out --;
         }
-        System.out.println(w.getName()+":"+out);
         return out + w.getPrivates().size();
     }
 
@@ -3046,7 +3045,7 @@ public class Game1856 extends AbstractGame {
         enforceEvent(POST_REV_EVENT);
         Corp c = getCurrentCorp();
         if (!c.getTrains().isEmpty()) throw new IllegalStateException("Prez may not contribute voluntarily");
-        int size = (board.getTrains().isEmpty()) ? 8 : board.getTrains().get(0);
+        int size = (board.getTrains().isEmpty()) ? DIESEL_TRAIN : board.getTrains().get(0);
         for(Integer poolTrain: board.getTrainPool()) {
             if(poolTrain < size) throw new IllegalStateException("Must buy smaller train in pool");
         }
