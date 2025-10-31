@@ -892,13 +892,15 @@ public class Game1856 extends AbstractGame {
     }
 
     private void doEndOpRound(TrainMove move) {
+        boolean maxPrice = false;
         for(Corp c: board.getCorps()) {
             c.setHasOperated(false);
+            if(c.getPrice().rightEdge() && c.getPrice().ceiling()) maxPrice = true;
         }
         board.setLoanTaken(false);
         board.setPassCount(0);
         if(board.getCurrentOpRound() == board.getMaxOpRounds()) {
-            if(board.isBankBreach()) {
+            if(board.isBankBreach() || maxPrice) {
                 board.setPhase(Era.DONE.name());
             } else {
                 board.setPhase(Era.STOCK.name());
@@ -2247,8 +2249,12 @@ public class Game1856 extends AbstractGame {
         board.setMaxOpRounds(maxRounds());
         board.setPhase(Era.OP.name());
         board.setEvent(PRE_REV_EVENT);
+        boolean gameOver = false;
         for(Corp c: board.getCorps()) {
             c.setHasOperated(false);
+            if (c.getPrice().rightEdge() && c.getPoolShares() == 0 && c.getBankShares() == 0) {
+                gameOver = true;
+            }
         }
 
         if (rawMove) {
@@ -2267,8 +2273,12 @@ public class Game1856 extends AbstractGame {
                 }
             }
         }
-        payPrivs();
-        setNextOpCorp(rawMove);
+        if(gameOver) {
+            board.setPhase(Era.DONE.name());
+        } else {
+            payPrivs();
+            setNextOpCorp(rawMove);
+        }
     }
 
     private String nextPlayer(String currentPlayer) {
@@ -2938,7 +2948,7 @@ public class Game1856 extends AbstractGame {
         if(c.getPrice().rightEdge()) {
             if (!c.getPrice().ceiling()) {
                 makeFollowMove(PRICE_UP, "", c.getName(), 1);
-            } //TODO make sure this triggers end of game
+            }
         } else {
                 makeFollowMove(PRICE_RIGHT, "", c.getName(), 1);
         }
