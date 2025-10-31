@@ -91,8 +91,11 @@ public class Game1856 extends AbstractGame {
     public static final String C2C_TRAIN_BUY = "c2cTrainBuy";
     public static final String FORCED_BANK_TRAIN = "forcedBankTrainBuy";
     public static final String FORCED_POOL_BUY = "forcedPoolTrainBuy";
+    public static final String PREZ_FORCED_REDEMPTION = "prezRedemption";
     public static final String ASK_TRAIN_DROP ="askTrainDrop";
     public static final String FORCED_SALE = "forcedSale";
+    public static final String FORCED_REDEMPTION = "forcedRedemption";
+    public static final String CORP_TO_BANK = "corpPay";
     public static final String DROP_TRAIN = "dropTrain";
     public static final String DROP_CGR_TRAIN = "dropCGRTrain";
     public static final String DONE_CGR_DROP = "doneCGRdrop";
@@ -488,9 +491,12 @@ public class Game1856 extends AbstractGame {
             case END_OP_TURN -> doEndOpTurn(move, rawMove);
             case FORCED_BANK_TRAIN -> doForcedBankTrainBuy(move, rawMove);
             case FORCED_POOL_BUY -> doForcedPoolTrainBuy(move);
+            case PREZ_FORCED_REDEMPTION -> doPrezRedemption(move, rawMove);
             case C2C_TRAIN_BUY -> doC2CtrainBuy(move);
             case ASK_TRAIN_DROP -> doAskTrainDrop(move, rawMove);
             case FORCED_SALE -> doForcedSale(move, rawMove);
+            case FORCED_REDEMPTION -> doForcedRedemption(move, rawMove);
+            case CORP_TO_BANK -> doCorpToBank(move);
             case NEXT_CORP -> doNextCorp(move);
             case START_CGR_REDEMPTIONS -> doStartCGRRedemptions(move, rawMove);
             case AUTOPAY_CGR_LOANS -> doAutopayCGR(move);
@@ -1298,8 +1304,11 @@ public class Game1856 extends AbstractGame {
             case DROP_PORT -> undoDropPort(move);
             case FORCED_BANK_TRAIN -> undoForcedBankTrainBuy(move); //bank buy
             case FORCED_POOL_BUY -> undoForcedPoolTrainBuy(move);
+            case PREZ_FORCED_REDEMPTION -> undoPrezRedepmtion(move);
             case ASK_TRAIN_DROP -> undoAskTrainDrop(move);
             case FORCED_SALE -> undoForcedSale(move);
+            case FORCED_REDEMPTION -> undoForcedRedemption(move);
+            case CORP_TO_BANK -> undoCorpToBank(move);
             case NEXT_CORP -> undoNextCorp(move);
             case START_CGR_REDEMPTIONS -> undoStartCGRRedemptions(move);
             case AUTOPAY_CGR_LOANS -> undoAutopayCGR(move);
@@ -1322,6 +1331,46 @@ public class Game1856 extends AbstractGame {
             default -> { return false; }
         }
         return true;
+    }
+
+    private void doPrezRedemption(TrainMove move, boolean rawMove) {
+        Wallet w = findWallet(move.getPlayer());
+        payWalletToBank(w, move.getAmount());
+        board.setEvent(FORCED_SALE_EVENT);
+    }
+
+    private void undoPrezRedepmtion(TrainMove move) {
+        Wallet w = findWallet(move.getPlayer());
+        payBankToWallet(w, move.getAmount());
+        board.setEvent(POST_REV_EVENT);
+    }
+
+    private void doCorpToBank(TrainMove move) {
+        payCorpToBank(findCorp(move.getCorp()), move.getAmount());
+    }
+
+    private void undoCorpToBank(TrainMove move) {
+        payBankToCorp(findCorp(move.getCorp()), move.getAmount());
+    }
+
+    private void doForcedRedemption(TrainMove move, boolean rawMove) {
+        Corp c = findCorp(move.getCorp());
+        c.setLoans(c.getLoans() - move.getAmount());
+        if(!rawMove) return;
+        int cost = 100 * move.getAmount();
+        int remainder = cost - c.getCash();
+        if (remainder > 0) {
+            makeFollowMove(CORP_TO_BANK, "", board.getCurrentCorp(), c.getCash());
+            makeFollowMove(PREZ_FORCED_REDEMPTION, c.getPrez(), c.getName(), remainder);
+        } else {
+            makeFollowMove(CORP_TO_BANK, "", board.getCurrentCorp(), cost);
+            makeFollowMove(END_OP_TURN, "", board.getCurrentCorp(), 0);
+        }
+    }
+
+    private void undoForcedRedemption(TrainMove move) {
+        Corp c = findCorp(move.getCorp());
+        c.setLoans(c.getLoans() + move.getAmount());
     }
 
     private void doTradein(TrainMove move, boolean rawMove) {
@@ -3005,7 +3054,13 @@ public class Game1856 extends AbstractGame {
     synchronized public Board1856 endOpTurn() {
         enforcePhase(Era.OP);
         enforceEvent(POST_REV_EVENT);
-        makePrimaryMove(END_OP_TURN, "", board.getCurrentCorp(), 0);
+        Corp c = getCurrentCorp();
+        int held = 10 - c.getBankShares() - c.getPoolShares();
+        if(c.getLoans() > held) {
+            makePrimaryMove(FORCED_REDEMPTION, c.getPrez(), c.getName(), c.getLoans() - held);
+        } else {
+            makePrimaryMove(END_OP_TURN, "", board.getCurrentCorp(), 0);
+        }
         return board;
     }
 
