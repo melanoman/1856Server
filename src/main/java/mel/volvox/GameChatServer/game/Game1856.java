@@ -895,7 +895,7 @@ public class Game1856 extends AbstractGame {
         boolean maxPrice = false;
         for(Corp c: board.getCorps()) {
             c.setHasOperated(false);
-            if(c.getPrice().rightEdge() && c.getPrice().ceiling()) maxPrice = true;
+            if(c.getPar() > 0 && c.getPrice().rightEdge() && c.getPrice().ceiling()) maxPrice = true;
         }
         board.setLoanTaken(false);
         board.setPassCount(0);
