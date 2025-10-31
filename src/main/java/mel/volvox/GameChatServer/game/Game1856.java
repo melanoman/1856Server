@@ -1655,7 +1655,7 @@ public class Game1856 extends AbstractGame {
             w.getStocks().removeIf(x -> dead.contains(x.getCorp())); //phase II -- actually delete
             if(player2CGRcount.containsKey(w.getName())) {
                 int shares = player2CGRcount.get(w.getName());
-                shareToWallet(w, "CGR", shares); //TODO CONST
+                shareToWallet(w, CORP_CGR, shares); //TODO CONST
                 if(shares > prezCount) {
                     prez = w;
                     prezCount = shares;
@@ -1664,7 +1664,7 @@ public class Game1856 extends AbstractGame {
         }
 
         for(Stock s:prez.getStocks()) {
-            if(s.getCorp().equals("CGR")) s.setPresident(true);
+            if(s.getCorp().equals(CORP_CGR)) s.setPresident(true);
         }
 
         if (rawMove) for(int i = board.getCorps().size() - 1; i >= 0; i--) {
@@ -1691,7 +1691,7 @@ public class Game1856 extends AbstractGame {
         }
 
         StockPrice par = calculateCGRpar(CGRpriceTotal, CGRpriceMin, dead.size());
-        Corp cgr = new Corp("CGR", par.getPrice(), bankShares, par, poolShares, CGRcash, 0,
+        Corp cgr = new Corp(CORP_CGR, par.getPrice(), bankShares, par, poolShares, CGRcash, 0,
                 10, -1, prez.getName(), Corp.CGR_TYPE, 0, 0,
                 new ArrayList<>(), CGRtrains, false, CGRbridge, CGRtunnel,
                 hasOperated, true, true, false);
@@ -1705,9 +1705,9 @@ public class Game1856 extends AbstractGame {
         board.setCurrentCorp(move.getCorp());
         board.setCGRsize(Board1856.CGR_PENDING);
         for(Wallet w: board.getWallets()) {
-            w.getStocks().removeIf(x -> x.getCorp().equals("CGR"));
+            w.getStocks().removeIf(x -> x.getCorp().equals(CORP_CGR));
         }
-        board.getCorps().removeIf(x -> x.getName().equals("CGR"));
+        board.getCorps().removeIf(x -> x.getName().equals(CORP_CGR));
     }
 
     private boolean canForceSell(Wallet w, Stock s) {
@@ -2131,7 +2131,7 @@ public class Game1856 extends AbstractGame {
      * @return The level of the next available bank train, use 8 for D
      */
     private int availableTrainLevel() {
-        return board.getTrains().size() > 1 ? board.getTrains().get(0) : 8;
+        return board.getTrains().size() > 1 ? board.getTrains().get(0) : DIESEL_TRAIN;
     }
 
     /**
@@ -2139,7 +2139,7 @@ public class Game1856 extends AbstractGame {
      */
     private int highestTrainSold() {
         return switch (board.getTrains().size()) {
-            case 0, 1 -> board.isDieselBought() ? 8 : 6;
+            case 0, 1 -> board.isDieselBought() ? DIESEL_TRAIN : 6;
             case 2, 3, 4 -> 5;
             case 5, 6, 7, 8 -> 4;
             case 9, 10, 11, 12, 13 -> 3;
@@ -2991,7 +2991,7 @@ public class Game1856 extends AbstractGame {
     int[] TRAIN_PRICE = { 0, 0, 100, 225, 350, 550, 700, 0, 1100 };
     int[] TRAIN_LIMIT = { 0, 0, 4, 4, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2};
     private int trainLimit(Board1856 board, Corp corp) {
-        if(corp.getName().equals("CGR")) return 3;
+        if(corp.getName().equals(CORP_CGR)) return 3;
         return TRAIN_LIMIT[highestTrainSold()];
     }
 
@@ -3031,7 +3031,7 @@ public class Game1856 extends AbstractGame {
         // TODO TRADE-INS
         // TODO ENFORCE LIMIT DROP TO POOL
         enforcePhase(Era.OP);
-        int size = (board.getTrains().isEmpty()) ? 8 : board.getTrains().get(0);
+        int size = (board.getTrains().isEmpty()) ? DIESEL_TRAIN : board.getTrains().get(0);
         int price =  TRAIN_PRICE[size];
         Corp c = getCurrentCorp();
         if (c.getTrains().size() >= trainLimit(board, c)) throw new IllegalStateException("Too many trains");
