@@ -2252,7 +2252,8 @@ public class Game1856 extends AbstractGame {
         boolean gameOver = false;
         for(Corp c: board.getCorps()) {
             c.setHasOperated(false);
-            if (c.getPrice().rightEdge() && c.getPoolShares() == 0 && c.getBankShares() == 0) {
+            if (c.getPar() > 0 && c.getPrice().rightEdge() &&
+                    c.getPoolShares() == 0 && c.getBankShares() == 0) {
                 gameOver = true;
             }
         }
