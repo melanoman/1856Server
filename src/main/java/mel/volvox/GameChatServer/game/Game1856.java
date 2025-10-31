@@ -907,9 +907,13 @@ public class Game1856 extends AbstractGame {
                 board.setCurrentCorp("");
             }
         } else {
-            board.setCurrentOpRound(board.getCurrentOpRound() + 1);
-            board.setCurrentCorp(board.getCorps().get(0).getName());
-            payPrivs();
+            if (maxPrice) {
+                board.setPhase(Era.DONE.name());
+            } else {
+                board.setCurrentOpRound(board.getCurrentOpRound() + 1);
+                board.setCurrentCorp(board.getCorps().get(0).getName());
+                payPrivs();
+            }
         }
     }
 
@@ -923,6 +927,8 @@ public class Game1856 extends AbstractGame {
         if (board.getPhase().equals(Era.OP.name())) {
             board.setCurrentOpRound(board.getCurrentOpRound() - 1);
             unpayPrivs();
+        } else if (board.getPhase().equals(Era.DONE.name())) {
+            board.setPhase(Era.OP.name());
         } else {
             board.setCurrentOpRound(move.getAmount() > 0 ? move.getAmount() : -move.getAmount());
             board.setMaxOpRounds(board.getCurrentOpRound());
