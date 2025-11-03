@@ -98,6 +98,8 @@ public class Game1856 extends AbstractGame {
     public static final String FORCED_REDEMPTION = "forcedRedemption";
     public static final String CORP_TO_BANK = "corpPay";
     public static final String DROP_TRAIN = "dropTrain";
+    public static final String DIE_WITH_TRAIN = "dieWithTrain";
+    public static final String FORGET_CORP = "forgetCorp";
     public static final String DROP_CGR_TRAIN = "dropCGRTrain";
     public static final String DONE_CGR_DROP = "doneCGRdrop";
     public static final String END_CGR_DROP = "endCGRdrop";
@@ -125,6 +127,8 @@ public class Game1856 extends AbstractGame {
     public static final String CGR_TRAIN = "CGRtrain";
     public static final String TRADE = "trade"; //trade for cgr shares
     public static final String TRADE_PREZ = "tradePrez";
+    public static final String KILL_PREZ = "killPrez";
+    public static final String KILL_STOCK = "killStock";
 
     // event constants
     // TODO move error message substrings out of constants to insulate clients
@@ -509,7 +513,9 @@ public class Game1856 extends AbstractGame {
             case ABANDON_CORP -> doAbandonCorp(move);
             case FORM_CGR -> doFormCGR(move, rawMove);
             case DROP_TRAIN -> doDropTrain(move);
+            case DIE_WITH_TRAIN -> doDieWithTrain(move);
             case DROP_CGR_TRAIN -> doDropCGRtrain(move, rawMove);
+            case FORGET_CORP ->doForgetCorp(move, rawMove);
             case DONE_CGR_DROP, END_CGR_DROP -> doDoneCGRdrop(move);
             case UNFREEZE -> doUnfreeze();
             case SET_CGR_TOKENS -> doCGRtokens(move, rawMove);
@@ -524,6 +530,8 @@ public class Game1856 extends AbstractGame {
             case CGR_TRAIN -> doCGRTrain(move);
             case TRADE -> doCGRTrade(move, false);
             case TRADE_PREZ -> doCGRTrade(move, true);
+            case KILL_PREZ -> doKillStock(move, true);
+            case KILL_STOCK -> doKillStock(move, false);
             case BANK_BREACH -> doBankBreach(move);
             case CLOSE_CORP -> doCloseCorp(move, rawMove);
             default -> throw new IllegalStateException("unknown move action: "+move.getAction());
@@ -539,11 +547,12 @@ public class Game1856 extends AbstractGame {
             makeFollowMove(CGR_CASH, ""+encodeFlags(c), c.getName(), c.getCash());
             makeFollowMove(CGR_TOKEN, ""+c.getTokensMax(), c.getName(), c.getTokensUsed());
             for(Integer train: c.getTrains()) {
-              makeFollowMove(DROP_TRAIN, "", c.getName(), train);
+              makeFollowMove(DIE_WITH_TRAIN, "", c.getName(), train);
             }
             makeFollowMove(CGR_ESCROW, "" + c.getLastRun(), c.getName(), c.getEscrow());
             makeFollowMove(CGR_PAR, "" + encodeLoanAndShares(c), c.getName(), c.getPar());
             makeFollowMove(CGR_FOLD, c.getPrez(), c.getName(), encodePrice(c.getPrice()));
+            makeFollowMove(FORGET_CORP, "", c.getName(), 0);
         }
     }
 
@@ -1076,7 +1085,6 @@ public class Game1856 extends AbstractGame {
             updatePrez(move.getCorp());
             if(c.getName().equals(CORP_CGR) && board.isCGRfreeze()) return;
             if (drop > 0) makeFollowMove(DROP_STOCK_PRICE, "", move.getCorp(), drop);
-            makeFollowMove(REORDER_CORP, "", move.getCorp(), board.getCorps().indexOf(c));
         }
     }
 
@@ -1350,8 +1358,10 @@ public class Game1856 extends AbstractGame {
             case END_OP_TURN -> undoEndOpTurn(move);
             case C2C_TRAIN_BUY -> undoC2CtrainBuy(move);
             case DROP_TRAIN -> undoDropTrain(move);
+            case DIE_WITH_TRAIN -> undoDieWithTrain(move);
             case DROP_CGR_TRAIN -> undoDropCGRtrain(move);
             case DONE_CGR_DROP, END_CGR_DROP -> undoDoneCGRdrop(move);
+            case FORGET_CORP -> undoForgetCorp(move);
             case UNFREEZE -> undoUnfreeze();
             case SET_CGR_TOKENS -> undoCGRtokens(move);
             case DROP_PORT -> undoDropPort(move);
@@ -1380,11 +1390,45 @@ public class Game1856 extends AbstractGame {
             case CGR_TRAIN -> undoCGRTrain(move);
             case TRADE -> undoCGRTrade(move, false);
             case TRADE_PREZ -> undoCGRTrade(move, true);
+            case KILL_PREZ -> undoKillStock(move, true);
+            case KILL_STOCK -> undoKillStock(move, false);
             case BANK_BREACH -> undoBankBreach(move);
             case CLOSE_CORP -> undoCloseCorp(move);
             default -> { return false; }
         }
         return true;
+    }
+
+    private void doForgetCorp(TrainMove move, boolean rawMove) {
+        board.getCorps().removeIf(x -> x.getName().equals(move.getCorp()));
+        if (rawMove) {
+            Map<Wallet, Stock> w2s = new HashMap<>();
+            for(Wallet w: board.getWallets()) {
+                for(Stock s: w.getStocks()) {
+                    if(s.getCorp().equals(move.getCorp())) w2s.put(w, s);
+                }
+            }
+            for(Map.Entry<Wallet, Stock> entry: w2s.entrySet()) {
+                Wallet w = entry.getKey();
+                Stock s = entry.getValue();
+                makeFollowMove(s.isPresident()? KILL_PREZ : KILL_STOCK, w.getName(), move.getCorp(), s.getAmount());
+            }
+        }
+    }
+
+    private void undoForgetCorp(TrainMove move) {
+        //nothing to do -- defer to CGR drop's undo
+    }
+
+    private void doDieWithTrain(TrainMove move) {
+        board.getTrainPool().add(move.getAmount());
+    }
+
+    private void undoDieWithTrain(TrainMove move) {
+        board.getTrainPool().remove(Integer.valueOf(move.getAmount()));
+        Corp c = findCorp(move.getCorp());
+        c.getTrains().add(move.getAmount());
+        c.getTrains().sort(null);
     }
 
     private void doBounceCGR(TrainMove move) {
@@ -1601,6 +1645,16 @@ public class Game1856 extends AbstractGame {
     }
 
     private void undoCGRTrade(TrainMove move, boolean isPrez) {
+        Wallet w = findWallet(move.getPlayer());
+        w.getStocks().add(new Stock(move.getCorp(), move.getAmount(), isPrez));
+    }
+
+    private void doKillStock(TrainMove move, boolean isPrez) {
+        Wallet w = findWallet(move.getPlayer());
+        w.getStocks().removeIf(x -> x.getCorp().equals(move.getCorp()));
+    }
+
+    private void undoKillStock(TrainMove move, boolean isPrez) {
         Wallet w = findWallet(move.getPlayer());
         w.getStocks().add(new Stock(move.getCorp(), move.getAmount(), isPrez));
     }
