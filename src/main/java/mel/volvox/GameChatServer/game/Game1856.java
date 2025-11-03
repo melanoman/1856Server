@@ -59,6 +59,7 @@ public class Game1856 extends AbstractGame {
     public static final String PRICE_UP = "priceUp";
     public static final String PRICE_RIGHT = "priceRight";
     public static final String PRICE_LEFT = "priceLeft";
+    public static final String BOUNCE_CGR = "bounceCGR";
     public static final String UPDATE_PREZ = "updatePrez";
 
     public static final String USE_WS = "useWS";
@@ -106,6 +107,7 @@ public class Game1856 extends AbstractGame {
     public static final String NEXT_CORP = "nextCorp";
     public static final String END_OP_ROUND = "endOpRound";
     public static final String BANK_BREACH = "bankBreach";
+    public static final String CLOSE_CORP = "closeCorp";
 
     public static final String START_CGR_REDEMPTIONS = "startCGR";
     public static final String AUTOPAY_CGR_LOANS = "autoPayCGR";
@@ -460,6 +462,7 @@ public class Game1856 extends AbstractGame {
             case STOCK_HEADER -> { } //nothing to do -- this just anchors the sale list
             case DROP_STOCK_PRICE -> doDropStockPrice(move, rawMove);
             case PRICE_DOWN, PRICE_UP, PRICE_LEFT, PRICE_RIGHT -> doStockStep(move, rawMove);
+            case BOUNCE_CGR -> doBounceCGR(move);
             case REORDER_CORP -> doReorderCorp(move);
             case END_STOCK_ACTION -> doEndStockAction(true, rawMove);
             case TAKE_LOAN -> doTakeLoan(move);
@@ -522,11 +525,30 @@ public class Game1856 extends AbstractGame {
             case TRADE -> doCGRTrade(move, false);
             case TRADE_PREZ -> doCGRTrade(move, true);
             case BANK_BREACH -> doBankBreach(move);
+            case CLOSE_CORP -> doCloseCorp(move, rawMove);
             default -> throw new IllegalStateException("unknown move action: "+move.getAction());
         }
         if (rawMove && board.getBankCash() < 0 && !board.isBankBreach()) {
             makeFollowMove(BANK_BREACH, "", "", 0);
         }
+    }
+
+    private void doCloseCorp(TrainMove move, boolean rawMove) {
+        Corp c = findCorp(move.getCorp());
+        if (rawMove) {
+            makeFollowMove(CGR_CASH, ""+encodeFlags(c), c.getName(), c.getCash());
+            makeFollowMove(CGR_TOKEN, ""+c.getTokensMax(), c.getName(), c.getTokensUsed());
+            for(Integer train: c.getTrains()) {
+              makeFollowMove(DROP_TRAIN, "", c.getName(), train);
+            }
+            makeFollowMove(CGR_ESCROW, "" + c.getLastRun(), c.getName(), c.getEscrow());
+            makeFollowMove(CGR_PAR, "" + encodeLoanAndShares(c), c.getName(), c.getPar());
+            makeFollowMove(CGR_FOLD, c.getPrez(), c.getName(), encodePrice(c.getPrice()));
+        }
+    }
+
+    private void undoCloseCorp(TrainMove move) {
+        //nothing to do
     }
 
     private void doDropCGRtrain(TrainMove move, boolean rawMove) {
@@ -976,6 +998,19 @@ public class Game1856 extends AbstractGame {
         Corp c = findCorp(move.getCorp());
         c.getPrice().drop(move.getAmount());
         corp2price.put(c.getName(), c.getPrice().getPrice());
+        if (rawMove) {
+            if(c.getPrice().getPrice() < 30) {
+                if(c.getName().equals(CORP_CGR)) {
+                    int bounce = (30 - c.getPrice().getPrice()) / 5;
+                    makeFollowMove(BOUNCE_CGR, "", "", bounce);
+                    makeFollowMove(REORDER_CORP, "", CORP_CGR, board.getCorps().indexOf(c));
+                } else {
+                    makeFollowMove(CLOSE_CORP, "", move.getCorp(), 0);
+                }
+            } else {
+                makeFollowMove(REORDER_CORP, "", move.getCorp(), board.getCorps().indexOf(c));
+            }
+        }
     }
 
     private void undoDropStockPrice(TrainMove move) {
@@ -994,7 +1029,16 @@ public class Game1856 extends AbstractGame {
        }
        corp2price.put(c.getName(), c.getPrice().getPrice());
        if (rawMove) {
-           makeFollowMove(REORDER_CORP, "", move.getCorp(), board.getCorps().indexOf(c));
+           if(c.getPrice().getPrice() < 30) {
+               if(c.getName().equals(CORP_CGR)) {
+                   makeFollowMove(BOUNCE_CGR, "", "", 1);
+                   makeFollowMove(REORDER_CORP, "", CORP_CGR, board.getCorps().indexOf(c));
+               } else {
+                   makeFollowMove(CLOSE_CORP, "", move.getCorp(), 0);
+               }
+           } else {
+               makeFollowMove(REORDER_CORP, "", move.getCorp(), board.getCorps().indexOf(c));
+           }
        }
    }
 
@@ -1274,6 +1318,7 @@ public class Game1856 extends AbstractGame {
             case STOCK_HEADER ->  {}  // nothing to undo
             case DROP_STOCK_PRICE -> undoDropStockPrice(move);
             case PRICE_DOWN, PRICE_UP, PRICE_LEFT, PRICE_RIGHT -> undoStockStep(move);
+            case BOUNCE_CGR -> undoBounceCGR(move);
             case REORDER_CORP -> undoReorderCorp(move);
             case END_STOCK_ACTION -> undoEndStockAction(move);
             case TAKE_LOAN -> undoTakeLoan(move);
@@ -1336,9 +1381,22 @@ public class Game1856 extends AbstractGame {
             case TRADE -> undoCGRTrade(move, false);
             case TRADE_PREZ -> undoCGRTrade(move, true);
             case BANK_BREACH -> undoBankBreach(move);
+            case CLOSE_CORP -> undoCloseCorp(move);
             default -> { return false; }
         }
         return true;
+    }
+
+    private void doBounceCGR(TrainMove move) {
+        Corp c = findCorp(CORP_CGR);
+        for(int i=0; i<move.getAmount(); i++) {
+            c.getPrice().up();
+        }
+    }
+
+    private void undoBounceCGR(TrainMove move) {
+        Corp c = findCorp(CORP_CGR);
+        c.getPrice().drop(move.getAmount());
     }
 
     private void doPrezRedemption(TrainMove move, boolean rawMove) {
