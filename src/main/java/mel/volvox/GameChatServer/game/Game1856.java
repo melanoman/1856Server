@@ -2490,8 +2490,8 @@ public class Game1856 extends AbstractGame {
             new Corp("LPS", 2),
             new Corp("TGB", 2),
             new Corp("THB", 2),
-            new Corp("WGB", 3),
-            new Corp("WR", 2)
+            new Corp("WGB", 2),
+            new Corp("WR", 3)
     );
 
     static List<Integer> PAR_VALUES = List.of(65, 70, 75, 80, 90, 100);
