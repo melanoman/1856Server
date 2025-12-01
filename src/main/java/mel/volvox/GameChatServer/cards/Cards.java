@@ -1,0 +1,37 @@
+package mel.volvox.GameChatServer.cards;
+
+import mel.volvox.GameChatServer.comm.cards.Card;
+import mel.volvox.GameChatServer.service.DiceService;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class Cards {
+    public static List<Card> shuffle(int size) {
+        List<Integer> cards = new ArrayList<>(size);
+        for(int i=0; i<size; i++) cards.add(i);
+        for(int i=size-1; i>0; i--) {
+            int slot = DiceService.Roll(i)-1;
+            if(slot<i) {
+                int swap = cards.get(i);
+                cards.set(i, cards.get(slot));
+                cards.set(slot, swap);
+            }
+        }
+        return asDeck(cards);
+    }
+
+    public static void deal(List<Card> from, List<Card> to, int count, boolean expose) {
+        for(int i=0; i< count; i++) {
+            Card c = from.remove(0);
+            if (expose) c.setExposed(true);
+            to.add(0, c);
+        }
+    }
+
+    public static List<Card> asDeck(List<Integer> cards) {
+        List<Card> deck = new ArrayList<>();
+        for(Integer i: cards) deck.add(new Card(i, false, false, false));
+        return deck;
+    }
+}
