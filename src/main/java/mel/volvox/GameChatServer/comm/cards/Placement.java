@@ -28,4 +28,11 @@ public class Placement {
         out.getDeck().add(new Card(size, false, false, false));
         return out;
     }
+
+    public boolean isEmpty() {
+        for(Card c:deck) {
+            if(c != null) return false;
+        }
+        return true;
+    }
 }

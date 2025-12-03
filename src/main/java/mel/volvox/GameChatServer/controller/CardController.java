@@ -49,7 +49,6 @@ public class CardController {
                               @PathVariable int x,
                               @PathVariable int y) {
         CardGame cg = id2game.get(game);
-        cg.select(place, x, y);
-        return cg.getLayout();
+        return cg.select(place, x, y);
     }
 }

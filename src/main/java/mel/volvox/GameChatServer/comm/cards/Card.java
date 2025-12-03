@@ -12,4 +12,8 @@ public class Card {
     boolean exposed = true;
     boolean inverted = false;
     boolean highlight = false;
+
+    public int cv1to13() {
+        return id%13 + 1;
+    }
 }

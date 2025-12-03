@@ -34,4 +34,12 @@ public class Cards {
         for(Integer i: cards) deck.add(new Card(i, false, false, false));
         return deck;
     }
+
+    public static void dealOver(List<Card> drawDeck, List<Card> target, int index) {
+        if (drawDeck.isEmpty()) {
+            target.set(index, null);
+        } else {
+            target.set(index, drawDeck.remove(0));
+        }
+    }
 }
