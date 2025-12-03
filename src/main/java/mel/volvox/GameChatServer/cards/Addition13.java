@@ -22,8 +22,8 @@ public class Addition13 extends CardGame {
         Cards.deal(deck, table.getDeck(), 10, true);
         table.setGridHeight(2);
         table.setGridWidth(5);
-        table.setX(285);
-        table.setY(175);
+        table.setX(265);
+        table.setY(165);
         table.setId("main");
         show.setId(id);
         show.getPlacements().add(table);

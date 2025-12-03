@@ -41,4 +41,15 @@ public class CardController {
             throw new IllegalStateException("Game not found");
         }
     }
+
+    @PutMapping("cards/select/{game}/{place}/{x}/{y}")
+    @ResponseBody
+    public Tableau selectCard(@PathVariable String game,
+                              @PathVariable String place,
+                              @PathVariable int x,
+                              @PathVariable int y) {
+        CardGame cg = id2game.get(game);
+        cg.select(place, x, y);
+        return cg.getLayout();
+    }
 }
