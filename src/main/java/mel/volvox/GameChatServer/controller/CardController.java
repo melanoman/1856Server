@@ -17,19 +17,28 @@ import java.util.Map;
 public class CardController {
     Map<String, CardGame> id2game = new HashMap<>();
 
-    @GetMapping("cards/new/{category}/{game}")
+    @PutMapping("cards/new/{game}")
     @ResponseBody
-    public Tableau createGame(@PathVariable String category,
-                             @PathVariable String game) {
+    public Tableau createGame(@PathVariable String game) {
         CardGame cg = new Addition13(); //TODO lookup specific game
         cg.init();
-        id2game.put(game, cg);
-        return cg.refresh();
+        id2game.put(cg.getLayout().getId(), cg);
+        return cg.getLayout();
     }
 
     @GetMapping("cards/list")
     @ResponseBody
     public List<String> list() {
         return id2game.keySet().stream().toList();
+    }
+
+    @GetMapping("cards/show/{id}")
+    @ResponseBody
+    public Tableau showTableau(@PathVariable String id) {
+        try {
+            return id2game.get(id).getLayout();
+        } catch(Exception e) {
+            throw new IllegalStateException("Game not found");
+        }
     }
 }

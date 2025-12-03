@@ -3,6 +3,7 @@ package mel.volvox.GameChatServer.cards;
 import mel.volvox.GameChatServer.comm.cards.Card;
 import mel.volvox.GameChatServer.comm.cards.Placement;
 import mel.volvox.GameChatServer.comm.cards.Tableau;
+import org.springframework.web.bind.annotation.GetMapping;
 
 import java.util.List;
 import java.util.UUID;
@@ -21,14 +22,15 @@ public class Addition13 extends CardGame {
         Cards.deal(deck, table.getDeck(), 10, true);
         table.setGridHeight(2);
         table.setGridWidth(5);
+        table.setX(285);
+        table.setY(175);
         table.setId("main");
         show.setId(id);
         show.getPlacements().add(table);
-        show.getPlacements().add(Placement.drawDeck("draw", deck.size()));
     }
 
     @Override
-    public Tableau refresh() {
+    public Tableau getLayout() {
         return show;
     }
 

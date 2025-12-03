@@ -13,7 +13,7 @@ public class Placement {
     public static final int NORMAL = 0;
     public static final int NO_SPLAY = 0;
     public static final int FACE_UP = 0;
-    public static final int FACE_DOWN = 1; //present a single card as the SIZE of the deck
+    public static final int FACE_DOWN = 1;
 
     String id;
     List<Card> deck = new ArrayList<>();
