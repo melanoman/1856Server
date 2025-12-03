@@ -17,6 +17,12 @@ import java.util.Map;
 public class CardController {
     Map<String, CardGame> id2game = new HashMap<>();
 
+    private CardGame findGame(String id) {
+        CardGame out = id2game.get(id);
+        if(out == null) throw new IllegalStateException("GameNotFound");
+        return out;
+    }
+
     @PutMapping("cards/new/{game}")
     @ResponseBody
     public Tableau createGame(@PathVariable String game) {
@@ -35,11 +41,7 @@ public class CardController {
     @GetMapping("cards/show/{id}")
     @ResponseBody
     public Tableau showTableau(@PathVariable String id) {
-        try {
-            return id2game.get(id).getLayout();
-        } catch(Exception e) {
-            throw new IllegalStateException("Game not found");
-        }
+        return findGame(id).getLayout();
     }
 
     @PutMapping("cards/select/{game}/{place}/{x}/{y}")
@@ -48,7 +50,6 @@ public class CardController {
                               @PathVariable String place,
                               @PathVariable int x,
                               @PathVariable int y) {
-        CardGame cg = id2game.get(game);
-        return cg.select(place, x, y);
+        return findGame(game).select(place, x, y);
     }
 }
