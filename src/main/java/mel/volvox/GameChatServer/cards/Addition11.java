@@ -25,6 +25,7 @@ public class Addition11 extends CardGame {
         main.setGridWidth(3);
         main.setGridHeight(3);
         table.getPlacements().add(main);
+        checkResult();
     }
 
     private void clearHighlight() {
@@ -42,26 +43,22 @@ public class Addition11 extends CardGame {
         Card c = main.getDeck().get(index);
         c.setHighlight(true);
         if(c.isFace()) {
-            int suit = c.suit();
-            if(saveSuit==suit) {
-                if(b==null) {
-                    b=c;
-                } else {
-                    //TODO dealOver trio
-                    Cards.dealOver(deck, main.getDeck(), a);
-                    Cards.dealOver(deck, main.getDeck(), b);
-                    Cards.dealOver(deck, main.getDeck(), c);
-                }
-            } else {
+            if(saveSum > 0 || hasMatch(c, a, b)) {
                 clearHighlight();
-                if (saveSum > 0) {
-                    saveSum = 0;
-                    a=c;
-                    saveSuit = suit;
-                } else { // switch suits
-                    saveSuit = suit;
-                    a=c;
-                }
+                saveSum = 0;
+                a = c;
+                b = null;
+            } else if(a==null) {
+                a = c;
+            } else if(b==null) {
+                b = c;
+            } else {
+                Cards.dealOver(deck, main.getDeck(), a);
+                Cards.dealOver(deck, main.getDeck(), b);
+                Cards.dealOver(deck, main.getDeck(), c);
+                checkResult();
+                a=null;
+                b=null;
             }
         } else { //not face
             if (c.cv1to13() + saveSum == 11) {
@@ -69,6 +66,8 @@ public class Addition11 extends CardGame {
                 Cards.dealOver(deck, main.getDeck(), c);
                 checkResult();
                 saveSum = 0;
+                a=null;
+                b=null;
             } else {
                 clearHighlight();
                 saveSuit = Card.NO_SUIT;
@@ -84,19 +83,26 @@ public class Addition11 extends CardGame {
             if(main.getDeck().isEmpty()) table.setResult(Tableau.WIN);
         } else {
             boolean[] sum = new boolean[11];
-            int[] suit = new int[4];
+            boolean jack=false, queen=false, king=false;
             for(Card c:main.getDeck()) {
                 if(c.isFace()) {
-                    int s = c.suit();
-                    if(suit[s] == 2) return;
-                    suit[s]++;
+                    int v = c.cv1to13();
+                    if(v==11) jack=true;
+                    if(v==12) queen=true;
+                    if(v==13) king=true;
                 } else {
                     int v = c.cv1to13();
                     if(sum[11-v]) return;
                     sum[v] = true;
                 }
             }
-            table.setResult(Tableau.LOSE);
+            if(!jack || !queen || !king) table.setResult(Tableau.LOSE);
         }
+    }
+
+    private boolean hasMatch(Card x, Card y, Card z) {
+        if(y != null && x.cv1to13() == y.cv1to13()) return true;
+        if(z != null && x.cv1to13() == z.cv1to13()) return true;
+        return false;
     }
 }
