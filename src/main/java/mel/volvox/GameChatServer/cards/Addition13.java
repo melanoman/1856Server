@@ -5,47 +5,38 @@ import mel.volvox.GameChatServer.comm.cards.Placement;
 import mel.volvox.GameChatServer.comm.cards.Tableau;
 
 import java.util.List;
-import java.util.UUID;
 
 public class Addition13 extends CardGame {
-    public static final String MAIN = "main";
-    Tableau show;
     List<Card> deck;
-    Placement table;
+    Placement main = new Placement();
     Card selection = null;
     int selectedIndex = -1;
 
     @Override
     public void init() {
-        String id = UUID.randomUUID().toString();
-        show = new Tableau();
+        super.init();
         deck = Cards.shuffle(52);
-        table = new Placement();
-        Cards.deal(deck, table.getDeck(), 10, true);
-        table.setGridHeight(2);
-        table.setGridWidth(5);
-        table.setX(265);
-        table.setY(165);
-        table.setId(MAIN);
-        show.setId(id);
-        show.getPlacements().add(table);
-    }
-
-    @Override
-    public Tableau getLayout() {
-        return show;
+        Cards.deal(deck, main.getDeck(), 10, true);
+        main.setGridHeight(2);
+        main.setGridWidth(5);
+        main.setX(265);
+        main.setY(165);
+        main.setId(MAIN);
+        table.getPlacements().add(main);
     }
 
     @Override
     public Tableau select(String id, int gridX, int gridY) {
-        if(!MAIN.equals(id)) return show;
-        if(show.getResult() != Tableau.NONE) return show;
-        int index = gridX + gridY*table.getGridWidth();
+        if(!MAIN.equals(id)) return table;
+        if(table.getResult() != Tableau.NONE) return table;
+        if (gridX > 4 || gridY > 1) return table;
 
-        Card c = table.getDeck().get(index);
+        int index = gridX + gridY* main.getGridWidth();
+        Card c = main.getDeck().get(index);
         int value = cardValue(c);
+
         if(value == 13) {
-            Cards.dealOver(deck, table.getDeck(), index);
+            Cards.dealOver(deck, main.getDeck(), index);
             checkWin();
             checkLoss();
         } else if(selection == null) {
@@ -53,8 +44,8 @@ public class Addition13 extends CardGame {
             selectedIndex = index;
             c.setHighlight(true);
         } else if(cardValue(selection) + value == 13) {
-            Cards.dealOver(deck, table.getDeck(), index);
-            Cards.dealOver(deck, table.getDeck(), selectedIndex);
+            Cards.dealOver(deck, main.getDeck(), index);
+            Cards.dealOver(deck, main.getDeck(), selectedIndex);
             selection = null;
             checkWin();
             checkLoss();
@@ -65,12 +56,12 @@ public class Addition13 extends CardGame {
             selection = c;
             selectedIndex = index;
         }
-        return show;
+        return table;
     }
 
     private void checkWin() {
-        if(deck.isEmpty() && table.isEmpty()) {
-            show.setResult(Tableau.WIN);
+        if(deck.isEmpty() && main.isEmpty()) {
+            table.setResult(Tableau.WIN);
         }
     }
 
@@ -78,12 +69,12 @@ public class Addition13 extends CardGame {
         boolean[] used = new boolean[13];
         used[0] = true;
         for(int i=1; i<13; i++) used[i] = false;
-        for(Card c:table.getDeck()) {
+        for(Card c: main.getDeck()) {
             int val = cardValue(c);
             if(used[13-val]) return;
             else used[val] = true;
         }
-        show.setResult(Tableau.LOSE);
+        table.setResult(Tableau.LOSE);
     }
 
     private int cardValue(Card c) {

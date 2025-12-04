@@ -42,4 +42,8 @@ public class Cards {
             target.set(index, drawDeck.remove(0));
         }
     }
+
+    public static void dealOver(List<Card> drawDeck, List<Card> target, Card c) {
+        dealOver(drawDeck, target, target.indexOf(c));
+    }
 }
