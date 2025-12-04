@@ -39,6 +39,7 @@ public class Addition13 extends CardGame {
     @Override
     public Tableau select(String id, int gridX, int gridY) {
         if(!MAIN.equals(id)) return show;
+        if(show.getResult() != Tableau.NONE) return show;
         int index = gridX + gridY*table.getGridWidth();
 
         Card c = table.getDeck().get(index);
@@ -46,6 +47,7 @@ public class Addition13 extends CardGame {
         if(value == 13) {
             Cards.dealOver(deck, table.getDeck(), index);
             checkWin();
+            checkLoss();
         } else if(selection == null) {
             selection = c;
             selectedIndex = index;
@@ -55,6 +57,7 @@ public class Addition13 extends CardGame {
             Cards.dealOver(deck, table.getDeck(), selectedIndex);
             selection = null;
             checkWin();
+            checkLoss();
         } else {
             System.out.println(cardValue(selection) + value);
             selection.setHighlight(false);
@@ -69,6 +72,18 @@ public class Addition13 extends CardGame {
         if(deck.isEmpty() && table.isEmpty()) {
             show.setResult(Tableau.WIN);
         }
+    }
+
+    private void checkLoss() {
+        boolean[] used = new boolean[13];
+        used[0] = true;
+        for(int i=1; i<13; i++) used[i] = false;
+        for(Card c:table.getDeck()) {
+            int val = cardValue(c);
+            if(used[13-val]) return;
+            else used[val] = true;
+        }
+        show.setResult(Tableau.LOSE);
     }
 
     private int cardValue(Card c) {
