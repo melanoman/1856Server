@@ -37,8 +37,7 @@ public class Addition13 extends CardGame {
 
         if(value == 13) {
             Cards.dealOver(deck, main.getDeck(), index);
-            checkWin();
-            checkLoss();
+            checkResult();
         } else if(selection == null) {
             selection = c;
             selectedIndex = index;
@@ -47,10 +46,8 @@ public class Addition13 extends CardGame {
             Cards.dealOver(deck, main.getDeck(), index);
             Cards.dealOver(deck, main.getDeck(), selectedIndex);
             selection = null;
-            checkWin();
-            checkLoss();
+            checkResult();
         } else {
-            System.out.println(cardValue(selection) + value);
             selection.setHighlight(false);
             c.setHighlight(true);
             selection = c;
@@ -59,17 +56,17 @@ public class Addition13 extends CardGame {
         return table;
     }
 
-    private void checkWin() {
+    private void checkResult() {
         if(deck.isEmpty() && main.isEmpty()) {
             table.setResult(Tableau.WIN);
+            return;
         }
-    }
 
-    private void checkLoss() {
         boolean[] used = new boolean[13];
         used[0] = true;
         for(int i=1; i<13; i++) used[i] = false;
         for(Card c: main.getDeck()) {
+            if(c==null) continue;
             int val = cardValue(c);
             if(used[13-val]) return;
             else used[val] = true;
