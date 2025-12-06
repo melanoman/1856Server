@@ -1,5 +1,6 @@
 package mel.volvox.GameChatServer.controller;
 
+import mel.volvox.GameChatServer.cards.Addition10;
 import mel.volvox.GameChatServer.cards.Addition11;
 import mel.volvox.GameChatServer.cards.Addition13;
 import mel.volvox.GameChatServer.cards.CardGame;
@@ -8,7 +9,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +23,7 @@ public class CardController {
     static {
         name2class.put("simple addition ==>thirteens", Addition13.class);
         name2class.put("simple addition ==>elevens", Addition11.class);
+        name2class.put("simple addition ==>tens", Addition10.class);
     }
 
     private CardGame findGame(String id) {

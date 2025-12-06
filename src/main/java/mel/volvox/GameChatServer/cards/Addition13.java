@@ -75,6 +75,6 @@ public class Addition13 extends CardGame {
     }
 
     private int cardValue(Card c) {
-        return c.cv1to13();
+        return c.rank();
     }
 }

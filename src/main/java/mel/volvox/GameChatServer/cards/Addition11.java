@@ -8,7 +8,6 @@ import java.util.List;
 
 public class Addition11 extends CardGame {
     Card a, b;
-    int saveSuit = Card.NO_SUIT;
     int saveSum = 0;
     List<Card> deck;
     Placement main;
@@ -28,9 +27,10 @@ public class Addition11 extends CardGame {
         checkResult();
     }
 
-    private void clearHighlight() {
-        if(a != null) a.setHighlight(false);
-        if(b != null) b.setHighlight(false);
+    private void clearSelection() {
+        if(a != null) { a.setHighlight(false); a=null; }
+        if(b != null) { b.setHighlight(false); b=null; }
+        saveSum = 0;
     }
 
     @Override
@@ -41,13 +41,14 @@ public class Addition11 extends CardGame {
         int index = gridX + gridY*main.getGridWidth();
 
         Card c = main.getDeck().get(index);
+        if(c.isHighlight()) {
+            clearSelection();
+        }
         c.setHighlight(true);
         if(c.isFace()) {
             if(saveSum > 0 || hasMatch(c, a, b)) {
-                clearHighlight();
-                saveSum = 0;
+                clearSelection();
                 a = c;
-                b = null;
             } else if(a==null) {
                 a = c;
             } else if(b==null) {
@@ -61,7 +62,7 @@ public class Addition11 extends CardGame {
                 b=null;
             }
         } else { //not face
-            if (c.cv1to13() + saveSum == 11) {
+            if (c.rank() + saveSum == 11) {
                 Cards.dealOver(deck, main.getDeck(), a);
                 Cards.dealOver(deck, main.getDeck(), c);
                 checkResult();
@@ -69,9 +70,8 @@ public class Addition11 extends CardGame {
                 a=null;
                 b=null;
             } else {
-                clearHighlight();
-                saveSuit = Card.NO_SUIT;
-                saveSum = c.cv1to13();
+                clearSelection();
+                saveSum = c.rank();
                 a=c;
             }
         }
@@ -86,12 +86,12 @@ public class Addition11 extends CardGame {
             boolean jack=false, queen=false, king=false;
             for(Card c:main.getDeck()) {
                 if(c.isFace()) {
-                    int v = c.cv1to13();
+                    int v = c.rank();
                     if(v==11) jack=true;
                     if(v==12) queen=true;
                     if(v==13) king=true;
                 } else {
-                    int v = c.cv1to13();
+                    int v = c.rank();
                     if(sum[11-v]) return;
                     sum[v] = true;
                 }
@@ -101,8 +101,8 @@ public class Addition11 extends CardGame {
     }
 
     private boolean hasMatch(Card x, Card y, Card z) {
-        if(y != null && x.cv1to13() == y.cv1to13()) return true;
-        if(z != null && x.cv1to13() == z.cv1to13()) return true;
+        if(y != null && x.rank() == y.rank()) return true;
+        if(z != null && x.rank() == z.rank()) return true;
         return false;
     }
 }

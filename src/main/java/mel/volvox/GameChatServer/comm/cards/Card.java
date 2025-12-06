@@ -15,7 +15,7 @@ public class Card {
     boolean inverted = false;
     boolean highlight = false;
 
-    public int cv1to13() {
+    public int rank() {
         return id%13 + 1;
     }
 
