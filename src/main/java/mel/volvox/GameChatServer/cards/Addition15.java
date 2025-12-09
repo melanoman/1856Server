@@ -20,19 +20,38 @@ public class Addition15 extends CardGame {
         Cards.deal(deck, main.getDeck(), 16, true);
         main.setGridHeight(4);
         main.setGridWidth(4);
-        main.setX(265);
-        main.setY(50);
+        main.setX(275);
+        main.setY(120);
         main.setId(MAIN);
         table.getPlacements().add(main);
         checkResult();
+    }
+
+    private boolean findFifteen(int[] used, int sum, int max, int block) {
+        if(sum > 15) return false;
+        if(sum == 15) return true;
+        if(used[max] > block && findFifteen(used, sum+max, max, block+1)) return true;
+        for(int i=max-1; i>0; i--) {
+            if(used[i] == 0) continue;
+            if(findFifteen(used, sum+i, i, 1)) return true;
+        }
+        return false;
     }
 
     private void checkResult() {
         if(deck.isEmpty()) {
             table.setResult(Tableau.WIN);
         } else {
-            //TODO check for loss
+            int[] used = new int[14];
+            for(Card c: main.getDeck()) {
+                if(c == null) continue;
+                used[c.rank()]++;
+            }
+            for(int i=9; i>3; i--) {
+                if(used[i]>0 && findFifteen(used, i, i, 1)) return;
+            }
         }
+        table.setResult(Tableau.LOSE);
     }
 
     private void deselect() {
