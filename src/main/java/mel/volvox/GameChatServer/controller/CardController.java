@@ -3,19 +3,22 @@ package mel.volvox.GameChatServer.controller;
 import mel.volvox.GameChatServer.cards.*;
 import mel.volvox.GameChatServer.comm.cards.CardMenuItem;
 import mel.volvox.GameChatServer.comm.cards.Tableau;
+import mel.volvox.GameChatServer.model.cards.CardRules;
+import mel.volvox.GameChatServer.repository.CardRulesRepo;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @CrossOrigin
 @Controller
 @Component
 public class CardController {
+    @Autowired
+    CardRulesRepo cardRulesRepo;
+
     Map<String, CardGame> id2game = new HashMap<>();
     static List<CardMenuItem> mainMenu = new ArrayList<>();
     static Map<String, CardMenuItem> name2sub = new HashMap<>();
@@ -51,6 +54,14 @@ public class CardController {
         CardGame out = id2game.get(id);
         if(out == null) throw new IllegalStateException("GameNotFound");
         return out;
+    }
+
+    @GetMapping("cards/rules/{game}")
+    @ResponseBody
+    public String getRules(@PathVariable String game) {
+        Optional<CardRules> cr = cardRulesRepo.findById(game);
+        if(cr.isPresent()) return cr.get().getRules();
+        else throw new IllegalStateException("Rules not found");
     }
 
     @GetMapping("cards/menu")
