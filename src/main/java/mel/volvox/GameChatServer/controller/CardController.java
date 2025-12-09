@@ -4,11 +4,13 @@ import mel.volvox.GameChatServer.cards.Addition10;
 import mel.volvox.GameChatServer.cards.Addition11;
 import mel.volvox.GameChatServer.cards.Addition13;
 import mel.volvox.GameChatServer.cards.CardGame;
+import mel.volvox.GameChatServer.comm.cards.CardMenuItem;
 import mel.volvox.GameChatServer.comm.cards.Tableau;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,18 +20,45 @@ import java.util.Map;
 @Component
 public class CardController {
     Map<String, CardGame> id2game = new HashMap<>();
+    static List<CardMenuItem> mainMenu = new ArrayList<>();
+    static Map<String, CardMenuItem> name2sub = new HashMap<>();
 
     static Map<String, Class<? extends CardGame>> name2class = new HashMap<>();
-    static {
-        name2class.put("simple addition ==>thirteens", Addition13.class);
-        name2class.put("simple addition ==>elevens", Addition11.class);
-        name2class.put("simple addition ==>tens", Addition10.class);
+    static void addGame(String fullName, Class<? extends CardGame> clazz) {
+        name2class.put(fullName, clazz);
+        String[] p = fullName.split(" ==>");
+        String top = p[0];
+        if(p.length > 1) {
+            CardMenuItem mi;
+            if(name2sub.containsKey(top)) {
+                mi = name2sub.get(top);
+            } else {
+                mi = new CardMenuItem(top, new ArrayList<>());
+                mainMenu.add(mi);
+                name2sub.put(top, mi);
+            }
+            mi.getSub().add(p[1]);
+        } else {
+            mainMenu.add(new CardMenuItem(top, null));
+        }
     }
+    static {
+        addGame("simple addition ==>thirteens", Addition13.class);
+        addGame("simple addition ==>elevens", Addition11.class);
+        addGame("simple addition ==>tens", Addition10.class);
+    }
+
 
     private CardGame findGame(String id) {
         CardGame out = id2game.get(id);
         if(out == null) throw new IllegalStateException("GameNotFound");
         return out;
+    }
+
+    @GetMapping("cards/menu")
+    @ResponseBody
+    public List<CardMenuItem> getMainMenu() {
+        return mainMenu;
     }
 
     @PutMapping("cards/new/{game}")
