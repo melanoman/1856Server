@@ -1,9 +1,6 @@
 package mel.volvox.GameChatServer.controller;
 
-import mel.volvox.GameChatServer.cards.Addition10;
-import mel.volvox.GameChatServer.cards.Addition11;
-import mel.volvox.GameChatServer.cards.Addition13;
-import mel.volvox.GameChatServer.cards.CardGame;
+import mel.volvox.GameChatServer.cards.*;
 import mel.volvox.GameChatServer.comm.cards.CardMenuItem;
 import mel.volvox.GameChatServer.comm.cards.Tableau;
 import org.springframework.stereotype.Component;
@@ -46,6 +43,7 @@ public class CardController {
         addGame("simple addition ==>thirteens", Addition13.class);
         addGame("simple addition ==>elevens", Addition11.class);
         addGame("simple addition ==>tens", Addition10.class);
+        addGame("simple addition ==>fifteens", Addition15.class);
     }
 
 
