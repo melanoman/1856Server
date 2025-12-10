@@ -27,10 +27,24 @@ public class Block11 extends CardGame {
         main.setY(140);
         main.setId(MAIN);
         table.getPlacements().add(main);
+        checkResult();
     }
 
     private void deselectAll() {
         if(a != null) { a.setHighlight(false); a = null; }
+    }
+
+    private void checkResult() {
+        if(deck.isEmpty()) table.setResult(Tableau.WIN);
+        else {
+            boolean[] used = new boolean[11];
+            for(Card c:main.getDeck()) {
+                if(c.isFace()) continue;
+                if(used[11-c.rank()]) return;
+                used[c.rank()] = true;
+            }
+            table.setResult(Tableau.LOSE);
+        }
     }
 
     @Override
@@ -46,6 +60,7 @@ public class Block11 extends CardGame {
             Cards.dealOver(deck, main.getDeck(), a);
             Cards.dealOver(deck, main.getDeck(), c);
             a = null;
+            checkResult();
         } else {
             a.setHighlight(false);
             c.setHighlight(true);
