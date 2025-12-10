@@ -10,6 +10,7 @@ public class Block11 extends CardGame {
     List<Card> deck;
     Placement main = new Placement();
     boolean seeded = false;
+    Card a = null;
 
     @Override
     public void init() {
@@ -28,8 +29,28 @@ public class Block11 extends CardGame {
         table.getPlacements().add(main);
     }
 
+    private void deselectAll() {
+        if(a != null) { a.setHighlight(false); a = null; }
+    }
+
     @Override
     public Tableau select(String id, int gridX, int gridY) {
+        int index = gridX + gridY*main.getGridWidth();
+        Card c = main.getDeck().get(index);
+        if (c.isHighlight() || c.isFace()) {
+            deselectAll();
+        } else if (a==null) {
+            a = c;
+            c.setHighlight(true);
+        } else if (a.rank()+c.rank() == 11) {
+            Cards.dealOver(deck, main.getDeck(), a);
+            Cards.dealOver(deck, main.getDeck(), c);
+            a = null;
+        } else {
+            a.setHighlight(false);
+            c.setHighlight(true);
+            a = c;
+        }
         return table;
     }
 }
