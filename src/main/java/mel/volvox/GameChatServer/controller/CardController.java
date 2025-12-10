@@ -47,6 +47,7 @@ public class CardController {
         addGame("simple addition ==>elevens", Addition11.class);
         addGame("simple addition ==>tens", Addition10.class);
         addGame("simple addition ==>fifteens", Addition15.class);
+        addGame("block solitaire ==>elevens", Block11.class);
     }
 
 
