@@ -7,6 +7,8 @@ import mel.volvox.GameChatServer.comm.cards.Tableau;
 public class Baroness extends CardGame {
     Placement[] pile = new Placement[7];
     DrawDeck drawDeck = new DrawDeck(52);
+    Card selection = null;
+    int selectionIndex;
 
     private Placement makePile(int index, Card c) {
         Placement out = new Placement();
@@ -49,9 +51,42 @@ public class Baroness extends CardGame {
         }
     }
 
+    private Tableau select(int index) {
+        if(pile[index].getDeck().isEmpty()) return table;
+
+        Card c = pile[index].getDeck().get(0);
+        if(selection == null) {
+            if(c.rank() == 13) {
+                pile[index].getDeck().remove(0);
+            }
+            else {
+                selection=c;
+                selectionIndex=index;
+                c.setHighlight(true);
+            }
+        } else if(selection.rank()+c.rank() == 13) {
+            pile[selectionIndex].getDeck().remove(0);
+            pile[index].getDeck().remove(0);
+            selection = null;
+        } else {
+            selection.setHighlight(false);
+            selection=c;
+            selectionIndex=index;
+            c.setHighlight(true);
+        }
+        return table;
+    }
+
     @Override
     public Tableau select(String id, int gridX, int gridY) {
         if(id.equals("draw")) deal5();
+        else {
+            try {
+                return select(Integer.parseInt(id));
+            } catch (NumberFormatException e) {
+                throw new IllegalStateException("unknown click target");
+            }
+        }
         return table;
     }
 }
