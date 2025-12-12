@@ -13,8 +13,8 @@ public class Baroness extends CardGame {
     private Placement makePile(int index, Card c) {
         Placement out = new Placement();
         out.setId(""+index);
-        out.setX(200+ index*75);
-        out.setY(200);
+        out.setX(220+ index*75);
+        out.setY(175);
         out.setGridWidth(1);
         out.setGridHeight(1);
         out.getDeck().add(c);
