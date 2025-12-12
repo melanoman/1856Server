@@ -44,10 +44,12 @@ public class Baroness extends CardGame {
     }
 
     private void deal5() {
+        if(drawDeck.size() == 0) return;
         for(int i=0; i<5; i++) drawDeck.dealOnto(pile[i].getDeck(), true);
         if(drawDeck.size() == 2) {
             drawDeck.dealOnto(pile[5].getDeck(), true);
             drawDeck.dealOnto(pile[6].getDeck(), true);
+            checkResult();
         }
     }
 
@@ -74,7 +76,22 @@ public class Baroness extends CardGame {
             selectionIndex=index;
             c.setHighlight(true);
         }
+        if(drawDeck.size() == 0) checkResult();
         return table;
+    }
+
+    private void checkResult() {
+        if(drawDeck.size() > 0) return;
+        boolean[] used = new boolean[13];
+        boolean found = false;
+        for(int i=0; i<7; i++) {
+            if(pile[i].getDeck().isEmpty()) continue;
+            found = true;
+            Card c = pile[i].getDeck().get(0);
+            if(c.rank()==13 || used[13-c.rank()]) return;
+            used[c.rank()] = true;
+        }
+        table.setResult(found ? Tableau.LOSE : Tableau.WIN);
     }
 
     @Override
