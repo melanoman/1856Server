@@ -9,6 +9,7 @@ import java.util.List;
 public class Baroness extends CardGame {
     Placement[] pile = new Placement[5];
     List<Card> deck;
+    Placement draw;
 
     private Placement makePile(int index, Card c) {
         Placement out = new Placement();
@@ -30,7 +31,13 @@ public class Baroness extends CardGame {
             pile[i] = makePile(i, deck.remove(0));
             table.getPlacements().add(pile[i]);
         }
+        draw = makePile(2, new Card());
+        draw.setY(250);
+        draw.setId("draw");
+        draw.getDeck().get(0).setExposed(false);
+        table.getPlacements().add(draw);
     }
+
     @Override
     public Tableau select(String id, int gridX, int gridY) {
         return table;
