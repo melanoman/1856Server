@@ -49,6 +49,7 @@ public class CardController {
         addGame("simple addition ==>fifteens", Addition15.class);
         addGame("block solitaire ==>elevens", Block11.class);
         addGame("block solitaire ==>tens", Block10.class);
+        addGame("baroness", Baroness.class);
     }
 
 
