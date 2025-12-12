@@ -57,11 +57,14 @@ public class Baroness extends CardGame {
         if(pile[index].getDeck().isEmpty()) return table;
 
         Card c = pile[index].getDeck().get(0);
+        if(c.isHighlight()) {
+            c.setHighlight(false);
+            selection = null;
+        }
         if(selection == null) {
             if(c.rank() == 13) {
                 pile[index].getDeck().remove(0);
-            }
-            else {
+            } else {
                 selection=c;
                 selectionIndex=index;
                 c.setHighlight(true);
@@ -70,6 +73,8 @@ public class Baroness extends CardGame {
             pile[selectionIndex].getDeck().remove(0);
             pile[index].getDeck().remove(0);
             selection = null;
+        } else if(c.rank() == 13) {
+            pile[index].getDeck().remove(0);
         } else {
             selection.setHighlight(false);
             selection=c;
