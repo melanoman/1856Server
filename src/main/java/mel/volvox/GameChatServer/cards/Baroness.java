@@ -15,8 +15,6 @@ public class Baroness extends CardGame {
         out.setId(""+index);
         out.setX(220+ index*75);
         out.setY(175);
-        out.setGridWidth(1);
-        out.setGridHeight(1);
         if (c != null) {
             out.getDeck().add(c);
             c.setExposed(true);

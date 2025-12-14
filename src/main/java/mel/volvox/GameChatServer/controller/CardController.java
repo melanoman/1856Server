@@ -50,6 +50,7 @@ public class CardController {
         addGame("block solitaire ==>elevens", Block11.class);
         addGame("block solitaire ==>tens", Block10.class);
         addGame("baroness", Baroness.class);
+        addGame("fourteen puzzle", FourteenPuzzle.class);
     }
 
 

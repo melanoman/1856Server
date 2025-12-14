@@ -24,8 +24,6 @@ public class DrawDeck {
         deck = Cards.shuffle(size);
         placement.getDeck().add(new Card(0, false, false, false));
         placement.setId("draw");
-        placement.setGridWidth(1);
-        placement.setGridHeight(1);
     }
 
     public Card draw() {

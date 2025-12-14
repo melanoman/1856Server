@@ -12,15 +12,17 @@ import java.util.UUID;
 public class Placement {
     public static final int NORMAL = 0;
     public static final int NO_SPLAY = 0;
+    public static final int SPLAY_DOWN = 1;
     public static final int FACE_UP = 0;
     public static final int FACE_DOWN = 1;
 
     String id;
     List<Card> deck = new ArrayList<>();
-    int gridWidth;
-    int gridHeight;
+    int gridWidth = 1;
+    int gridHeight = 1;
     int x;
     int y;
+    int splay = NO_SPLAY;
 
     public static Placement drawDeck(String id, int size) {
         Placement out = new Placement();
