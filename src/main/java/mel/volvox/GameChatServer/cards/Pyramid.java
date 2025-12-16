@@ -7,10 +7,14 @@ import mel.volvox.GameChatServer.comm.cards.Tableau;
 public class Pyramid extends CardGame {
     DrawDeck drawDeck = new DrawDeck(52);
     Placement playPile = new Placement();
+    Card selection = null;
+    int selectionIndex;
 
     Placement[] row;
-    private final String DRAW = "draw";
-    private final String PLAY = "play";
+    private static String DRAW = "draw";
+    private static String PLAY = "play";
+    private static final int DRAW_PILE = -1;
+    private static final int PLAY_PILE = -2;
 
     private void makeRow(int index) {
         Placement p = new Placement();
@@ -46,8 +50,16 @@ public class Pyramid extends CardGame {
 
     @Override
     public Tableau select(String id, int gridX, int gridY) {
-        if(DRAW.equals(id)) drawDeck.dealOnto(playPile.getDeck(), true);
-        else if (PLAY.equals(id)) {
+        if(DRAW.equals(id)) {
+            if(!drawDeck.isEmpty()) {
+                if (playPile.isEmpty()) drawDeck.dealOnto(playPile, true);
+                else if (drawDeck.isTopExposed()) drawDeck.dealOnto(playPile, true);
+                else {
+                    selection = drawDeck.exposeTop();
+                    selectionIndex = DRAW_PILE;
+                }
+            }
+        } else if (PLAY.equals(id)) {
             //TODO playDeck
         } else {
             int rowNum = Integer.parseInt(id);
