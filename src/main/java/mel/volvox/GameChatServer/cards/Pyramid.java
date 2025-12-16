@@ -38,6 +38,12 @@ public class Pyramid extends CardGame {
         table.getPlacements().add(playPile);
     }
 
+    private boolean unavailable(int r, int c) {
+        if (row[r].getDeck().get(c) == null) return true;
+        if (r == 6) return false;
+        return row[r+1].getDeck().get(r) != null || row[r+1].getDeck().get(r+1) != null;
+    }
+
     @Override
     public Tableau select(String id, int gridX, int gridY) {
         if(DRAW.equals(id)) drawDeck.dealOnto(playPile.getDeck(), true);
@@ -45,9 +51,9 @@ public class Pyramid extends CardGame {
             //TODO playDeck
         } else {
             int rowNum = Integer.parseInt(id);
+            if(unavailable(rowNum, gridX)) { return table; }
             Placement p = row[rowNum];
             Card c = p.getDeck().get(gridX);
-            if(c == null) { return table; }
             c.setHighlight(!c.isHighlight());
         }
         return table;
