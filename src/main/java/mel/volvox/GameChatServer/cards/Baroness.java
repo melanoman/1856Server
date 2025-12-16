@@ -37,7 +37,6 @@ public class Baroness extends CardGame {
         drawDeck.getPlacement().setX(370);
         drawDeck.getPlacement().setY(250);
         drawDeck.getPlacement().setId("draw");
-        drawDeck.getPlacement().getDeck().get(0).setExposed(false);
         table.getPlacements().add(drawDeck.getPlacement());
     }
 
