@@ -22,6 +22,7 @@ public class Placement {
     int gridHeight = 1;
     int x;
     int y;
+    int margin = 15;
     int splay = NO_SPLAY;
 
     public static Placement drawDeck(String id, int size) {

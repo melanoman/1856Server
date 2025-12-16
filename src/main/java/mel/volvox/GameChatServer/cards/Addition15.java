@@ -50,8 +50,8 @@ public class Addition15 extends CardGame {
             for(int i=9; i>3; i--) {
                 if(used[i]>0 && findFifteen(used, i, i, 1)) return;
             }
+            table.setResult(Tableau.LOSE);
         }
-        table.setResult(Tableau.LOSE);
     }
 
     private void deselect() {

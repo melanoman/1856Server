@@ -35,15 +35,25 @@ public class Cards {
         return deck;
     }
 
-    public static void dealOver(List<Card> drawDeck, List<Card> target, int index) {
+    public static void dealOver(List<Card> drawDeck, List<Card> target, int index, boolean expose) {
         if (drawDeck.isEmpty()) {
             target.set(index, null);
         } else {
-            target.set(index, drawDeck.remove(0));
+            Card c = drawDeck.remove(0);
+            if (expose) c.setExposed(true);
+            target.set(index, c);
         }
     }
 
+    public static void dealOver(List<Card> drawDeck, List<Card> target, int index) {
+        dealOver(drawDeck, target, index, true);
+    }
+
     public static void dealOver(List<Card> drawDeck, List<Card> target, Card c) {
-        dealOver(drawDeck, target, target.indexOf(c));
+        dealOver(drawDeck, target, target.indexOf(c), true);
+    }
+
+    public static void dealOver(List<Card> drawDeck, List<Card> target, Card c, boolean expose) {
+        dealOver(drawDeck, target, target.indexOf(c), expose);
     }
 }
