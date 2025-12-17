@@ -76,9 +76,8 @@ public class Pyramid extends CardGame {
                     redeals--;
                     drawDeck.redealFrom(playPile.getDeck(), false);
                     if(redeals == 0) drawDeck.setReadealAllowed(false);
-                } else {
-                    checkResult();
                 }
+                checkResult();
             }
         } else if (PLAY.equals(id)) {
             if (drawDeck.isTopExposed()) {
