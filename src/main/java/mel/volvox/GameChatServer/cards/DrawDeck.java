@@ -1,10 +1,10 @@
 package mel.volvox.GameChatServer.cards;
 
 import lombok.Getter;
+import lombok.Setter;
 import mel.volvox.GameChatServer.comm.cards.Card;
 import mel.volvox.GameChatServer.comm.cards.Placement;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -12,10 +12,11 @@ import java.util.List;
  * when the last card is drawn.
  */
 public class DrawDeck {
-    @Getter
     private final List<Card> deck;
     @Getter
     private final Placement placement = new Placement();
+    @Setter
+    private boolean readealAllowed = false;
 
     private static final int SPLAY_HEIGHT = 30;
     private static final int SPLAY_WIDTH = 5;
@@ -30,19 +31,31 @@ public class DrawDeck {
     }
 
     private void unsplay() {
+        if(placement.getDeck().size() < 2) return;
         placement.getDeck().remove(0);
         placement.setX(placement.getX() - SPLAY_WIDTH);
         placement.setY(placement.getY() - SPLAY_HEIGHT);
     }
 
+    private void showIfEmpty() {
+        if (deck.isEmpty()) {
+            while (!placement.isEmpty()) placement.getDeck().remove(0);
+            placement.getDeck().add(new Card(readealAllowed ? -1 : -2, true, false, false));
+        }
+    }
+
     public Card draw() {
         if (deck.isEmpty()) return null;
         Card out = deck.remove(0);
-        if (placement.getDeck().size() > 1) unsplay();
-        if (deck.isEmpty()) {
-            placement.getDeck().remove(0);
-        }
+        unsplay();
+        showIfEmpty();
         return out;
+    }
+
+    public void deal(List<Card> target, int count, boolean expose) {
+        unsplay();
+        Cards.deal(deck, target, count, expose);
+        showIfEmpty();
     }
 
     public boolean isTopExposed() {
@@ -84,5 +97,15 @@ public class DrawDeck {
      */
     public Card peek() {
         return deck.isEmpty() ? null : deck.get(0);
+    }
+
+    public void redealFrom(List<Card> from, boolean expose) {
+        for(Card c: from) {
+            deck.add(0, c);
+            c.setExposed(expose);
+        }
+        from.clear();
+        placement.getDeck().clear();
+        placement.getDeck().add(new Card(0, false, false, false));
     }
 }

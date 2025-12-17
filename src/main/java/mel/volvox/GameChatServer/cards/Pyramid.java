@@ -11,6 +11,7 @@ public class Pyramid extends CardGame {
     Placement playPile = new Placement();
     Card selection = null;
     int selectionIndex;
+    private int redeals = 3;
 
     Placement[] row;
     private static String DRAW = "draw";
@@ -26,7 +27,7 @@ public class Pyramid extends CardGame {
         p.setX(350 - index*27);
         p.setY(50 + index*35);
         p.setGridWidth(index+1);
-        Cards.deal(drawDeck.getDeck(), p.getDeck(), index+1, true);
+        drawDeck.deal(p.getDeck(), index+1, true);
         row[index] = p;
         table.getPlacements().add(p);
     }
@@ -38,6 +39,7 @@ public class Pyramid extends CardGame {
         drawDeck.getPlacement().setX(300);
         drawDeck.getPlacement().setY(350);
         drawDeck.getPlacement().setId(DRAW);
+        drawDeck.setReadealAllowed(true);
         table.getPlacements().add(drawDeck.getPlacement());
         playPile.setId(PLAY);
         playPile.setX(400);
@@ -67,6 +69,12 @@ public class Pyramid extends CardGame {
                     selection = drawDeck.exposeTop();
                     selectionIndex = DRAW_PILE;
                     selection.setHighlight(true);
+                }
+            } else {
+                if (redeals > 0) {
+                    redeals--;
+                    drawDeck.redealFrom(playPile.getDeck(), false);
+                    if(redeals == 0) drawDeck.setReadealAllowed(false);
                 }
             }
         } else if (PLAY.equals(id)) {
