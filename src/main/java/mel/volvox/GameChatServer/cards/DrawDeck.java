@@ -78,4 +78,11 @@ public class DrawDeck {
     public boolean isEmpty() {
         return deck.isEmpty();
     }
+
+    /**
+     * look at top card WITHOUT removing it
+     */
+    public Card peek() {
+        return deck.isEmpty() ? null : deck.get(0);
+    }
 }
