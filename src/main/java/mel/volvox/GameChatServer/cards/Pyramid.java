@@ -61,6 +61,7 @@ public class Pyramid extends CardGame {
                     if(drawDeck.peek().rank() == 13) {
                         drawDeck.draw();
                         clearSelection();
+                        checkResult();
                     } else {
                         drawDeck.dealOnto(playPile, true);
                         clearSelection();
@@ -75,13 +76,15 @@ public class Pyramid extends CardGame {
                     redeals--;
                     drawDeck.redealFrom(playPile.getDeck(), false);
                     if(redeals == 0) drawDeck.setReadealAllowed(false);
+                } else {
+                    checkResult();
                 }
             }
         } else if (PLAY.equals(id)) {
             if (drawDeck.isTopExposed()) {
                 if(!playPile.isEmpty() && selection.rank() + playPile.getDeck().get(0).rank() == 13) {
-                    removeSelection(1);
                     playPile.getDeck().remove(0);
+                    removeSelection(1);
                 } else {
                     drawDeck.dealOnto(playPile, true);
                     clearSelection();
@@ -90,8 +93,8 @@ public class Pyramid extends CardGame {
                 if(selectionIndex == PLAY_PILE) {
                     clearSelection();
                 } else if (selection != null && selection.rank() + playPile.getDeck().get(0).rank() == 13) {
-                    removeSelection(2);
                     playPile.getDeck().remove(0);
+                    removeSelection(2);
                 } else {
                     if(selection != null) selection.setHighlight(false);
                     selectionIndex = PLAY_PILE;
@@ -110,9 +113,10 @@ public class Pyramid extends CardGame {
                 selection = null;
             } else if(c.rank() == 13) {
                 p.getDeck().set(gridX, null);
+                checkResult();
             } else if (selection != null && selection.rank() + c.rank() == 13) {
-                removeSelection(3);
                 p.getDeck().set(gridX, null);
+                removeSelection(3);
             } else {
                 if(drawDeck.isTopExposed()) {
                     drawDeck.dealOnto(playPile, true);
@@ -142,10 +146,35 @@ public class Pyramid extends CardGame {
         }
         selectionIndex = NO_SELECTION;
         selection = null;
+        checkResult();
     }
 
     private void removeSelectionFromRow() {
         List<Card> r = row[selectionIndex].getDeck();
         r.set(r.indexOf(selection), null);
+    }
+
+    private void checkResult() {
+        if (drawDeck.isEmpty() && playPile.isEmpty() && row[0].getDeck().get(0) == null) {
+            table.setResult(Tableau.WIN);
+        } else if (redeals > 0 || !drawDeck.isEmpty()) {
+            return;
+        } else {
+            boolean[] used = new boolean[14];
+            //for each card in pyramid
+            for(int i=6; i>=0; i--) {
+                for(int j=i-1; j>=0; j--) {
+                    if(unavailable(i, j)) continue;
+                    //return if playable else mark used
+                    Card c = row[i].getDeck().get(j);
+                    if(used[13-c.rank()]) return;
+                    used[c.rank()] = true;
+                }
+            }
+            // return if top of playPile is playable
+            if (!playPile.isEmpty() && used[13-playPile.getDeck().get(0).rank()]) return;
+            // LOSER
+            table.setResult(Tableau.LOSE);
+        }
     }
 }
