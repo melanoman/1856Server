@@ -108,4 +108,11 @@ public class DrawDeck {
         placement.getDeck().clear();
         placement.getDeck().add(new Card(0, false, false, false));
     }
+
+    /**
+     * Silde a card under the deck.  Does not flip the card.
+     */
+    public void add(Card c) {
+        deck.add(c);
+    }
 }

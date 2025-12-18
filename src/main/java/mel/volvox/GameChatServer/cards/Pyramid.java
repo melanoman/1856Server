@@ -14,11 +14,6 @@ public class Pyramid extends CardGame {
     private int redeals = 3;
 
     Placement[] row;
-    private static String DRAW = "draw";
-    private static String PLAY = "play";
-    private static final int DRAW_PILE = -1;
-    private static final int PLAY_PILE = -2;
-    private static final int NO_SELECTION = -3;
 
     private void makeRow(int index) {
         Placement p = new Placement();
