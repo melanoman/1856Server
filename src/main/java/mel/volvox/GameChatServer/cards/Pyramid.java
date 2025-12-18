@@ -34,7 +34,7 @@ public class Pyramid extends CardGame {
         drawDeck.getPlacement().setX(300);
         drawDeck.getPlacement().setY(350);
         drawDeck.getPlacement().setId(DRAW);
-        drawDeck.setReadealAllowed(true);
+        drawDeck.setRedealAllowed(true);
         table.getPlacements().add(drawDeck.getPlacement());
         playPile.setId(PLAY);
         playPile.setX(400);
@@ -70,7 +70,7 @@ public class Pyramid extends CardGame {
                 if (redeals > 0) {
                     redeals--;
                     drawDeck.redealFrom(playPile.getDeck(), false);
-                    if(redeals == 0) drawDeck.setReadealAllowed(false);
+                    if(redeals == 0) drawDeck.setRedealAllowed(false);
                 }
                 checkResult();
             }

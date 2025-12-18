@@ -23,9 +23,10 @@ public class Cards {
 
     public static void deal(List<Card> from, List<Card> to, int count, boolean expose) {
         for(int i=0; i< count; i++) {
+            if (from.isEmpty()) return;
             Card c = from.remove(0);
             if (expose) c.setExposed(true);
-            to.add(0, c);
+            to.add(c);
         }
     }
 

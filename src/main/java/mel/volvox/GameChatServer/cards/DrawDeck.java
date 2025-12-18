@@ -1,7 +1,6 @@
 package mel.volvox.GameChatServer.cards;
 
 import lombok.Getter;
-import lombok.Setter;
 import mel.volvox.GameChatServer.comm.cards.Card;
 import mel.volvox.GameChatServer.comm.cards.Placement;
 
@@ -15,11 +14,13 @@ public class DrawDeck {
     private final List<Card> deck;
     @Getter
     private final Placement placement = new Placement();
-    @Setter
-    private boolean readealAllowed = false;
+    private boolean redealAllowed = false;
 
     private static final int SPLAY_HEIGHT = 30;
     private static final int SPLAY_WIDTH = 5;
+    private static final int REDEAL_OK = -1;
+    private static final int REDEAL_BAD = -2;
+
     /**
      * @param size number of cards in the deck
      */
@@ -28,6 +29,11 @@ public class DrawDeck {
         placement.getDeck().add(new Card(0, false, false, false));
         placement.setId("draw");
         placement.setSplay(Placement.SPLAY_DOWN);
+    }
+
+    public void setRedealAllowed(boolean allowed) {
+        if(deck.isEmpty()) placement.getDeck().get(0).setId(allowed ? REDEAL_OK : REDEAL_BAD);
+        redealAllowed = allowed;
     }
 
     private void unsplay() {
@@ -40,7 +46,9 @@ public class DrawDeck {
     private void showIfEmpty() {
         if (deck.isEmpty()) {
             while (!placement.isEmpty()) placement.getDeck().remove(0);
-            placement.getDeck().add(new Card(readealAllowed ? -1 : -2, true, false, false));
+            placement.getDeck().add(
+                    new Card(redealAllowed ? REDEAL_OK : REDEAL_BAD, true, false, false
+            ));
         }
     }
 

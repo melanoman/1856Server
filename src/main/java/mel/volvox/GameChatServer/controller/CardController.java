@@ -53,6 +53,7 @@ public class CardController {
         addGame("fourteen puzzle", FourteenPuzzle.class);
         addGame("pyramid", Pyramid.class);
         addGame("nestor", Nestor.class);
+        addGame("monte carlo", MonteCarlo.class);
     }
 
 
