@@ -57,8 +57,7 @@ public class Baroness extends CardGame {
         if(c.isHighlight()) {
             c.setHighlight(false);
             selection = null;
-        }
-        if(selection == null) {
+        } else if(selection == null) {
             if(c.rank() == 13) {
                 pile[index].getDeck().remove(0);
             } else {
