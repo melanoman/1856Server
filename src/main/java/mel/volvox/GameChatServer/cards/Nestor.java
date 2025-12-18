@@ -51,9 +51,73 @@ public class Nestor extends CardGame {
         table.getPlacements().add(drawDeck.getPlacement());
     }
 
+    private void removeCard(int index) {
+        if (index == DRAW_PILE) drawDeck.draw();
+        else {
+            Placement p = column[index];
+            p.getDeck().remove(0);
+            p.setX(p.getX() - 5);
+            p.setY(p.getY() - 30);
+        }
+    }
+
+    private void clearSelection() {
+        if(selectionIndex == DRAW_PILE) drawDeck.draw();
+        if(selection != null) selection.setHighlight(false);
+        selectionIndex = NO_SELECTION;
+        selection = null;
+    }
+
+    private void checkResult() {
+        boolean found = false;
+        boolean[] used = new boolean[14];
+        for(int i=0; i<12; i++) {
+            if(!column[i].isEmpty()) {
+                found = true;
+                int rank = column[i].getDeck().get(0).rank();
+                if(used[rank]) return;
+                else used[rank] = true;
+            }
+        }
+        if (found) {
+            if(drawDeck.isEmpty()) table.setResult(Tableau.LOSE);
+        } else {
+            table.setResult(Tableau.WIN);
+        }
+    }
+
     @Override
     public Tableau select(String id, int gridX, int gridY) {
-        //TODO all the play rules
+        if(DRAW.equals(id)) {
+            if (drawDeck.isTopExposed()) {
+                clearSelection();
+                checkResult();
+            } else {
+                clearSelection();
+                selection = drawDeck.exposeTop();
+                selection.setHighlight(true);
+                selectionIndex = DRAW_PILE;
+            }
+        } else {
+            int index = Integer.parseInt(id);
+            Placement p = column[index];
+            if (!p.isEmpty()) {
+                Card c = p.getDeck().get(0);
+                if (c.isHighlight()) clearSelection();
+                else if (selection != null && selection.rank() == c.rank()) {
+                    removeCard(selectionIndex);
+                    selection = null;
+                    selectionIndex = NO_SELECTION;
+                    removeCard(index);
+                    checkResult();
+                } else {
+                    clearSelection();
+                    selection = c;
+                    c.setHighlight(true);
+                    selectionIndex = index;
+                }
+            }
+        }
         return table;
     }
 }
