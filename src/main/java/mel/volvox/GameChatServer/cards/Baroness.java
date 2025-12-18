@@ -14,7 +14,8 @@ public class Baroness extends CardGame {
         Placement out = new Placement();
         out.setId(""+index);
         out.setX(220+ index*75);
-        out.setY(175);
+        out.setY(275);
+        out.setSplay(Placement.SPLAY_DOWN);
         if (c != null) {
             out.getDeck().add(c);
             c.setExposed(true);
@@ -35,7 +36,7 @@ public class Baroness extends CardGame {
         table.getPlacements().add(pile[5]);
         table.getPlacements().add(pile[6]);
         drawDeck.getPlacement().setX(370);
-        drawDeck.getPlacement().setY(250);
+        drawDeck.getPlacement().setY(350);
         drawDeck.getPlacement().setId("draw");
         table.getPlacements().add(drawDeck.getPlacement());
     }
