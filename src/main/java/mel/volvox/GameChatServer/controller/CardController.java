@@ -54,6 +54,7 @@ public class CardController {
         addGame("pyramid", Pyramid.class);
         addGame("nestor", Nestor.class);
         addGame("monte carlo", MonteCarlo.class);
+        addGame("decade", Decade.class);
     }
 
 
