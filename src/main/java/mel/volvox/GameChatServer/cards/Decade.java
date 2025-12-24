@@ -34,7 +34,8 @@ public class Decade extends CardGame {
     }
 
     private void removeSelection() {
-        for (int i=selStart; i<=selEnd; i++) main.getDeck().remove(selStart);
+        if (selEnd >= selStart) main.getDeck().subList(selStart, selEnd + 1).clear();
+
         selStart = NO_SELECTION;
         selEnd = NO_SELECTION;
         selTotal = 0;
