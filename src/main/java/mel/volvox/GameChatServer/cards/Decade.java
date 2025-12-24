@@ -4,10 +4,6 @@ import mel.volvox.GameChatServer.comm.cards.Card;
 import mel.volvox.GameChatServer.comm.cards.Placement;
 import mel.volvox.GameChatServer.comm.cards.Tableau;
 
-import java.util.List;
-
-
-
 public class Decade extends CardGame {
     Placement main = new Placement();
     int selStart = NO_SELECTION;

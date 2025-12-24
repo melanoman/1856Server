@@ -4,9 +4,6 @@ import mel.volvox.GameChatServer.comm.cards.Card;
 import mel.volvox.GameChatServer.comm.cards.Placement;
 import mel.volvox.GameChatServer.comm.cards.Tableau;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class Nestor extends CardGame {
     private final Placement[] column = new Placement[12];
     private final DrawDeck drawDeck = new DrawDeck(52);

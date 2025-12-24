@@ -1,7 +1,5 @@
 package mel.volvox.GameChatServer.cards;
 
-import mel.volvox.GameChatServer.comm.cards.Card;
-import mel.volvox.GameChatServer.comm.cards.Placement;
 import mel.volvox.GameChatServer.comm.cards.Tableau;
 
 import java.util.UUID;

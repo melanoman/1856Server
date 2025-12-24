@@ -42,7 +42,7 @@ public class Baroness extends CardGame {
     }
 
     private void deal5() {
-        if(drawDeck.size() == 0) return;
+        if(drawDeck.isEmpty()) return;
         for(int i=0; i<5; i++) drawDeck.dealOnto(pile[i].getDeck(), true);
         if(drawDeck.size() == 2) {
             drawDeck.dealOnto(pile[5].getDeck(), true);
@@ -78,12 +78,12 @@ public class Baroness extends CardGame {
             selectionIndex=index;
             c.setHighlight(true);
         }
-        if(drawDeck.size() == 0) checkResult();
+        if(drawDeck.isEmpty()) checkResult();
         return table;
     }
 
     private void checkResult() {
-        if(drawDeck.size() > 0) return;
+        if(!drawDeck.isEmpty()) return;
         boolean[] used = new boolean[13];
         boolean found = false;
         for(int i=0; i<7; i++) {
