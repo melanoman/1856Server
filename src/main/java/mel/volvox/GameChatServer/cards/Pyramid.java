@@ -151,9 +151,8 @@ public class Pyramid extends CardGame {
     private void checkResult() {
         if (drawDeck.isEmpty() && playPile.isEmpty() && row[0].getDeck().get(0) == null) {
             table.setResult(Tableau.WIN);
-        } else if (redeals > 0 || !drawDeck.isEmpty()) {
-            return;
         } else {
+            if (redeals > 0 || !drawDeck.isEmpty()) return;
             boolean[] used = new boolean[14];
             //for each card in pyramid
             for(int i=6; i>=0; i--) {
