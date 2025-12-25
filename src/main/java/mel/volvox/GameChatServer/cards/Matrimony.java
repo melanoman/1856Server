@@ -7,11 +7,9 @@ import mel.volvox.GameChatServer.comm.cards.Tableau;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Matrimony extends CardGame {
+public class Matrimony extends SingleSelectionGame {
     public static int QUEEN_HEARTS = 37;
     public static int KING_HEARTS = 38;
-    private Card selection = null;
-    private int selectionIndex = NO_SELECTION;
     private final List<Card> deck = Cards.shuffle(52);
     private final Placement main = new Placement();
 
@@ -45,32 +43,19 @@ public class Matrimony extends CardGame {
         int index = gridX + 13*gridY;
         if (index < deck.size()) {
             Card c = deck.get(index);
-            int dx = Math.abs(selectionIndex - index);
+            int dx = Math.abs(selectedIndex - index);
             if (selection == null || dx == 0) {
                 shiftSelection(index, c);
             } else if ((dx == 2 || dx == 3) &&
                        (selection.suit() == c.suit() || selection.rank() == c.rank())
             ) {
-                    int start = Math.min(selectionIndex, index);
+                    int start = Math.min(selectedIndex, index);
                     for (int i = 1; i < dx; i++) deck.remove(start + 1);
                     clearSelection();
                     checkResult();
             } else shiftSelection(index, c);
         } else clearSelection();
         return table;
-    }
-
-    private void clearSelection() {
-        if(selection != null) selection.setHighlight(false);
-        selection = null;
-        selectionIndex = NO_SELECTION;
-    }
-
-    private void shiftSelection(int index, Card c) {
-        clearSelection();
-        selection = c;
-        selectionIndex = index;
-        c.setHighlight(true);
     }
 
     private void checkResult() {

@@ -6,11 +6,9 @@ import mel.volvox.GameChatServer.comm.cards.Tableau;
 
 import java.util.List;
 
-public class Addition13 extends CardGame {
+public class Addition13 extends SingleSelectionGame {
     List<Card> deck;
     Placement main = new Placement();
-    Card selection = null;
-    int selectedIndex = -1;
 
     @Override
     public void init() {
@@ -29,29 +27,26 @@ public class Addition13 extends CardGame {
     public Tableau select(String id, int gridX, int gridY) {
         if(!MAIN.equals(id)) return table;
         if(table.getResult() != Tableau.NONE) return table;
-        if (gridX > 4 || gridY > 1) return table;
 
-        int index = gridX + gridY* main.getGridWidth();
+        int index = gridX + gridY*main.getGridWidth();
         Card c = main.getDeck().get(index);
+        if (c == null) return table; // ignore clicks to empty spaces
         int value = cardValue(c);
 
-        if(value == 13) {
+        if (index == selectedIndex) {
+            clearSelection();
+        } else if(value == 13) {
             Cards.dealOver(deck, main.getDeck(), index);
             checkResult();
         } else if(selection == null) {
-            selection = c;
-            selectedIndex = index;
-            c.setHighlight(true);
+            shiftSelection(index, c);
         } else if(cardValue(selection) + value == 13) {
             Cards.dealOver(deck, main.getDeck(), index);
             Cards.dealOver(deck, main.getDeck(), selectedIndex);
-            selection = null;
+            clearSelection();
             checkResult();
         } else {
-            selection.setHighlight(false);
-            c.setHighlight(true);
-            selection = c;
-            selectedIndex = index;
+            shiftSelection(index, c);
         }
         return table;
     }
