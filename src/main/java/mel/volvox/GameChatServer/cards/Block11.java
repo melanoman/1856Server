@@ -6,11 +6,10 @@ import mel.volvox.GameChatServer.comm.cards.Tableau;
 
 import java.util.List;
 
-public class Block11 extends CardGame {
+public class Block11 extends SingleSelectionGame {
     List<Card> deck;
     Placement main = new Placement();
     boolean seeded = false;
-    Card a = null;
 
     @Override
     public void init() {
@@ -18,6 +17,7 @@ public class Block11 extends CardGame {
         deck = Cards.shuffle(52);
         while(main.getDeck().size() < 12) {
             Card c = deck.remove(0);
+            c.setExposed(true);
             if(c.isFace()) deck.add(c);
             else main.getDeck().add(c);
         }
@@ -30,9 +30,6 @@ public class Block11 extends CardGame {
         checkResult();
     }
 
-    private void deselectAll() {
-        if(a != null) { a.setHighlight(false); a = null; }
-    }
 
     private void checkResult() {
         if(deck.isEmpty()) table.setResult(Tableau.WIN);
@@ -51,20 +48,18 @@ public class Block11 extends CardGame {
     public Tableau select(String id, int gridX, int gridY) {
         int index = gridX + gridY*main.getGridWidth();
         Card c = main.getDeck().get(index);
+        if (c == null) return table;
         if (c.isHighlight() || c.isFace()) {
-            deselectAll();
-        } else if (a==null) {
-            a = c;
-            c.setHighlight(true);
-        } else if (a.rank()+c.rank() == 11) {
-            Cards.dealOver(deck, main.getDeck(), a);
+            clearSelection();
+        } else if (selection==null) {
+            shiftSelection(index, c);
+        } else if (selection.rank()+c.rank() == 11) {
+            Cards.dealOver(deck, main.getDeck(), selection);
             Cards.dealOver(deck, main.getDeck(), c);
-            a = null;
+            clearSelection();
             checkResult();
         } else {
-            a.setHighlight(false);
-            c.setHighlight(true);
-            a = c;
+            shiftSelection(index, c);
         }
         return table;
     }

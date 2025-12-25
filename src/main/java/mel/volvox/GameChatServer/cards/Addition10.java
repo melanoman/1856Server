@@ -41,7 +41,6 @@ public class Addition10 extends CardGame {
     }
 
     private void checkResult() {
-        //TODO check Result SA10
         if (deck.isEmpty() && main.isEmpty()) {
             table.setResult(Tableau.WIN);
         } else {
