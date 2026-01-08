@@ -57,6 +57,7 @@ public class CardController {
         addGame("decade", Decade.class);
         addGame("matrimony", Matrimony.class);
         addGame("accordian", Accordian.class);
+        addGame("golf", Golf.class);
     }
 
 

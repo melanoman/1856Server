@@ -52,6 +52,12 @@ public class DrawDeck {
         }
     }
 
+    public Card draw(boolean expose) {
+        Card c = draw();
+        c.setExposed(expose);
+        return c;
+    }
+
     public Card draw() {
         if (deck.isEmpty()) return null;
         Card out = deck.remove(0);
