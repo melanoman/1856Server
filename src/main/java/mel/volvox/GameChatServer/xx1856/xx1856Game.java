@@ -22,7 +22,10 @@ public class xx1856Game {
     private List<xxMove> moves = new ArrayList<>();
     private final Map<String, xx1856Game> name2game = new HashMap<>();
 
-    public xx1856Game(xx1856Repo repo) { this.repo = repo; }
+    public xx1856Game(String name, xx1856Repo repo) {
+        this.repo = repo;
+        board.name = name;
+    }
 
     public void undo() {
         if (board.undoCount < moves.size()) {
