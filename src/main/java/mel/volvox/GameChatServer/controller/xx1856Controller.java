@@ -25,14 +25,17 @@ public class xx1856Controller {
     @GetMapping("/18xx/list")
     @ResponseBody
     synchronized List<Channel> listGames() {
-        return List.of(new Channel("aa", "xx"), new Channel("bb", "xx"));
-        //return channelRepo.findByType(xx1856_TYPE);
+        return channelRepo.findByType(xx1856_TYPE);
     }
 
     @PutMapping("/18xx/create/{name}")
     @ResponseBody
-    synchronized String create1856(@PathVariable String name) {
-        //TODO
-        throw new IllegalStateException("TODO implement createGame");
+    synchronized List<Channel> create1856(@PathVariable String name) {
+        if(channelRepo.findByNameAndType(name, xx1856_TYPE).isEmpty()) {
+            channelRepo.save(new Channel(name, xx1856_TYPE));
+        }
+        //TODO actually create the game
+        //TODO return board instead
+        return channelRepo.findByType(xx1856_TYPE);
     }
 }
