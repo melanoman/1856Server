@@ -35,6 +35,14 @@ public class UndoManager<
         }
     }
 
+    public void load(List<MOVE> moves) {
+        for(MOVE move:moves) {
+            ACTION action = findAction(move);
+            moves.add(move);
+            action.exec(move, game);
+        }
+    }
+
     public void newTopMove(MOVE move) {
         ACTION action = findAction(move);
         action.checkAllowed(move, game);
