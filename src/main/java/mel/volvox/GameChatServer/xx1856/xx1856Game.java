@@ -3,6 +3,7 @@ package mel.volvox.GameChatServer.xx1856;
 import lombok.Getter;
 
 import mel.volvox.GameChatServer.model.xx1856.xxMove;
+import mel.volvox.GameChatServer.model.xx1856.xxMoveID;
 import mel.volvox.GameChatServer.repository.xx1856Repo;
 import mel.volvox.undo.UndoManager;
 import mel.volvox.undo.UndoableGame;
@@ -40,4 +41,13 @@ public class xx1856Game implements UndoableGame<xxMove> {
         }
     }
 
+    private xxMoveID nextID() {
+        throw new IllegalStateException("TODO makeID");
+    }
+
+    public xx1856Board addMoveUsingPlayer(String opcode, String player) {
+        xxMove move = new xxMove(nextID(), opcode, player, "", 0, "", true);
+        undoMgr.newTopMove(move);
+        return board;
+    }
 }

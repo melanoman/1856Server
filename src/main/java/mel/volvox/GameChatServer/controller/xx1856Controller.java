@@ -1,7 +1,6 @@
 package mel.volvox.GameChatServer.controller;
 
 import mel.volvox.GameChatServer.model.seating.Channel;
-import mel.volvox.GameChatServer.model.xx1856.xxMove;
 import mel.volvox.GameChatServer.repository.ChannelRepo;
 import mel.volvox.GameChatServer.repository.xx1856Repo;
 
@@ -15,6 +14,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static mel.volvox.GameChatServer.xx1856.xxOpcodes.*;
 
 @CrossOrigin
 @Controller
@@ -30,13 +31,13 @@ public class xx1856Controller {
 
     @GetMapping("/18xx/list")
     @ResponseBody
-    synchronized List<Channel> listGames() {
+    List<Channel> listGames() {
         return channelRepo.findByType(xx1856_TYPE);
     }
 
     @PutMapping("/18xx/create/{name}")
     @ResponseBody
-    synchronized xx1856Board create1856(@PathVariable String name) {
+    xx1856Board create1856(@PathVariable String name) {
         if(channelRepo.findByNameAndType(name, xx1856_TYPE).isEmpty()) {
             try {
                 channelRepo.save(new Channel(name, xx1856_TYPE));
@@ -51,18 +52,27 @@ public class xx1856Controller {
         }
     }
 
-    @GetMapping("18xx/board/{name}")
-    @ResponseBody
-    synchronized xx1856Board load1856(@PathVariable String name) {
-        if(name2game.containsKey(name)) return name2game.get(name).getBoard();
+    synchronized private xx1856Game findGame(String name) {
+        if(name2game.containsKey(name)) return name2game.get(name);
         if(channelRepo.findByNameAndType(name, xx1856_TYPE).isEmpty()) {
             throw new IllegalStateException("Game not Found");
         } else {
             xx1856Game game = new xx1856Game(name, repo);
             game.load(repo.findByIdGameNameOrderByIdSerialNumberAsc(name));
             name2game.put(name, game);
-            return game.getBoard();
-
+            return game;
         }
+    }
+
+    @GetMapping("18xx/board/{name}")
+    @ResponseBody
+    xx1856Board load1856(@PathVariable String name) {
+        return findGame(name).getBoard();
+    }
+
+    @PutMapping("18xx/addPlayer/{game}/{player}")
+    @ResponseBody
+    xx1856Board addPlayer(@PathVariable String game, @PathVariable String player) {
+        return findGame(game).addMoveUsingPlayer(ADD_PLAYER, player);
     }
 }

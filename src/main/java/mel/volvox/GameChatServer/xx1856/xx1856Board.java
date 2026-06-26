@@ -20,5 +20,4 @@ public class xx1856Board {
     List<xxBid> bids = new ArrayList<>(); //only valid during auction
 
     String phase = Era.GATHER.name();
-
 }
