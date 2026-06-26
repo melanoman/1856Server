@@ -12,25 +12,10 @@ import java.util.List;
 import java.util.Map;
 
 public class xx1856Game implements UndoableGame<xxMove> {
-    @Override
-    public void storeMove(xxMove move) {
-        repo.save(move);
-    }
-
-    @Override
-    public void deleteMove(xxMove move) {
-        repo.delete(move);
-    }
-
-    @Override
-    public String getActionType(xxMove move) {
-        return move.getAction();
-    }
-
-    @Override
-    public boolean isMovePrimary(xxMove move) {
-        return move.isTop();
-    }
+    @Override public void storeMove(xxMove move) { repo.save(move); }
+    @Override public void deleteMove(xxMove move) { repo.delete(move); }
+    @Override public String getActionType(xxMove move) { return move.getAction(); }
+    @Override public boolean isMovePrimary(xxMove move) { return move.isTop(); }
 
     public enum Era { GATHER, AUCTION, INITIAL, STOCK, OP, DONE }
 

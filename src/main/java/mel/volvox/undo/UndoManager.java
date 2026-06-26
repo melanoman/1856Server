@@ -52,8 +52,8 @@ public class UndoManager<
         }
         game.storeMove(move);
         moves.add(move);
-        action.init(move, game);
         action.exec(move, game);
+        action.init(move, game);
     }
 
     public void newSubMove(MOVE move) {

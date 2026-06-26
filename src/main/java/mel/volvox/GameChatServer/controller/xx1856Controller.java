@@ -1,6 +1,7 @@
 package mel.volvox.GameChatServer.controller;
 
 import mel.volvox.GameChatServer.model.seating.Channel;
+import mel.volvox.GameChatServer.model.xx1856.xxMove;
 import mel.volvox.GameChatServer.repository.ChannelRepo;
 import mel.volvox.GameChatServer.repository.xx1856Repo;
 
@@ -58,9 +59,10 @@ public class xx1856Controller {
             throw new IllegalStateException("Game not Found");
         } else {
             xx1856Game game = new xx1856Game(name, repo);
+            game.load(repo.findByIdGameNameOrderByIdSerialNumberAsc(name));
             name2game.put(name, game);
             return game.getBoard();
-            //TODO load moves
+
         }
     }
 }
