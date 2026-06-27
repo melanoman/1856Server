@@ -46,9 +46,10 @@ public class UndoManager<
     public void newTopMove(MOVE move) {
         ACTION action = findAction(move);
         action.checkAllowed(move, game);
-        if (undoCount > 0) {
-            moves.subList(moves.size()-undoCount, moves.size()).clear();
-            undoCount = 0;
+        while (undoCount > 0) {
+            MOVE oldMove = moves.remove(moves.size() - 1);
+            game.deleteMove(oldMove);
+            undoCount--;
         }
         game.storeMove(move);
         moves.add(move);
@@ -81,8 +82,8 @@ public class UndoManager<
     public void redo() {
         if (undoCount < 1) return;
         MOVE move = moves.get(moves.size() - undoCount);
-        findAction(move).exec(move, game);
         undoCount--;
+        findAction(move).exec(move, game);
         redoSubs();
     }
 
@@ -97,12 +98,13 @@ public class UndoManager<
 
     public void redoAll() {
         while (undoCount > 0) {
-            undoCount--;
             MOVE move = moves.get(moves.size() - undoCount);
+            undoCount--;
             findAction(move).exec(move, game);
         }
     }
 
     public int size() { return moves.size(); }
+    public int calculateSerialNumber() { return moves.size() - undoCount;}
 }
 

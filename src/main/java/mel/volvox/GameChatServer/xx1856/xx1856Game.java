@@ -32,9 +32,10 @@ public class xx1856Game implements UndoableGame<xxMove> {
         registerActions();
     }
 
-    public void load(List<xxMove> moves) {
-        undoMgr.load(moves);
-    }
+    public void load(List<xxMove> moves) { undoMgr.load(moves); }
+    public xx1856Board undo() { undoMgr.undo(); return board; }
+    public xx1856Board redo() { undoMgr.redo(); return board; }
+    public xx1856Board redoAll() { undoMgr.redoAll(); return board; }
 
     void assertPhase(Era intended, String caller) {
         if(!intended.name().equals(board.phase)) {
@@ -48,7 +49,7 @@ public class xx1856Game implements UndoableGame<xxMove> {
         return board;
     }
 
-    private xxMoveID nextID() { return new xxMoveID(board.name, undoMgr.size()); }
+    private xxMoveID nextID() { return new xxMoveID(board.name, undoMgr.calculateSerialNumber()); }
     private void registerActions() {
         xxPlayerActions.registerAll(undoMgr);
     }

@@ -75,4 +75,22 @@ public class xx1856Controller {
     xx1856Board addPlayer(@PathVariable String game, @PathVariable String player) {
         return findGame(game).addMoveUsingPlayer(ADD_PLAYER, player);
     }
+
+    @PutMapping("18xx/undo/{game}")
+    @ResponseBody
+    xx1856Board undo(@PathVariable String game) {
+        return findGame(game).undo();
+    }
+
+    @PutMapping("18xx/redo/{game}")
+    @ResponseBody
+    xx1856Board redo(@PathVariable String game) {
+        return findGame(game).redo();
+    }
+
+    @PutMapping("18xx/redoAll/{game}")
+    @ResponseBody
+    xx1856Board redoAll(@PathVariable String game) {
+        return findGame(game).redoAll();
+    }
 }
