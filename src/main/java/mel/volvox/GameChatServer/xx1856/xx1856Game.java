@@ -24,7 +24,7 @@ public class xx1856Game implements UndoableGame<xxMove> {
     @Getter private final xxBank bank = new xxBank(board);
     private final xx1856Repo repo;
     private final Map<String, xx1856Game> name2game = new HashMap<>();
-    @Getter private final UndoManager<xxMove, xx1856Game, ? extends xxAction> undoMgr = new UndoManager<>(this);
+    @Getter private final UndoManager<xxMove, xx1856Game, xxAction> undoMgr = new UndoManager<>(this);
 
     public xx1856Game(String name, xx1856Repo repo) {
         this.repo = repo;

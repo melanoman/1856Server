@@ -1,5 +1,6 @@
 package mel.volvox.GameChatServer.xx1856;
 
+import mel.volvox.GameChatServer.game.Game;
 import mel.volvox.GameChatServer.model.xx1856.xxMove;
 import mel.volvox.undo.UndoManager;
 
@@ -15,7 +16,7 @@ public class xxPlayerActions {
         return null;
     }
 
-    public static void registerAll(UndoManager mgr) {
+    public static void registerAll(UndoManager<xxMove, xx1856Game, xxAction> mgr) {
         mgr.registerActionType(ADD_PLAYER, new AddPlayerAction());
     }
 
