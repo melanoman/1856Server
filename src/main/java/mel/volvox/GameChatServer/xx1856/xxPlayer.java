@@ -1,8 +1,15 @@
 package mel.volvox.GameChatServer.xx1856;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.util.ArrayList;
 import java.util.List;
 
+@NoArgsConstructor
+@AllArgsConstructor
+@Data
 public class xxPlayer {
     String name;
     int cash;

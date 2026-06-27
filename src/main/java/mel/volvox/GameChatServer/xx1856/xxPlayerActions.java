@@ -1,8 +1,11 @@
 package mel.volvox.GameChatServer.xx1856;
 
 import mel.volvox.GameChatServer.model.xx1856.xxMove;
+import mel.volvox.undo.UndoManager;
 
 import java.util.List;
+
+import static mel.volvox.GameChatServer.xx1856.xxOpcodes.*;
 
 public class xxPlayerActions {
     static xxPlayer findPlayer(String name, xx1856Game game) {
@@ -10,6 +13,10 @@ public class xxPlayerActions {
             if(name.equals(player.name)) return player;
         }
         return null;
+    }
+
+    public static void registerAll(UndoManager mgr) {
+        mgr.registerActionType(ADD_PLAYER, new AddPlayerAction());
     }
 
     public static class AddPlayerAction extends xxAction {

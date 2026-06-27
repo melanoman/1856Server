@@ -29,6 +29,7 @@ public class xx1856Game implements UndoableGame<xxMove> {
     public xx1856Game(String name, xx1856Repo repo) {
         this.repo = repo;
         board.name = name;
+        registerActions();
     }
 
     public void load(List<xxMove> moves) {
@@ -41,13 +42,14 @@ public class xx1856Game implements UndoableGame<xxMove> {
         }
     }
 
-    private xxMoveID nextID() {
-        throw new IllegalStateException("TODO makeID");
-    }
-
     public xx1856Board addMoveUsingPlayer(String opcode, String player) {
         xxMove move = new xxMove(nextID(), opcode, player, "", 0, "", true);
         undoMgr.newTopMove(move);
         return board;
+    }
+
+    private xxMoveID nextID() { return new xxMoveID(board.name, undoMgr.size()); }
+    private void registerActions() {
+        xxPlayerActions.registerAll(undoMgr);
     }
 }

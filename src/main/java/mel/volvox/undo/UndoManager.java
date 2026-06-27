@@ -38,7 +38,7 @@ public class UndoManager<
     public void load(List<MOVE> moves) {
         for(MOVE move:moves) {
             ACTION action = findAction(move);
-            moves.add(move);
+            this.moves.add(move);
             action.exec(move, game);
         }
     }
@@ -102,5 +102,7 @@ public class UndoManager<
             findAction(move).exec(move, game);
         }
     }
+
+    public int size() { return moves.size(); }
 }
 
