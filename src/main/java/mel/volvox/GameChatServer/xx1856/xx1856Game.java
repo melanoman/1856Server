@@ -49,6 +49,12 @@ public class xx1856Game implements UndoableGame<xxMove> {
         return board;
     }
 
+    public xx1856Board addMoveUsingPlayerDetail(String opcode, String player, String detail) {
+        xxMove move = new xxMove(nextID(), opcode, player, "", 0, detail, true);
+        undoMgr.newTopMove(move);
+        return board;
+    }
+
     private xxMoveID nextID() { return new xxMoveID(board.name, undoMgr.calculateSerialNumber()); }
     private void registerActions() {
         xxPlayerActions.registerAll(undoMgr);

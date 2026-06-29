@@ -76,6 +76,12 @@ public class xx1856Controller {
         return findGame(game).addMoveUsingPlayer(ADD_PLAYER, player);
     }
 
+    @PutMapping("18xx/renamePlayer/{game}/{player}/{newName}")
+    @ResponseBody
+    xx1856Board renamePlayer(@PathVariable String game, @PathVariable String player, @PathVariable String newName) {
+        return findGame(game).addMoveUsingPlayerDetail(RENAME_PLAYER, player, newName);
+    }
+
     @PutMapping("18xx/undo/{game}")
     @ResponseBody
     xx1856Board undo(@PathVariable String game) {
@@ -92,5 +98,11 @@ public class xx1856Controller {
     @ResponseBody
     xx1856Board redoAll(@PathVariable String game) {
         return findGame(game).redoAll();
+    }
+
+    @PutMapping("18xx/startGame/{game}/{shuffle}")
+    @ResponseBody
+    xx1856Board startGame(@PathVariable String game, @PathVariable boolean shuffle) {
+        throw new IllegalStateException("TODO startGame "+(shuffle? "with":"without")+" shuffle");
     }
 }

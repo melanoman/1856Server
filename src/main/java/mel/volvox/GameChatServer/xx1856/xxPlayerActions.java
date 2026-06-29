@@ -18,8 +18,10 @@ public class xxPlayerActions {
 
     public static void registerAll(UndoManager<xxMove, xx1856Game, xxAction> mgr) {
         mgr.registerActionType(ADD_PLAYER, new AddPlayerAction());
+        mgr.registerActionType(RENAME_PLAYER, new RenamePlayerAction());
     }
 
+    //player = name to add
     public static class AddPlayerAction extends xxAction {
 
         @Override
@@ -43,6 +45,33 @@ public class xxPlayerActions {
         public void undo(xxMove move, xx1856Game game) {
             List<xxPlayer> players = game.getBoard().getPlayers();
             players.remove(players.size() - 1);
+        }
+    }
+
+    // player = oldname detail = newName
+    static class RenamePlayerAction extends xxAction {
+
+        @Override
+        public void checkAllowed(xxMove move, xx1856Game game) {
+            if(findPlayer(move.getPlayer(), game) == null) throw new IllegalStateException("Player not found");
+            if(findPlayer(move.getDetail(), game) != null) throw new IllegalStateException("Duplicate player name");
+        }
+
+        @Override
+        public void init(xxMove move, xx1856Game game) { }
+
+        @Override
+        public void exec(xxMove move, xx1856Game game) {
+            xxPlayer player = findPlayer(move.getPlayer(), game);
+            assert player != null;
+            player.name = move.getDetail();
+        }
+
+        @Override
+        public void undo(xxMove move, xx1856Game game) {
+            xxPlayer player = findPlayer(move.getDetail(), game);
+            assert player != null;
+            player.name = move.getPlayer();
         }
     }
 }
