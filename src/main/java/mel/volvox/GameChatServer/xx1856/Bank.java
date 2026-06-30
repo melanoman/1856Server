@@ -3,10 +3,10 @@ package mel.volvox.GameChatServer.xx1856;
 /**
  * This class manipulates board state for bank transactions
  */
-public class xxBank {
-    xx1856Board board;
+public class Bank {
+    Board board;
 
-    public xxBank(xx1856Board board) {
+    public Bank(Board board) {
         this.board = board;
     }
 

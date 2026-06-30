@@ -10,10 +10,10 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
-public class xxPlayer {
+public class Player {
     String name;
     int cash;
-    List<xxStock> shares = new ArrayList<>();
+    List<Stock> shares = new ArrayList<>();
     List<String> privs = new ArrayList<>();
     List<String> blocks = new ArrayList<>();
 }

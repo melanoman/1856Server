@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class xx1856Game implements UndoableGame<xxMove> {
+public class Game implements UndoableGame<xxMove> {
     @Override public void storeMove(xxMove move) { repo.save(move); }
     @Override public void deleteMove(xxMove move) { repo.delete(move); }
     @Override public String getActionType(xxMove move) { return move.getAction(); }
@@ -20,22 +20,22 @@ public class xx1856Game implements UndoableGame<xxMove> {
 
     public enum Era { GATHER, AUCTION, INITIAL, STOCK, OP, DONE }
 
-    @Getter private final xx1856Board board = new xx1856Board();
-    @Getter private final xxBank bank = new xxBank(board);
+    @Getter private final Board board = new Board();
+    @Getter private final Bank bank = new Bank(board);
     private final xx1856Repo repo;
-    private final Map<String, xx1856Game> name2game = new HashMap<>();
-    @Getter private final UndoManager<xxMove, xx1856Game, xxAction> undoMgr = new UndoManager<>(this);
+    private final Map<String, Game> name2game = new HashMap<>();
+    @Getter private final UndoManager<xxMove, Game, Action> undoMgr = new UndoManager<>(this);
 
-    public xx1856Game(String name, xx1856Repo repo) {
+    public Game(String name, xx1856Repo repo) {
         this.repo = repo;
         board.name = name;
         registerActions();
     }
 
     public void load(List<xxMove> moves) { undoMgr.load(moves); }
-    public xx1856Board undo() { undoMgr.undo(); return board; }
-    public xx1856Board redo() { undoMgr.redo(); return board; }
-    public xx1856Board redoAll() { undoMgr.redoAll(); return board; }
+    public Board undo() { undoMgr.undo(); return board; }
+    public Board redo() { undoMgr.redo(); return board; }
+    public Board redoAll() { undoMgr.redoAll(); return board; }
 
     void assertPhase(Era intended, String caller) {
         if(!intended.name().equals(board.phase)) {
@@ -43,13 +43,13 @@ public class xx1856Game implements UndoableGame<xxMove> {
         }
     }
 
-    public xx1856Board addMoveUsingPlayer(String opcode, String player) {
+    public Board addMoveUsingPlayer(String opcode, String player) {
         xxMove move = new xxMove(nextID(), opcode, player, "", 0, "", true);
         undoMgr.newTopMove(move);
         return board;
     }
 
-    public xx1856Board addMoveUsingPlayerDetail(String opcode, String player, String detail) {
+    public Board addMoveUsingPlayerDetail(String opcode, String player, String detail) {
         xxMove move = new xxMove(nextID(), opcode, player, "", 0, detail, true);
         undoMgr.newTopMove(move);
         return board;
@@ -57,6 +57,6 @@ public class xx1856Game implements UndoableGame<xxMove> {
 
     private xxMoveID nextID() { return new xxMoveID(board.name, undoMgr.calculateSerialNumber()); }
     private void registerActions() {
-        xxPlayerActions.registerAll(undoMgr);
+        PlayerActions.registerAll(undoMgr);
     }
 }

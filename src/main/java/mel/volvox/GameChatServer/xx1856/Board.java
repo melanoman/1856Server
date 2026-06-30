@@ -6,19 +6,19 @@ import lombok.NoArgsConstructor;
 import java.util.ArrayList;
 import java.util.List;
 
-import mel.volvox.GameChatServer.xx1856.xx1856Game.Era;
+import mel.volvox.GameChatServer.xx1856.Game.Era;
 
 @Data
 @NoArgsConstructor
-public class xx1856Board {
+public class Board {
     String name;
     int moveNumber = 0;
     int undoCount = 0;
 
     int bank;
-    List<xxPlayer> players = new ArrayList<>();
-    List<xxCorp> corps = new ArrayList<>();
-    List<xxBid> bids = new ArrayList<>(); //only valid during auction
+    List<Player> players = new ArrayList<>();
+    List<Corp> corps = new ArrayList<>();
+    List<Bid> bids = new ArrayList<>(); //only valid during auction
 
     String phase = Era.GATHER.name();
 }
