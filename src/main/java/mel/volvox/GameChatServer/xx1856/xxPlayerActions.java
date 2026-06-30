@@ -35,14 +35,14 @@ public class xxPlayerActions {
         public void init(xxMove move, xx1856Game game) { }
 
         @Override
-        public void exec(xxMove move, xx1856Game game) {
+        public void doAction(xxMove move, xx1856Game game) {
             xxPlayer player = new xxPlayer();
             player.name = move.getPlayer();
             game.getBoard().getPlayers().add(player);
         }
 
         @Override
-        public void undo(xxMove move, xx1856Game game) {
+        public void undoAction(xxMove move, xx1856Game game) {
             List<xxPlayer> players = game.getBoard().getPlayers();
             players.remove(players.size() - 1);
         }
@@ -61,14 +61,14 @@ public class xxPlayerActions {
         public void init(xxMove move, xx1856Game game) { }
 
         @Override
-        public void exec(xxMove move, xx1856Game game) {
+        public void doAction(xxMove move, xx1856Game game) {
             xxPlayer player = findPlayer(move.getPlayer(), game);
             assert player != null;
             player.name = move.getDetail();
         }
 
         @Override
-        public void undo(xxMove move, xx1856Game game) {
+        public void undoAction(xxMove move, xx1856Game game) {
             xxPlayer player = findPlayer(move.getDetail(), game);
             assert player != null;
             player.name = move.getPlayer();

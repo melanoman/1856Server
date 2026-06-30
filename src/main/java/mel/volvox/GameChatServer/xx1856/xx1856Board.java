@@ -12,7 +12,8 @@ import mel.volvox.GameChatServer.xx1856.xx1856Game.Era;
 @NoArgsConstructor
 public class xx1856Board {
     String name;
-    int undoCount;
+    int moveNumber = 0;
+    int undoCount = 0;
 
     int bank;
     List<xxPlayer> players = new ArrayList<>();
