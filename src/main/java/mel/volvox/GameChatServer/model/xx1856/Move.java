@@ -11,9 +11,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Data
 @Entity
-public class xxMove {
+public class Move {
     @EmbeddedId
-    xxMoveID id;
+    MoveID id;
     String action;
     String player;
     String corp;

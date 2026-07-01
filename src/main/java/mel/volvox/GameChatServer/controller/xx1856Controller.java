@@ -103,6 +103,6 @@ public class xx1856Controller {
     @PutMapping("18xx/startGame/{game}/{shuffle}")
     @ResponseBody
     Board startGame(@PathVariable String game, @PathVariable boolean shuffle) {
-        throw new IllegalStateException("TODO startGame "+(shuffle? "with":"without")+" shuffle");
+        return findGame(game).addMoveUsingAmount(START_GAME, shuffle ? 1 : 0);
     }
 }

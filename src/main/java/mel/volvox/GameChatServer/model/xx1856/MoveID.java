@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Data
 @Embeddable
-public class xxMoveID {
+public class MoveID {
     String gameName;
     int serialNumber;
 }

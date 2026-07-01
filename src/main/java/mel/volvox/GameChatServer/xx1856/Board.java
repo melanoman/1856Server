@@ -21,4 +21,7 @@ public class Board {
     List<Bid> bids = new ArrayList<>(); //only valid during auction
 
     String phase = Era.GATHER.name();
+    String currentPlayer;
+    String priorityPlayer;
+    String currentCorp;  // used for priv during auction only
 }
