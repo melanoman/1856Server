@@ -1,6 +1,7 @@
 package mel.volvox.GameChatServer.xx1856;
 
 import mel.volvox.GameChatServer.model.xx1856.Move;
+import mel.volvox.GameChatServer.service.DiceService;
 import mel.volvox.undo.UndoManager;
 
 import java.util.ArrayList;
@@ -92,12 +93,17 @@ public class GatherActions {
 
         @Override
         public void init(Move move, Game game) {
+            int size = game.getBoard().getPlayers().size();
+            StringBuilder buf = new StringBuilder(NO_SHUFFLE.substring(0, size));
             if(move.getAmount() == 1) {
-                throw new IllegalStateException("TODO moake a random shuffle script");
-            } else {
-                String script = NO_SHUFFLE.substring(0, game.getBoard().players.size());
-                game.addSubUsingDetail(SHUFFLE, script);
+                for (int i = size; i > 0; i--) {
+                    int j = DiceService.Roll(i);
+                    char tmp = buf.charAt(i - 1);
+                    buf.setCharAt(i - 1, buf.charAt(j - 1));
+                    buf.setCharAt(j - 1, tmp);
+                }
             }
+            game.addSubUsingDetail(SHUFFLE, buf.toString());
         }
 
         @Override
