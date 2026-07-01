@@ -16,10 +16,10 @@ public class Priv {
 
     public static List<Priv> PRIVS = List.of(
             new Priv("FLOS", 20, 5),
-            new Priv("W&S", 40, 10),
+            new Priv("WS", 40, 10),
             new Priv("CAN", 50, 10),
             new Priv("GLS", 70, 15),
             new Priv("NIAG", 100, 20),
-            new Priv("ST.C", 100, 20)
+            new Priv("STC", 100, 20)
     );
 }
