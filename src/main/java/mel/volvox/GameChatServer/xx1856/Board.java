@@ -24,4 +24,7 @@ public class Board {
     String currentPlayer;
     String priorityPlayer;
     String currentCorp;  // used for priv during auction only
+
+    // TODO reconsider obscure items
+    int flosDiscount = 0;
 }

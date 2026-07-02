@@ -10,12 +10,6 @@ import java.util.List;
 import static mel.volvox.GameChatServer.xx1856.Opcodes.*;
 
 public class GatherActions {
-    static Player findPlayer(String name, Game game) {
-        for(Player player:game.getBoard().getPlayers()) {
-            if(name.equals(player.name)) return player;
-        }
-        return null;
-    }
 
     public static void registerAll(UndoManager<Move, Game, Action> mgr) {
         mgr.registerActionType(ADD_PLAYER, new AddPlayerAction());
@@ -29,7 +23,7 @@ public class GatherActions {
 
         @Override
         public void checkAllowed(Move move, Game game) {
-            game.assertPhase(Game.Era.GATHER, "AddPlayer");
+            assertPhase(game, Game.Era.GATHER, "AddPlayer");
             if(game.getBoard().getPlayers().size() > 5) throw new IllegalStateException("Game is full");
             if(findPlayer(move.getPlayer(), game) != null) throw new IllegalStateException("Duplicate Name: "+move.getPlayer());
         }
@@ -56,7 +50,7 @@ public class GatherActions {
 
         @Override
         public void checkAllowed(Move move, Game game) {
-            game.assertPhase(Game.Era.GATHER, "RenamePlayer");
+            assertPhase(game, Game.Era.GATHER, "RenamePlayer");
             if(findPlayer(move.getPlayer(), game) == null) throw new IllegalStateException("Player not found");
             if(findPlayer(move.getDetail(), game) != null) throw new IllegalStateException("Duplicate player name");
         }
@@ -83,7 +77,7 @@ public class GatherActions {
     static class StartGameAction extends Action {
         @Override
         public void checkAllowed(Move move, Game game) {
-            game.assertPhase(Game.Era.GATHER, "StartGame");
+            assertPhase(game ,Game.Era.GATHER, "StartGame");
             int playerCount = game.getBoard().getPlayers().size();
             if(playerCount < 3) throw new IllegalStateException("Too few players (min=3)");
             if(playerCount > 6) throw new IllegalStateException("Too many players (max=6)");
@@ -129,6 +123,9 @@ public class GatherActions {
             game.getBoard().currentCorp = Priv.PRIVS.get(0).getName();
             game.getBoard().currentPlayer = game.getBoard().getPlayers().get(0).name;
             game.getBoard().priorityPlayer = game.getBoard().getPlayers().get(0).name;
+            game.getBoard().bank = 10500;
+            int startAmount = 1500 / game.getBoard().getPlayers().size();
+            for(Player p: game.getBoard().getPlayers()) p.cash = startAmount;
         }
 
         @Override
@@ -143,6 +140,7 @@ public class GatherActions {
             game.getBoard().currentCorp = null;
             game.getBoard().currentPlayer = null;
             game.getBoard().priorityPlayer = null;
+            for(Player p: game.getBoard().getPlayers()) p.cash = 0;
         }
     }
 }

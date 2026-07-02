@@ -37,12 +37,6 @@ public class Game implements UndoableGame<Move> {
     public Board redo() { undoMgr.redo(); return board; }
     public Board redoAll() { undoMgr.redoAll(); return board; }
 
-    void assertPhase(Era intended, String caller) {
-        if(!intended.name().equals(board.phase)) {
-            throw new IllegalStateException("Edited during wrong phase -- " + caller);
-        }
-    }
-
     public Board addMoveUsingPlayer(String opcode, String player) {
         Move move = new Move(nextID(), opcode, player, "", 0, "", true);
         undoMgr.newTopMove(move);

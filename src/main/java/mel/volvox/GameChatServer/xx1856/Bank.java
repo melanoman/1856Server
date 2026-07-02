@@ -11,20 +11,29 @@ public class Bank {
     }
 
     public void payPlayer(String player, int amount) {
-        //TODO implement
-        assert false;
+        board.bank -= amount;
+        findPlayer(player).cash += amount;
+        //TODO implement end-of-game trigger
     }
 
     public void payCorp(String corp, int amount) {
-        //TODO implement
+        //TODO implement end-of-game trigger
         assert false;
     }
 
     public void debitPlayer(String player, int amount) {
-
+        board.bank += amount;
+        findPlayer(player).cash -= amount;
     }
 
     public void debitCorp(String corp, int amount) {
+        assert false;
+    }
 
+    private Player findPlayer(String playerName) {
+        for(Player p: board.getPlayers()) {
+            if(p.name.equals(playerName)) return p;
+        }
+        throw new IllegalStateException("Cannot find playerName "+ playerName);
     }
 }
