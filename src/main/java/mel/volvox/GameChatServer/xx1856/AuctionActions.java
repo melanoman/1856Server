@@ -7,12 +7,14 @@ import static mel.volvox.GameChatServer.xx1856.Action.findPriv;
 import static mel.volvox.GameChatServer.xx1856.Opcodes.*;
 
 public class AuctionActions {
+    public static final String BIDOFF_ACTIVITY = "bidoff";
 
     public static void registerAll(UndoManager<Move, Game, Action> mgr) {
         mgr.registerActionType(BUY, new BuyPrivAction());
         mgr.registerActionType(BID, new BidAction());
         mgr.registerActionType(AWARD_BID, new AwardBidAction());
         mgr.registerActionType(CANCEL_BID, new CancelBidAction());
+        mgr.registerActionType(START_BIDOFF, new StartBidoffAction());
     }
 
     static class BuyPrivAction extends Action {
@@ -156,6 +158,21 @@ public class AuctionActions {
         }
     }
 
+    static class StartBidoffAction extends Action {
+        @Override public void checkAllowed(Move move, Game game) { }
+        @Override public void init(Move move, Game game) { }
+
+        @Override
+        public void doAction(Move move, Game game) {
+            game.getBoard().activity = BIDOFF_ACTIVITY;
+        }
+
+        @Override
+        public void undoAction(Move move, Game game) {
+            game.getBoard().activity = move.getDetail();
+        }
+    }
+
     static boolean matchBid(Bid bid, String priv, String player, int amount) {
         return bid.priv.equals(priv) && bid.player.equals(player) && bid.amount == amount;
     }
@@ -191,9 +208,8 @@ public class AuctionActions {
     }
 
     static void makeStartBidoff(Priv priv, Game game) {
-        throw new IllegalStateException("TODO makeStartBidoff");
-        //TODO updateCorp to this priv
-        //TODO set activity to bidoff
+        makePrivChange(priv, game);
+        game.addSubUsingDetail(START_BIDOFF, game.getBoard().activity);
     }
 
     static void makePrivChange(Priv priv, Game game) {

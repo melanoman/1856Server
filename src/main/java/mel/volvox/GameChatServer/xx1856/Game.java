@@ -81,6 +81,11 @@ public class Game implements UndoableGame<Move> {
         undoMgr.newSubMove(move);
     }
 
+    public void addSubUsingNothing(String opcode) {
+        Move move = new Move(nextID(), opcode, "", "", 0, "", false);
+        undoMgr.newSubMove(move);
+    }
+
     private MoveID nextID() { return new MoveID(board.name, undoMgr.calculateSerialNumber()); }
     private void registerActions() {
         Action.registerAll(undoMgr);

@@ -18,6 +18,7 @@ public class Opcodes {
     public static final String AUCTION_PASS = "auctionPass";
     public static final String AWARD_BID = "awardBid";
     public static final String CANCEL_BID = "cancelBid";
+    public static final String START_BIDOFF = "startBidoff";
 
     //STOCK ACTIONS
     public static final String STOCK_PASS = "stockPass";
