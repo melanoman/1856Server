@@ -105,4 +105,11 @@ public class xx1856Controller {
     Board startGame(@PathVariable String game, @PathVariable boolean shuffle) {
         return findGame(game).addMoveUsingAmount(START_GAME, shuffle ? 1 : 0);
     }
+
+    @PutMapping("18xx/buyPriv/{game}/{priv}")
+    @ResponseBody
+    Board buyPriv(@PathVariable String game, @PathVariable String priv) {
+        Game g = findGame(game);
+        return g.addMove(BUY, g.getBoard().getCurrentPlayer(), priv, 0, "");
+    }
 }

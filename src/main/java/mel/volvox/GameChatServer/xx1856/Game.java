@@ -57,12 +57,8 @@ public class Game implements UndoableGame<Move> {
 
     public Board addMove(String opcode, String player, String corp, int amount, String detail) {
         Move move = new Move(nextID(), opcode, player, corp, amount, detail, true);
+        undoMgr.newTopMove(move);
         return board;
-    }
-
-    public void addSubUsingDetail(String opcode, String detail) {
-        Move move = new Move(nextID(), opcode, "", "", 0, detail, false);
-        undoMgr.newSubMove(move);
     }
 
     public void addSub(String opcode, String player, String corp, int amount, String detail) {
@@ -70,8 +66,25 @@ public class Game implements UndoableGame<Move> {
         undoMgr.newSubMove(move);
     }
 
+    public void addSubUsingDetail(String opcode, String detail) {
+        Move move = new Move(nextID(), opcode, "", "", 0, detail, false);
+        undoMgr.newSubMove(move);
+    }
+
+    public void addSubUsingPlayerDetail(String opcode, String player, String detail) {
+        Move move = new Move(nextID(), opcode, player, "", 0, detail, false);
+        undoMgr.newSubMove(move);
+    }
+
+    public void addSubUsingCorpDetail(String opcode, String corp, String detail) {
+        Move move = new Move(nextID(), opcode, "", corp, 0, detail, false);
+        undoMgr.newSubMove(move);
+    }
+
     private MoveID nextID() { return new MoveID(board.name, undoMgr.calculateSerialNumber()); }
     private void registerActions() {
+        Action.registerAll(undoMgr);
         GatherActions.registerAll(undoMgr);
+        AuctionActions.registerAll(undoMgr);
     }
 }

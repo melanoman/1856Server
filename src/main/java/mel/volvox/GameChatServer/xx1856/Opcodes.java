@@ -7,10 +7,16 @@ public class Opcodes {
     public static final String START_GAME = "startGame";
     public static final String SHUFFLE = "shuffle";
 
+    //GENERIC ACTIONS
+    public static final String CHANGE_PLAYER = "changePlayer";
+    public static final String CHANGE_PRIORITY = "changePriority";
+    public static final String CHANGE_CORP = "changeCorp";
+
     //AUCTION ACTIONS
-    public static final String BID = "bid";
-    public static final String BUY = "buy";
+    public static final String BID = "auctionBid";
+    public static final String BUY = "auctionBuy";
     public static final String AUCTION_PASS = "auctionPass";
+    public static final String CANCEL_BID = "cancelBid";
 
     //STOCK ACTIONS
     public static final String STOCK_PASS = "stockPass";
