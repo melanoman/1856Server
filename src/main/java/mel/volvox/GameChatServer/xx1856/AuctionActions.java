@@ -134,7 +134,7 @@ public class AuctionActions {
     static Bid findMinPlayerBid(String priv, String player, Game game) {
         Bid out = null;
         for (Bid bid: game.getBoard().getBids()) {
-            if(bid.player.equals(player)) {
+            if(bid.player.equals(player) && bid.priv.equals(priv)) {
                 if (out == null || out.getAmount() > bid.getAmount()) out = bid;
             }
         }
@@ -204,7 +204,6 @@ public class AuctionActions {
         Bid bid = findSoloBid(priv.name, game);
         game.addSubUsingCorpDetail(CHANGE_CORP, priv.name, game.getBoard().currentCorp);
         game.addSub(AWARD_BID, bid.player, bid.priv, bid.getAmount(), "");
-        makePrivAdvance(game);
     }
 
     static void makeStartBidoff(Priv priv, Game game) {
