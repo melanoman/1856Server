@@ -4,6 +4,7 @@ import mel.volvox.GameChatServer.model.seating.Channel;
 import mel.volvox.GameChatServer.repository.ChannelRepo;
 import mel.volvox.GameChatServer.repository.xx1856Repo;
 
+import mel.volvox.GameChatServer.xx1856.AuctionActions;
 import mel.volvox.GameChatServer.xx1856.Board;
 import mel.volvox.GameChatServer.xx1856.Game;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -110,6 +111,13 @@ public class xx1856Controller {
     @ResponseBody
     Board buyPriv(@PathVariable String game, @PathVariable String priv) {
         Game g = findGame(game);
-        return g.addMove(BUY, g.getBoard().getCurrentPlayer(), priv, 0, "");
+        return g.addMove(BUY, g.getBoard().getCurrentPlayer(), priv, AuctionActions.calculateBuyPrice(g), "");
+    }
+
+    @PutMapping("18xx/bid/{game}/{priv}/{amount}")
+    @ResponseBody
+    Board bidPriv(@PathVariable String game, @PathVariable String priv, @PathVariable int amount) {
+        Game g = findGame(game);
+        return g.addMove(BID, g.getBoard().getCurrentPlayer(), priv, amount, "");
     }
 }

@@ -146,4 +146,10 @@ public abstract class Action implements UndoableAction<Move, Game> {
         game.addSubUsingPlayerDetail(CHANGE_PLAYER, next.name, currentName);
         game.addSubUsingPlayerDetail(CHANGE_PRIORITY, next.name, currentName);
     }
+
+    static void makePlayerAdvance(Game game) {
+        String currentName = game.getBoard().currentPlayer;
+        Player next = nextPlayer(currentName, game);
+        game.addSubUsingPlayerDetail(CHANGE_PLAYER, next.name, currentName);
+    }
 }

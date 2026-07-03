@@ -3,6 +3,7 @@ package mel.volvox.GameChatServer.xx1856;
 import mel.volvox.GameChatServer.model.xx1856.Move;
 import mel.volvox.undo.UndoManager;
 
+import static mel.volvox.GameChatServer.xx1856.Action.findPriv;
 import static mel.volvox.GameChatServer.xx1856.Opcodes.*;
 
 public class AuctionActions {
@@ -10,6 +11,8 @@ public class AuctionActions {
     public static void registerAll(UndoManager<Move, Game, Action> mgr) {
         mgr.registerActionType(BUY, new BuyPrivAction());
         mgr.registerActionType(BID, new BidAction());
+        mgr.registerActionType(AWARD_BID, new AwardBidAction());
+        mgr.registerActionType(CANCEL_BID, new CancelBidAction());
     }
 
     static class BuyPrivAction extends Action {
@@ -28,7 +31,6 @@ public class AuctionActions {
 
         @Override
         public void init(Move move, Game game) {
-            //TODO resolve bids, advance Corp
             makePriorityAdvance(game);
             makePrivAdvance(game);
         }
@@ -68,7 +70,8 @@ public class AuctionActions {
             Bid old = findMinPlayerBid(move.getCorp(), move.getPlayer(), game);
 
             // if the oldest bid is the new bid, there is nothing to cancel
-            if (old != null && old.amount != move.getAmount()) cancelBid(old, game);
+            if (old != null && old.amount != move.getAmount()) makeCancelBid(old, game);
+            makePriorityAdvance(game);
         }
 
         @Override
@@ -81,6 +84,29 @@ public class AuctionActions {
         public void undoAction(Move move, Game game) {
             game.getBoard().bids.removeIf(bid -> matchBid(bid, move.getCorp(), move.getPlayer(), move.getAmount()));
             game.getBank().payPlayer(move.getPlayer(), move.getAmount());
+        }
+    }
+
+    static class AwardBidAction extends Action {
+        @Override public void checkAllowed(Move move, Game game) { }
+
+        @Override
+        public void init(Move move, Game game) {
+            makePrivAdvance(game);
+        }
+
+        @Override
+        public void doAction(Move move, Game game) {
+            Player player = findPlayer(move.getPlayer(), game);
+            player.privs.add(move.getCorp());
+            game.getBoard().bids.removeIf(bid -> bid.priv.equals(move.getCorp()));
+        }
+
+        @Override
+        public void undoAction(Move move, Game game) {
+            Player player = findPlayer(move.getPlayer(), game);
+            player.privs.removeIf(priv -> priv.equals(move.getCorp()));
+            game.getBoard().bids.add(new Bid(move.getCorp(), move.getPlayer(), move.getAmount()));
         }
     }
 
@@ -134,7 +160,7 @@ public class AuctionActions {
         return bid.priv.equals(priv) && bid.player.equals(player) && bid.amount == amount;
     }
 
-    static void cancelBid(Bid bid, Game game) {
+    static void makeCancelBid(Bid bid, Game game) {
         game.addSub(CANCEL_BID, bid.getPlayer(), bid.getPriv(), bid.getAmount(), "");
     }
 
@@ -158,12 +184,14 @@ public class AuctionActions {
     }
 
     static void makeSoloBidWin(Priv priv, Game game) {
-        //TODO updateCorp to this priv
-        //TODO make solo bid win
-        //TODO advance again
+        Bid bid = findSoloBid(priv.name, game);
+        game.addSubUsingCorpDetail(CHANGE_CORP, priv.name, game.getBoard().currentCorp);
+        game.addSub(AWARD_BID, bid.player, bid.priv, bid.getAmount(), "");
+        makePrivAdvance(game);
     }
 
     static void makeStartBidoff(Priv priv, Game game) {
+        throw new IllegalStateException("TODO makeStartBidoff");
         //TODO updateCorp to this priv
         //TODO set activity to bidoff
     }
@@ -176,10 +204,22 @@ public class AuctionActions {
         String currentName = game.getBoard().currentCorp;
         Priv priv = nextPriv(currentName);
         if (priv == null) makeEndAuction(game);
-        switch(countBids(priv, game)) {
+        else switch(countBids(priv, game)) {
             case 0 -> makePrivChange(priv, game);
             case 1 -> makeSoloBidWin(priv, game);
             default -> makeStartBidoff(priv, game);
         }
+    }
+
+    static Bid findSoloBid(String name, Game game) {
+        for(Bid bid:game.getBoard().bids) {
+            if (bid.priv.equals(name)) return bid;
+        }
+        throw new IllegalStateException("CORRUPTION Solo Bid not found");
+    }
+
+    public static int calculateBuyPrice(Game game) {
+        int base = findPriv(game.getBoard().currentCorp).price;
+        return ("FLOS".equals(game.getBoard().currentCorp)) ? base - game.getBoard().flosDiscount : base;
     }
 }
