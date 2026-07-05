@@ -3,7 +3,10 @@ package mel.volvox.GameChatServer.xx1856;
 import mel.volvox.GameChatServer.model.xx1856.Move;
 import mel.volvox.undo.UndoManager;
 
-import static mel.volvox.GameChatServer.xx1856.Action.findPriv;
+import java.util.ArrayList;
+import java.util.List;
+
+import static mel.volvox.GameChatServer.xx1856.Action.*;
 import static mel.volvox.GameChatServer.xx1856.Opcodes.*;
 
 public class AuctionActions {
@@ -15,6 +18,7 @@ public class AuctionActions {
         mgr.registerActionType(AWARD_BID, new AwardBidAction());
         mgr.registerActionType(CANCEL_BID, new CancelBidAction());
         mgr.registerActionType(START_BIDOFF, new StartBidoffAction());
+        mgr.registerActionType(WIN_BIDOFF, new WinBidoffAction());
     }
 
     static class BuyPrivAction extends Action {
@@ -236,5 +240,68 @@ public class AuctionActions {
     public static int calculateBuyPrice(Game game) {
         int base = findPriv(game.getBoard().currentCorp).price;
         return ("FLOS".equals(game.getBoard().currentCorp)) ? base - game.getBoard().flosDiscount : base;
+    }
+
+    public static class WinBidoffAction extends Action {
+
+        @Override
+        public void checkAllowed(Move move, Game game) {
+            assertPhase(game, Game.Era.AUCTION, "WinBid");
+            assertCorpTurn(game, move.getCorp(), "WinBid");
+            confirmPlayerHasBid(game, move.getCorp(), move.getPlayer());
+            confirmOverbidMargin(game, move.getCorp(), move.getPlayer(), move.getAmount());
+            confirmOverbidFunding(game, move.getCorp(), move.getPlayer(), move.getAmount());
+        }
+
+        @Override
+        public void init(Move move, Game game) {
+            List<Bid> toCancel = new ArrayList<>();
+            for (Bid bid:game.getBoard().bids) {
+                if(bid.priv.equals(move.getCorp())) toCancel.add(bid);
+            }
+            for (Bid bid: toCancel) makeCancelBid(bid, game);
+            makePrivAdvance(game);
+        }
+
+        @Override
+        public void doAction(Move move, Game game) {
+            Player player = findPlayer(move.getPlayer(), game);
+            player.privs.add(move.getCorp());
+            game.getBank().debitPlayer(move.getPlayer(), move.getAmount());
+            game.getBoard().activity = "";
+        }
+
+        @Override
+        public void undoAction(Move move, Game game) {
+            Player player = findPlayer(move.getPlayer(), game);
+            player.privs.remove(move.getCorp());
+            game.getBank().payPlayer(move.getPlayer(), move.getAmount());
+            game.getBoard().activity = BIDOFF_ACTIVITY;
+        }
+    }
+
+    private static void confirmPlayerHasBid(Game game, String priv, String player) {
+        for(Bid bid: game.getBoard().bids) {
+            if(bid.priv.equals(priv) && bid.player.equals(player)) return;
+        }
+        throw new IllegalStateException("Player "+player+" is not part of the bidding");
+    }
+
+    private static void confirmOverbidMargin(Game game, String priv, String player, int amount) {
+        int topBid = 0;
+        int margin = 5;
+        for (Bid bid : game.getBoard().bids) {
+            if (bid.priv.equals(priv) && bid.amount > topBid) {
+                topBid = bid.amount;
+                margin = bid.player.equals(player) ? 0 : 5;
+            }
+        }
+        if (amount - topBid < margin) throw new IllegalStateException("Minimum bid is " + (topBid + margin));
+    }
+
+    private static void confirmOverbidFunding(Game game, String priv, String player, int amount) {
+        Bid bid = findMinPlayerBid(priv, player, game);
+        int overbid = amount - bid.amount;
+        assertPlayerFunds(game, player, overbid, "WinBid");
     }
 }

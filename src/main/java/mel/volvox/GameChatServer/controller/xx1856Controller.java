@@ -107,17 +107,26 @@ public class xx1856Controller {
         return findGame(game).addMoveUsingAmount(START_GAME, shuffle ? 1 : 0);
     }
 
-    @PutMapping("18xx/buyPriv/{game}/{priv}")
+    @PutMapping("18xx/buyPriv/{game}/{priv}/{player}")
     @ResponseBody
-    Board buyPriv(@PathVariable String game, @PathVariable String priv) {
+    Board buyPriv(@PathVariable String game, @PathVariable String priv, @PathVariable String player) {
         Game g = findGame(game);
-        return g.addMove(BUY, g.getBoard().getCurrentPlayer(), priv, AuctionActions.calculateBuyPrice(g), "");
+        return g.addMove(BUY, player, priv, AuctionActions.calculateBuyPrice(g), "");
     }
 
-    @PutMapping("18xx/bid/{game}/{priv}/{amount}")
+    @PutMapping("18xx/bid/{game}/{priv}/{player}/{amount}")
     @ResponseBody
-    Board bidPriv(@PathVariable String game, @PathVariable String priv, @PathVariable int amount) {
+    Board bidPriv(@PathVariable String game, @PathVariable String priv,
+                  @PathVariable String player, @PathVariable int amount) {
         Game g = findGame(game);
-        return g.addMove(BID, g.getBoard().getCurrentPlayer(), priv, amount, "");
+        return g.addMove(BID, player, priv, amount, "");
+    }
+
+    @PutMapping("18xx/winBidoff/{game}/{priv}/{player}/{amount}")
+    @ResponseBody
+    Board winBidoff(@PathVariable String game, @PathVariable String priv,
+                    @PathVariable String player, @PathVariable int amount) {
+        Game g = findGame(game);
+        return g.addMove(WIN_BIDOFF, player, priv, amount, "");
     }
 }
