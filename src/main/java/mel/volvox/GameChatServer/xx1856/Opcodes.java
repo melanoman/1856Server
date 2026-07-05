@@ -16,6 +16,7 @@ public class Opcodes {
     public static final String BID = "auctionBid";
     public static final String BUY = "auctionBuy";
     public static final String AUCTION_PASS = "auctionPass";
+    public static final String AUCTION_PAYOUT = "auctionPayout";
     public static final String AWARD_BID = "awardBid";
     public static final String CANCEL_BID = "cancelBid";
     public static final String START_BIDOFF = "startBidoff";

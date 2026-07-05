@@ -118,15 +118,19 @@ public class xx1856Controller {
     @ResponseBody
     Board bidPriv(@PathVariable String game, @PathVariable String priv,
                   @PathVariable String player, @PathVariable int amount) {
-        Game g = findGame(game);
-        return g.addMove(BID, player, priv, amount, "");
+        return findGame(game).addMove(BID, player, priv, amount, "");
     }
 
     @PutMapping("18xx/winBidoff/{game}/{priv}/{player}/{amount}")
     @ResponseBody
     Board winBidoff(@PathVariable String game, @PathVariable String priv,
                     @PathVariable String player, @PathVariable int amount) {
-        Game g = findGame(game);
-        return g.addMove(WIN_BIDOFF, player, priv, amount, "");
+        return findGame(game).addMove(WIN_BIDOFF, player, priv, amount, "");
+    }
+
+    @PutMapping("18xx/auctionPass/{game}/{player}")
+    @ResponseBody
+    Board auctionPass(@PathVariable String game, @PathVariable String player) {
+        return findGame(game).addMove(AUCTION_PASS, player, "", 0, "");
     }
 }

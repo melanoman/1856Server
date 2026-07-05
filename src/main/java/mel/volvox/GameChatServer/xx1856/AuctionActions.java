@@ -19,6 +19,8 @@ public class AuctionActions {
         mgr.registerActionType(CANCEL_BID, new CancelBidAction());
         mgr.registerActionType(START_BIDOFF, new StartBidoffAction());
         mgr.registerActionType(WIN_BIDOFF, new WinBidoffAction());
+        mgr.registerActionType(AUCTION_PASS, new PassAction());
+        mgr.registerActionType(AUCTION_PAYOUT, new Payout());
     }
 
     static class BuyPrivAction extends Action {
@@ -27,29 +29,25 @@ public class AuctionActions {
             return ("FLOS".equals(move.getCorp())) ? base - game.getBoard().flosDiscount : base;
         }
 
-        @Override
-        public void checkAllowed(Move move, Game game) {
+        @Override public void checkAllowed(Move move, Game game) {
             assertPhase(game, Game.Era.AUCTION, "BuyPriv");
             assertPlayerTurn(game, move.getPlayer(), "BuyPriv");
             assertCorpTurn(game, move.getCorp(), "BuyPriv");
             assertPlayerFunds(game, move.getPlayer(), calculatePrice(move, game), "BuyPriv");
         }
 
-        @Override
-        public void init(Move move, Game game) {
+        @Override public void init(Move move, Game game) {
             makePriorityAdvance(game);
             makePrivAdvance(game);
         }
 
-        @Override
-        public void doAction(Move move, Game game) {
+        @Override public void doAction(Move move, Game game) {
             Player player = findPlayer(move.getPlayer(), game);
             player.privs.add(move.getCorp());
             game.getBank().debitPlayer(move.getPlayer(), calculatePrice(move, game));
         }
 
-        @Override
-        public void undoAction(Move move, Game game) {
+        @Override public void undoAction(Move move, Game game) {
             Player player = findPlayer(move.getPlayer(), game);
             player.privs.remove(move.getCorp());
             game.getBank().payPlayer(move.getPlayer(), calculatePrice(move, game));
@@ -57,8 +55,7 @@ public class AuctionActions {
     }
 
     static class BidAction extends Action {
-        @Override
-        public void checkAllowed(Move move, Game game) {
+        @Override public void checkAllowed(Move move, Game game) {
             assertPhase(game, Game.Era.AUCTION, "Bid");
             assertPlayerTurn(game, game.getBoard().currentPlayer, "Bid");
             if(findPrivIndex(game.getBoard().currentCorp) >= findPrivIndex(move.getCorp())) {
@@ -70,8 +67,7 @@ public class AuctionActions {
             assertPlayerFunds(game, move.getPlayer(), move.getAmount() - oldAmount, "Bid");
         }
 
-        @Override
-        public void init(Move move, Game game) {
+        @Override public void init(Move move, Game game) {
             // if there is an old bid by the same player, it will be lower than the new bid.
             Bid old = findMinPlayerBid(move.getCorp(), move.getPlayer(), game);
 
@@ -80,14 +76,12 @@ public class AuctionActions {
             makePriorityAdvance(game);
         }
 
-        @Override
-        public void doAction(Move move, Game game) {
+        @Override public void doAction(Move move, Game game) {
             game.getBoard().bids.add(new Bid(move.getCorp(), move.getPlayer(), move.getAmount()));
             game.getBank().debitPlayer(move.getPlayer(), move.getAmount());
         }
 
-        @Override
-        public void undoAction(Move move, Game game) {
+        @Override public void undoAction(Move move, Game game) {
             game.getBoard().bids.removeIf(bid -> matchBid(bid, move.getCorp(), move.getPlayer(), move.getAmount()));
             game.getBank().payPlayer(move.getPlayer(), move.getAmount());
         }
@@ -96,20 +90,17 @@ public class AuctionActions {
     static class AwardBidAction extends Action {
         @Override public void checkAllowed(Move move, Game game) { }
 
-        @Override
-        public void init(Move move, Game game) {
+        @Override public void init(Move move, Game game) {
             makePrivAdvance(game);
         }
 
-        @Override
-        public void doAction(Move move, Game game) {
+        @Override public void doAction(Move move, Game game) {
             Player player = findPlayer(move.getPlayer(), game);
             player.privs.add(move.getCorp());
             game.getBoard().bids.removeIf(bid -> bid.priv.equals(move.getCorp()));
         }
 
-        @Override
-        public void undoAction(Move move, Game game) {
+        @Override public void undoAction(Move move, Game game) {
             Player player = findPlayer(move.getPlayer(), game);
             player.privs.removeIf(priv -> priv.equals(move.getCorp()));
             game.getBoard().bids.add(new Bid(move.getCorp(), move.getPlayer(), move.getAmount()));
@@ -149,14 +140,12 @@ public class AuctionActions {
         @Override public void checkAllowed(Move move, Game game) { }
         @Override public void init(Move move, Game game) { }
 
-        @Override
-        public void doAction(Move move, Game game) {
+        @Override public void doAction(Move move, Game game) {
             game.getBank().payPlayer(move.getPlayer(), move.getAmount());
             game.getBoard().bids.removeIf(bid -> matchBid(bid, move.getCorp(), move.getPlayer(), move.getAmount()));
         }
 
-        @Override
-        public void undoAction(Move move, Game game) {
+        @Override public void undoAction(Move move, Game game) {
             game.getBank().debitPlayer(move.getPlayer(), move.getAmount());
             game.getBoard().bids.add(new Bid(move.getCorp(), move.getPlayer(), move.getAmount()));
         }
@@ -166,13 +155,11 @@ public class AuctionActions {
         @Override public void checkAllowed(Move move, Game game) { }
         @Override public void init(Move move, Game game) { }
 
-        @Override
-        public void doAction(Move move, Game game) {
+        @Override public void doAction(Move move, Game game) {
             game.getBoard().activity = BIDOFF_ACTIVITY;
         }
 
-        @Override
-        public void undoAction(Move move, Game game) {
+        @Override public void undoAction(Move move, Game game) {
             game.getBoard().activity = move.getDetail();
         }
     }
@@ -244,8 +231,7 @@ public class AuctionActions {
 
     public static class WinBidoffAction extends Action {
 
-        @Override
-        public void checkAllowed(Move move, Game game) {
+        @Override public void checkAllowed(Move move, Game game) {
             assertPhase(game, Game.Era.AUCTION, "WinBid");
             assertCorpTurn(game, move.getCorp(), "WinBid");
             confirmPlayerHasBid(game, move.getCorp(), move.getPlayer());
@@ -253,8 +239,7 @@ public class AuctionActions {
             confirmOverbidFunding(game, move.getCorp(), move.getPlayer(), move.getAmount());
         }
 
-        @Override
-        public void init(Move move, Game game) {
+        @Override public void init(Move move, Game game) {
             List<Bid> toCancel = new ArrayList<>();
             for (Bid bid:game.getBoard().bids) {
                 if(bid.priv.equals(move.getCorp())) toCancel.add(bid);
@@ -263,16 +248,14 @@ public class AuctionActions {
             makePrivAdvance(game);
         }
 
-        @Override
-        public void doAction(Move move, Game game) {
+        @Override public void doAction(Move move, Game game) {
             Player player = findPlayer(move.getPlayer(), game);
             player.privs.add(move.getCorp());
             game.getBank().debitPlayer(move.getPlayer(), move.getAmount());
             game.getBoard().activity = "";
         }
 
-        @Override
-        public void undoAction(Move move, Game game) {
+        @Override public void undoAction(Move move, Game game) {
             Player player = findPlayer(move.getPlayer(), game);
             player.privs.remove(move.getCorp());
             game.getBank().payPlayer(move.getPlayer(), move.getAmount());
@@ -303,5 +286,54 @@ public class AuctionActions {
         Bid bid = findMinPlayerBid(priv, player, game);
         int overbid = amount - bid.amount;
         assertPlayerFunds(game, player, overbid, "WinBid");
+    }
+
+    static class PassAction extends Action {
+        @Override public void checkAllowed(Move move, Game game) {
+            assertPhase(game, Game.Era.AUCTION, "AuctionPass");
+            assertPlayerTurn(game, move.getPlayer(), "AuctionPass");
+            if(!game.getBoard().activity.isEmpty()) throw new IllegalStateException("Enter Bidoff result first");
+        }
+
+        @Override public void init(Move move, Game game) {
+            if (game.getBoard().priorityPlayer.equals(game.getBoard().currentPlayer)) {
+                makeAuctionPayout(game);
+            }
+        }
+
+        @Override public void doAction(Move move, Game game) {
+            game.getBoard().currentPlayer = nextPlayer(game.getBoard().currentPlayer, game).name;
+        }
+
+        @Override public void undoAction(Move move, Game game) {
+            game.getBoard().currentPlayer = move.getPlayer();
+        }
+    }
+
+    static void makeAuctionPayout(Game game) {
+        game.addSub(AUCTION_PAYOUT, "", "", 0, "");
+    }
+
+    static class Payout extends Action {
+        @Override public void checkAllowed(Move move, Game game) { }
+        @Override public void init(Move move, Game game) { }
+
+        @Override public void doAction(Move move, Game game) {
+            for (Player player: game.getBoard().getPlayers()) {
+                for (String priv: player.privs) {
+                    game.getBank().payPlayer(player.name, Priv.findPriv(priv).dividend);
+                }
+            }
+            game.getBoard().flosDiscount += 5;
+        }
+
+        @Override public void undoAction(Move move, Game game) {
+            for (Player player : game.getBoard().getPlayers()) {
+                for (String priv : player.privs) {
+                    game.getBank().debitPlayer(player.name, Priv.findPriv(priv).dividend);
+                }
+            }
+            game.getBoard().flosDiscount -= 5;
+        }
     }
 }

@@ -22,4 +22,11 @@ public class Priv {
             new Priv("NIAG", 100, 20),
             new Priv("STC", 100, 20)
     );
+
+    public static Priv findPriv(String priv) {
+        for(Priv p:PRIVS) {
+            if(p.name.equals(priv)) return p;
+        }
+        throw new IllegalStateException("Private Company not found: " +priv);
+    }
 }
