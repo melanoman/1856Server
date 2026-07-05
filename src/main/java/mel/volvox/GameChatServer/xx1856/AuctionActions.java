@@ -20,7 +20,8 @@ public class AuctionActions {
         mgr.registerActionType(START_BIDOFF, new StartBidoffAction());
         mgr.registerActionType(WIN_BIDOFF, new WinBidoffAction());
         mgr.registerActionType(AUCTION_PASS, new PassAction());
-        mgr.registerActionType(AUCTION_PAYOUT, new Payout());
+        mgr.registerActionType(AUCTION_PAYOUT, new PayoutAction());
+        mgr.registerActionType(END_AUCTION, new EndAuctionAction());
     }
 
     static class BuyPrivAction extends Action {
@@ -188,7 +189,7 @@ public class AuctionActions {
     }
 
     static void makeEndAuction(Game game) {
-        //TODO makeEndAuction
+        game.addSub(END_AUCTION, "", "", 0, "");
     }
 
     static void makeSoloBidWin(Priv priv, Game game) {
@@ -314,7 +315,7 @@ public class AuctionActions {
         game.addSub(AUCTION_PAYOUT, "", "", 0, "");
     }
 
-    static class Payout extends Action {
+    static class PayoutAction extends Action {
         @Override public void checkAllowed(Move move, Game game) { }
         @Override public void init(Move move, Game game) { }
 
@@ -334,6 +335,21 @@ public class AuctionActions {
                 }
             }
             game.getBoard().flosDiscount -= 5;
+        }
+    }
+
+    static class EndAuctionAction extends Action {
+        @Override public void checkAllowed(Move move, Game game) { }
+        @Override public void init(Move move, Game game) { }
+
+        @Override public void doAction(Move move, Game game) {
+            game.getBoard().phase = Game.Era.INITIAL.name();
+            game.getBoard().currentCorp = "";
+        }
+
+        @Override public void undoAction(Move move, Game game) {
+            game.getBoard().phase = Game.Era.AUCTION.name();
+            game.getBoard().currentCorp = Priv.PRIVS.get(Priv.PRIVS.size() - 1).name;
         }
     }
 }
