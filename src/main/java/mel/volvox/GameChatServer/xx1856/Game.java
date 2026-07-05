@@ -37,24 +37,6 @@ public class Game implements UndoableGame<Move> {
     public Board redo() { undoMgr.redo(); return board; }
     public Board redoAll() { undoMgr.redoAll(); return board; }
 
-    public Board addMoveUsingPlayer(String opcode, String player) {
-        Move move = new Move(nextID(), opcode, player, "", 0, "", true);
-        undoMgr.newTopMove(move);
-        return board;
-    }
-
-    public Board addMoveUsingPlayerDetail(String opcode, String player, String detail) {
-        Move move = new Move(nextID(), opcode, player, "", 0, detail, true);
-        undoMgr.newTopMove(move);
-        return board;
-    }
-
-    public Board addMoveUsingAmount(String opcode, int amount) {
-        Move move = new Move(nextID(), opcode, "", "", amount, "", true);
-        undoMgr.newTopMove(move);
-        return board;
-    }
-
     public Board addMove(String opcode, String player, String corp, int amount, String detail) {
         Move move = new Move(nextID(), opcode, player, corp, amount, detail, true);
         undoMgr.newTopMove(move);
@@ -63,26 +45,6 @@ public class Game implements UndoableGame<Move> {
 
     public void addSub(String opcode, String player, String corp, int amount, String detail) {
         Move move = new Move(nextID(), opcode, player, corp, amount, detail, false);
-        undoMgr.newSubMove(move);
-    }
-
-    public void addSubUsingDetail(String opcode, String detail) {
-        Move move = new Move(nextID(), opcode, "", "", 0, detail, false);
-        undoMgr.newSubMove(move);
-    }
-
-    public void addSubUsingPlayerDetail(String opcode, String player, String detail) {
-        Move move = new Move(nextID(), opcode, player, "", 0, detail, false);
-        undoMgr.newSubMove(move);
-    }
-
-    public void addSubUsingCorpDetail(String opcode, String corp, String detail) {
-        Move move = new Move(nextID(), opcode, "", corp, 0, detail, false);
-        undoMgr.newSubMove(move);
-    }
-
-    public void addSubUsingNothing(String opcode) {
-        Move move = new Move(nextID(), opcode, "", "", 0, "", false);
         undoMgr.newSubMove(move);
     }
 

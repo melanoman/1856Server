@@ -25,7 +25,7 @@ public class GatherActions {
         public void checkAllowed(Move move, Game game) {
             assertPhase(game, Game.Era.GATHER, "AddPlayer");
             if(game.getBoard().getPlayers().size() > 5) throw new IllegalStateException("Game is full");
-            if(findPlayer(move.getPlayer(), game) != null) throw new IllegalStateException("Duplicate Name: "+move.getPlayer());
+            if(seekPlayer(move.getPlayer(), game) != null) throw new IllegalStateException("Duplicate Name: "+move.getPlayer());
         }
 
         @Override
@@ -51,8 +51,8 @@ public class GatherActions {
         @Override
         public void checkAllowed(Move move, Game game) {
             assertPhase(game, Game.Era.GATHER, "RenamePlayer");
-            if(findPlayer(move.getPlayer(), game) == null) throw new IllegalStateException("Player not found");
-            if(findPlayer(move.getDetail(), game) != null) throw new IllegalStateException("Duplicate player name");
+            if(seekPlayer(move.getPlayer(), game) == null) throw new IllegalStateException("Player not found");
+            if(seekPlayer(move.getDetail(), game) != null) throw new IllegalStateException("Duplicate player name");
         }
 
         @Override
@@ -60,14 +60,14 @@ public class GatherActions {
 
         @Override
         public void doAction(Move move, Game game) {
-            Player player = findPlayer(move.getPlayer(), game);
+            Player player = seekPlayer(move.getPlayer(), game);
             assert player != null;
             player.name = move.getDetail();
         }
 
         @Override
         public void undoAction(Move move, Game game) {
-            Player player = findPlayer(move.getDetail(), game);
+            Player player = seekPlayer(move.getDetail(), game);
             assert player != null;
             player.name = move.getPlayer();
         }
@@ -97,7 +97,7 @@ public class GatherActions {
                     buf.setCharAt(j - 1, tmp);
                 }
             }
-            game.addSubUsingDetail(SHUFFLE, buf.toString());
+            game.addSub(SHUFFLE, "", "", 0, buf.toString());
         }
 
         @Override
@@ -142,5 +142,12 @@ public class GatherActions {
             game.getBoard().priorityPlayer = null;
             for(Player p: game.getBoard().getPlayers()) p.cash = 0;
         }
+    }
+
+    static Player seekPlayer(String name, Game game) {
+        for(Player player:game.getBoard().getPlayers()) {
+            if(name.equals(player.name)) return player;
+        }
+        return null;
     }
 }

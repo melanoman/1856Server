@@ -193,17 +193,17 @@ public class AuctionActions {
 
     static void makeSoloBidWin(Priv priv, Game game) {
         Bid bid = findSoloBid(priv.name, game);
-        game.addSubUsingCorpDetail(CHANGE_CORP, priv.name, game.getBoard().currentCorp);
+        game.addSub(CHANGE_CORP, "", priv.name, 0, game.getBoard().currentCorp);
         game.addSub(AWARD_BID, bid.player, bid.priv, bid.getAmount(), "");
     }
 
     static void makeStartBidoff(Priv priv, Game game) {
         makePrivChange(priv, game);
-        game.addSubUsingDetail(START_BIDOFF, game.getBoard().activity);
+        game.addSub(START_BIDOFF, "", "", 0, game.getBoard().activity);
     }
 
     static void makePrivChange(Priv priv, Game game) {
-        game.addSubUsingCorpDetail(CHANGE_CORP, priv.name, game.getBoard().currentCorp);
+        game.addSub(CHANGE_CORP, "", priv.name, 0, game.getBoard().currentCorp);
     }
 
     static void makePrivAdvance(Game game) {

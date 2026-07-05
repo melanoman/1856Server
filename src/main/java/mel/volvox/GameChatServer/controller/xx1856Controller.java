@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static mel.volvox.GameChatServer.xx1856.AuctionActions.calculateBuyPrice;
 import static mel.volvox.GameChatServer.xx1856.Opcodes.*;
 
 @CrossOrigin
@@ -74,13 +75,13 @@ public class xx1856Controller {
     @PutMapping("18xx/addPlayer/{game}/{player}")
     @ResponseBody
     Board addPlayer(@PathVariable String game, @PathVariable String player) {
-        return findGame(game).addMoveUsingPlayer(ADD_PLAYER, player);
+        return findGame(game).addMove(ADD_PLAYER, player, "", 0, "");
     }
 
     @PutMapping("18xx/renamePlayer/{game}/{player}/{newName}")
     @ResponseBody
     Board renamePlayer(@PathVariable String game, @PathVariable String player, @PathVariable String newName) {
-        return findGame(game).addMoveUsingPlayerDetail(RENAME_PLAYER, player, newName);
+        return findGame(game).addMove(RENAME_PLAYER, player, "", 0, newName);
     }
 
     @PutMapping("18xx/undo/{game}")
@@ -104,14 +105,14 @@ public class xx1856Controller {
     @PutMapping("18xx/startGame/{game}/{shuffle}")
     @ResponseBody
     Board startGame(@PathVariable String game, @PathVariable boolean shuffle) {
-        return findGame(game).addMoveUsingAmount(START_GAME, shuffle ? 1 : 0);
+        return findGame(game).addMove(START_GAME, "", "", shuffle ? 1 : 0, "");
     }
 
     @PutMapping("18xx/buyPriv/{game}/{priv}/{player}")
     @ResponseBody
     Board buyPriv(@PathVariable String game, @PathVariable String priv, @PathVariable String player) {
         Game g = findGame(game);
-        return g.addMove(BUY, player, priv, AuctionActions.calculateBuyPrice(g), "");
+        return g.addMove(BUY, player, priv, calculateBuyPrice(g), "");
     }
 
     @PutMapping("18xx/bid/{game}/{priv}/{player}/{amount}")
