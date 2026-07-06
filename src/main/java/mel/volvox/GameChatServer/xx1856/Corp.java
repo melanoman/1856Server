@@ -16,7 +16,7 @@ public class Corp {
     int par = 0;
     int bankShares = 0; // zero until set par
     int poolShares = 0;
-    StockPrice price = new StockPrice(83, 0, 0);
+    StockPrice price;
     int tokensMax;
     int tokensUsed = 0;
     List <String> privs = new ArrayList<>();
