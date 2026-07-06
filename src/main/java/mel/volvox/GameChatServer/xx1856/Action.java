@@ -143,6 +143,7 @@ public abstract class Action implements UndoableAction<Move, Game> {
     static void makePriorityAdvance(Game game) {
         String currentName = game.getBoard().currentPlayer;
         Player next = nextPlayer(currentName, game);
+        game.addSub(CHANGE_PRIORITY, next.name, "", 0, game.getBoard().priorityPlayer);
         game.addSub(CHANGE_PLAYER, next.name, "", 0, currentName);
     }
 
