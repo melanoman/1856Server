@@ -345,11 +345,13 @@ public class AuctionActions {
         @Override public void doAction(Move move, Game game) {
             game.getBoard().phase = Game.Era.INITIAL.name();
             game.getBoard().currentCorp = "";
+            game.getBoard().corps.addAll(Corp.INIT);
         }
 
         @Override public void undoAction(Move move, Game game) {
             game.getBoard().phase = Game.Era.AUCTION.name();
             game.getBoard().currentCorp = Priv.PRIVS.get(Priv.PRIVS.size() - 1).name;
+            game.getBoard().corps = new ArrayList<>();
         }
     }
 }
