@@ -4,6 +4,8 @@ import mel.volvox.GameChatServer.model.xx1856.Move;
 import mel.volvox.undo.UndoManager;
 import mel.volvox.undo.UndoableAction;
 
+import java.util.List;
+
 import static mel.volvox.GameChatServer.xx1856.Opcodes.*;
 
 public abstract class Action implements UndoableAction<Move, Game> {
@@ -39,6 +41,13 @@ public abstract class Action implements UndoableAction<Move, Game> {
             throw new IllegalStateException("Edited during wrong phase -- " + caller);
         }
     }
+    static void assertPhases(Game game, List<Game.Era> intended, String caller) {
+        for(Game.Era era:intended) {
+            if(era.name().equals(game.getBoard().phase)) return;
+        }
+        throw new IllegalStateException("Edited during wrong phase -- "+ caller);
+    }
+
     static void assertPlayerTurn(Game game, String player, String caller) {
         if(!player.equals(game.getBoard().currentPlayer)) {
             throw new IllegalStateException("Wrong player "+player+" for "+caller);
@@ -112,6 +121,13 @@ public abstract class Action implements UndoableAction<Move, Game> {
             if(name.equals(priv.name)) return priv;
         }
         throw new IllegalStateException("Unknown Private Company");
+    }
+
+    static Corp findCorp(String name, Game game) {
+        for (Corp corp: game.getBoard().corps) {
+            if(name.equals(corp.name)) return corp;
+        }
+        throw new IllegalStateException("Corporation not found");
     }
 
     static int findPrivIndex(String name) {

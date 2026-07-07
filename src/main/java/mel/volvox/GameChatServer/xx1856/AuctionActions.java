@@ -345,7 +345,7 @@ public class AuctionActions {
         @Override public void doAction(Move move, Game game) {
             game.getBoard().phase = Game.Era.INITIAL.name();
             game.getBoard().currentCorp = "";
-            game.getBoard().corps.addAll(Corp.INIT);
+            for(Corp c:Corp.INIT) game.getBoard().corps.add(new Corp(c.name, c.tokensMax));
         }
 
         @Override public void undoAction(Move move, Game game) {

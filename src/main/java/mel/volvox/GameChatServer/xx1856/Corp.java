@@ -21,7 +21,9 @@ public class Corp {
     int tokensUsed = 0;
     List <String> privs = new ArrayList<>();
     List <String> trains = new ArrayList<>();
-    int loans;
+    int loans = 0;
+    boolean incrementallyFunded;
+    boolean destionationSatisfied;
 
     Corp(String name, int tokens) {
         this.name = name;
