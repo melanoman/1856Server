@@ -35,6 +35,7 @@ public class StockActions {
         @Override
         public void init(Move move, Game game) {
             makePriorityAdvance(game);
+            //TODO resort the new corp into operating order
         }
 
         @Override
@@ -45,8 +46,8 @@ public class StockActions {
             c.poolShares = 0;
             game.getBank().debitPlayer(move.getPlayer(), 2 * move.getAmount());
             c.price = StockPrice.makePar(move.getAmount());
-            //TODO put stock in portfolio
             //TODO record float type
+            findPlayer(move.getPlayer(), game).shares.add(new Stock(c.name, 2, true));
         }
 
         @Override
@@ -55,10 +56,10 @@ public class StockActions {
             c.par = 0;
             c.bankShares = 0;
             c. poolShares = 0;
-            game.getBank().debitPlayer(move.getPlayer(), 2 * move.getAmount());
+            game.getBank().payPlayer(move.getPlayer(), 2 * move.getAmount());
             c.price = null;
-            //TODO remove stock from portfolio
             //TODO clear float type
+            findPlayer(move.getPlayer(), game).shares.removeIf(x -> x.corpName.equals(move.getCorp()));
         }
     }
 }
