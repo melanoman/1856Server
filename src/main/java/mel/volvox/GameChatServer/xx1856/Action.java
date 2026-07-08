@@ -148,6 +148,15 @@ public abstract class Action implements UndoableAction<Move, Game> {
         throw new IllegalStateException("Unknown Player");
     }
 
+    static int findCorpIndex(String name, Game game) {
+        int index = 0;
+        for (Corp corp: game.getBoard().corps) {
+            if(corp.name.equals(name)) return index;
+            index++;
+        }
+        throw new IllegalStateException("Unknown Private Company");
+    }
+
     static Player nextPlayer(String current, Game game) {
         int index = findPlayerIndex(current, game);
         if (index+1 < game.getBoard().players.size()) {
