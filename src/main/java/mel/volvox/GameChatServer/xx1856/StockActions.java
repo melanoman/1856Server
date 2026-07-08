@@ -13,8 +13,27 @@ public class StockActions {
     static final List<Integer> VALID_PARS = List.of(65, 70, 75, 80, 90, 100);
 
     public static void registerAll(UndoManager<Move, Game, Action> undoMgr) {
+        undoMgr.registerActionType(STOCK_PASS, new PassAction());
         undoMgr.registerActionType(SET_PAR, new SetParAction());
         undoMgr.registerActionType(RESORT_CORP, new ResortCorpAction());
+    }
+
+    static class PassAction extends Action {
+
+        @Override public void checkAllowed(Move move, Game game) {
+            assertPhases(game, STOCK_OR_INITIAL, "stockPass");
+            if(!move.getPlayer().equals(game.getBoard().currentPlayer)) {
+                throw new IllegalStateException("Wrong player: "+move.getPlayer());
+            }
+        }
+
+        @Override public void init(Move move, Game game) {
+            makePlayerAdvance(game);
+            //TODO detect all-pass
+        }
+
+        @Override public void doAction(Move move, Game game) { }
+        @Override public void undoAction(Move move, Game game) { }
     }
 
     static class SetParAction extends Action {

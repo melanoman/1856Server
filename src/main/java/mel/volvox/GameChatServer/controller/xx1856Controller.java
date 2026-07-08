@@ -141,4 +141,10 @@ public class xx1856Controller {
                  @PathVariable String player, @PathVariable int amount) {
         return findGame(game).addMove(SET_PAR, player, corp, amount, "");
     }
+
+    @PutMapping("18xx/stockPass/{game}/{player}")
+    @ResponseBody
+    Board stockPass(@PathVariable String game, @PathVariable String player) {
+        return findGame(game).addMove(STOCK_PASS, player, "", 0, "");
+    }
 }
