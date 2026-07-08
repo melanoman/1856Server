@@ -16,6 +16,7 @@ public class StockActions {
         undoMgr.registerActionType(STOCK_PASS, new PassAction());
         undoMgr.registerActionType(SET_PAR, new SetParAction());
         undoMgr.registerActionType(RESORT_CORP, new ResortCorpAction());
+        undoMgr.registerActionType(END_STOCK, new EndStockRoundAction());
     }
 
     static class PassAction extends Action {
@@ -29,7 +30,9 @@ public class StockActions {
 
         @Override public void init(Move move, Game game) {
             makePlayerAdvance(game);
-            //TODO detect all-pass
+            if (game.getBoard().priorityPlayer.equals(game.getBoard().currentPlayer)) {
+                game.addMove(END_STOCK, "", "", 0, "");
+            }
         }
 
         @Override public void doAction(Move move, Game game) { }
@@ -113,5 +116,22 @@ public class StockActions {
         if (c.price.getPrice() > old.price.getPrice()) return 1;
         if (c.price.getPrice() < old.price.getPrice()) return -1;
         return (c.price.getX() - old.price.getX());
+    }
+
+    static class EndStockRoundAction extends Action {
+
+        @Override public void checkAllowed(Move move, Game game) { }
+        @Override public void init(Move move, Game game) {
+            //TODO set number of ORs
+            //TODO pay privates
+        }
+
+        @Override public void doAction(Move move, Game game) {
+
+        }
+
+        @Override public void undoAction(Move move, Game game) {
+
+        }
     }
 }
