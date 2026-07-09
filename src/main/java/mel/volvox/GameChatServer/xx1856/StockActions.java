@@ -17,6 +17,8 @@ public class StockActions {
         undoMgr.registerActionType(STOCK_PASS, new PassAction());
         undoMgr.registerActionType(STOCK_TURN, new Action.NullAction());
         undoMgr.registerActionType(SET_PAR, new SetParAction());
+        undoMgr.registerActionType(BANK_BUY, new BuyBankAction());
+        undoMgr.registerActionType(POOL_BUY, new BuyPoolAction());
         undoMgr.registerActionType(RESORT_CORP, new ResortCorpAction());
         undoMgr.registerActionType(END_STOCK, new EndStockRoundAction());
     }
@@ -69,6 +71,60 @@ public class StockActions {
             c.price = null;
             //TODO clear float type
             findPlayer(move.getPlayer(), game).shares.removeIf(x -> x.corpName.equals(move.getCorp()));
+        }
+    }
+
+    static class BuyBankAction extends Action {
+        @Override public void checkAllowed(Move move, Game game) { }
+
+        @Override
+        public void init(Move move, Game game) {
+            //TODO check prez change
+        }
+
+        @Override
+        public void doAction(Move move, Game game) {
+            Player p = findPlayer(move.getPlayer(), game);
+            Corp c = findCorp(move.getCorp(), game);
+            c.bankShares--;
+            addShareToPlayer(p, move.getCorp());
+            game.getBank().debitPlayer(move.getPlayer(), move.getAmount());
+        }
+
+        @Override
+        public void undoAction(Move move, Game game) {
+            Player p = findPlayer(move.getPlayer(), game);
+            Corp c = findCorp(move.getCorp(), game);
+            c.bankShares++;
+            subtractShareFromPlayer(p, move.getCorp());
+            game.getBank().payPlayer(move.getPlayer(), move.getAmount());
+        }
+    }
+
+    static class BuyPoolAction extends Action {
+        @Override public void checkAllowed(Move move, Game game) { }
+
+        @Override
+        public void init(Move move, Game game) {
+            //TODO check prez change
+        }
+
+        @Override
+        public void doAction(Move move, Game game) {
+            Player p = findPlayer(move.getPlayer(), game);
+            Corp c = findCorp(move.getCorp(), game);
+            c.poolShares--;
+            addShareToPlayer(p, move.getCorp());
+            game.getBank().debitPlayer(move.getPlayer(), move.getAmount());
+        }
+
+        @Override
+        public void undoAction(Move move, Game game) {
+            Player p = findPlayer(move.getPlayer(), game);
+            Corp c = findCorp(move.getCorp(), game);
+            c.poolShares++;
+            subtractShareFromPlayer(p, move.getCorp());
+            game.getBank().payPlayer(move.getPlayer(), move.getAmount());
         }
     }
 
@@ -141,8 +197,9 @@ public class StockActions {
         Player player = findPlayer(playerName, game);
 
         int cost = 0;
+        Corp corp = null;
         if (turn.buyType != null) {
-            Corp corp = findCorp(turn.buyCorp, game);
+            corp = findCorp(turn.buyCorp, game);
             switch(turn.buyType) {
                 case "par" -> checkPar(corp, turn.buyPar);
                 case "bank" -> checkBank(corp);
@@ -157,9 +214,9 @@ public class StockActions {
         //TODO check portfolio size
 
         game.addMove(STOCK_TURN, playerName, "", 0, "");
-        if (turn.buyFirst) makeBuySubs(game, playerName, turn);
+        if (turn.buyFirst) makeBuySubs(game, playerName, turn, corp);
         for(Stock s:turn.salesList) makeSaleSub(game, playerName, s);
-        if (!turn.buyFirst) makeBuySubs(game, playerName, turn);
+        if (!turn.buyFirst) makeBuySubs(game, playerName, turn, corp);
         makePriorityAdvance(game);
         return game.getBoard();
     }
@@ -173,14 +230,22 @@ public class StockActions {
         }
     }
 
-    private static void makeBuySubs(Game game, String playerName, StockTurn turn) {
+    private static void makeBuySubs(Game game, String playerName, StockTurn turn, Corp corp) {
         if(turn.buyType == null) return; //no purchase
-        System.out.println("purchase "+turn.buyType);
+        switch (turn.buyType) {
+            case "par" -> game.addSub(SET_PAR, playerName, corp.name, turn.buyPar, "");
+            case "bank" -> game.addSub(BANK_BUY, playerName, corp.name, corp.par, "");
+            case "pool" -> game.addSub(POOL_BUY, playerName, corp.name, corp.price.getPrice(), "");
+        }
+        //TODO check prez change
     }
 
     private static void makeSaleSub(Game game, String playerName, Stock sale) {
-        //TODO makeSaleSub
+        Corp c = findCorp(sale.corpName, game);
+        game.addSub(STOCK_SALE, playerName, sale.corpName, sale.amount, previewDrop(sale, game));
     }
+
+    private static String previewDrop(Stock sale, Game game) { return ""+0; } //TODO preview drop
 
     private static void checkPool(Corp corp) {
         if(corp.poolShares < 1) throw new IllegalStateException("No pool share available for "+corp.name);
@@ -188,6 +253,20 @@ public class StockActions {
 
     private static void checkBank(Corp corp) {
         if(corp.bankShares < 1) throw new IllegalStateException("No bank share available for "+corp.name);
+    }
+
+    private static void addShareToPlayer(Player p, String corpName) {
+        for(Stock s:p.shares) if(s.corpName.equals(corpName)) { s.amount++; return; }
+        p.shares.add(new Stock(corpName, 1, false));
+    }
+
+    private static void subtractShareFromPlayer(Player p, String corpName) {
+        Stock nuke = null;
+        for(Stock s:p.shares) if(s.corpName.equals(corpName)) {
+            s.amount--;
+            if (s.amount == 0) nuke = s;
+        }
+        p.shares.remove(nuke);
     }
 
     private static int calculateCost(Corp c, String buyType, int par) {
