@@ -26,6 +26,7 @@ public class Opcodes {
     //STOCK ACTIONS
     public static final String STOCK_PASS = "stockPass";
     public static final String SET_PAR = "setPar";
+    public static final String STOCK_TURN = "stockTurn";
     public static final String END_STOCK = "endStock";
 
     //CORP ACTIONS

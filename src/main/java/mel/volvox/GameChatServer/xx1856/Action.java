@@ -177,4 +177,11 @@ public abstract class Action implements UndoableAction<Move, Game> {
         Player next = nextPlayer(currentName, game);
         game.addSub(CHANGE_PLAYER, next.name, "", 0, currentName);
     }
+
+    public static class NullAction extends Action {
+        @Override public void doAction(Move move, Game game) { }
+        @Override public void undoAction(Move move, Game game) { }
+        @Override public void checkAllowed(Move move, Game game) { }
+        @Override public void init(Move move, Game game) { }
+    }
 }

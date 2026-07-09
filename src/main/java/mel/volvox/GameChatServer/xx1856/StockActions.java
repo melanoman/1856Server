@@ -6,6 +6,7 @@ import mel.volvox.undo.UndoManager;
 
 import java.util.List;
 
+import static mel.volvox.GameChatServer.xx1856.Action.*;
 import static mel.volvox.GameChatServer.xx1856.Opcodes.*;
 
 public class StockActions {
@@ -14,6 +15,7 @@ public class StockActions {
 
     public static void registerAll(UndoManager<Move, Game, Action> undoMgr) {
         undoMgr.registerActionType(STOCK_PASS, new PassAction());
+        undoMgr.registerActionType(STOCK_TURN, new Action.NullAction());
         undoMgr.registerActionType(SET_PAR, new SetParAction());
         undoMgr.registerActionType(RESORT_CORP, new ResortCorpAction());
         undoMgr.registerActionType(END_STOCK, new EndStockRoundAction());
@@ -40,22 +42,9 @@ public class StockActions {
     }
 
     static class SetParAction extends Action {
-
-        @Override public void checkAllowed(Move move, Game game) {
-            assertPhases(game, STOCK_OR_INITIAL, "SetPar");
-            Corp c = findCorp(move.getCorp(), game);
-            if (c.par > 0) {
-                throw new IllegalStateException("Par already set");
-            }
-            if (!VALID_PARS.contains(move.getAmount())) {
-                throw new IllegalStateException("Invalid Par value " + move.getAmount());
-            }
-            assertPlayerFunds(game, move.getPlayer(), 2 * move.getAmount(), "SetPar");
-            // TODO check portfolio space
-        }
+        @Override public void checkAllowed(Move move, Game game) { }
 
         @Override public void init(Move move, Game game) {
-            makePriorityAdvance(game);
             int oldIndex = findCorpIndex(move.getCorp(), game);
             game.addSub(RESORT_CORP, "", move.getCorp(), oldIndex, "");
         }
@@ -106,7 +95,6 @@ public class StockActions {
             game.getBoard().corps.remove(c);
             game.getBoard().corps.add(move.getAmount(), c);
         }
-
     }
 
     static int compareCorpOrder(Corp c, Corp old) {
@@ -134,4 +122,82 @@ public class StockActions {
 
         }
     }
+
+    // empty umbrella for processStockAction
+    public static class StockTurnAction extends Action {
+        @Override public void checkAllowed(Move move, Game game) { /* see processStockTurn */ }
+        @Override public void init(Move move, Game game) { /* see processStockTurn */ }
+        @Override public void doAction(Move move, Game game) { }
+        @Override public void undoAction(Move move, Game game) { }
+    }
+
+    public static Board processStockTurn(StockTurn turn, String playerName, Game game) {
+        //TODO checkAllowed
+        assertPhases(game, STOCK_OR_INITIAL, "stockTurn");
+        assertPlayerTurn(game, playerName, "stockTurn");
+        if(game.getBoard().phase.equals(Game.Era.INITIAL.name()) && !turn.salesList.isEmpty()) {
+            throw new IllegalStateException("No sales in first stock round.");
+        }
+        Player player = findPlayer(playerName, game);
+
+        int cost = 0;
+        if (turn.buyType != null) {
+            Corp corp = findCorp(turn.buyCorp, game);
+            switch(turn.buyType) {
+                case "par" -> checkPar(corp, turn.buyPar);
+                case "bank" -> checkBank(corp);
+                case "pool" -> checkPool(corp);
+            }
+            cost = calculateCost(corp, turn.buyType, turn.buyPar);
+        }
+        //TODO are sales sellable?
+
+        if (!turn.buyFirst) cost -= calculateSalesValue(turn.salesList, game);
+        if (cost > 0) assertPlayerFunds(game, playerName, cost, "stockBuy");
+        //TODO check portfolio size
+
+        game.addMove(STOCK_TURN, playerName, "", 0, "");
+        if (turn.buyFirst) makeBuySubs(game, playerName, turn);
+        for(Stock s:turn.salesList) makeSaleSub(game, playerName, s);
+        if (!turn.buyFirst) makeBuySubs(game, playerName, turn);
+        makePriorityAdvance(game);
+        return game.getBoard();
+    }
+
+    private static void checkPar(Corp corp, int amount) {
+        if (!VALID_PARS.contains(amount)) {
+            throw new IllegalStateException("Invalid Par value " + amount);
+        }
+        if(corp.par > 0) {
+            throw new IllegalStateException(corp.name+" already has its par set");
+        }
+    }
+
+    private static void makeBuySubs(Game game, String playerName, StockTurn turn) {
+        if(turn.buyType == null) return; //no purchase
+        System.out.println("purchase "+turn.buyType);
+    }
+
+    private static void makeSaleSub(Game game, String playerName, Stock sale) {
+        //TODO makeSaleSub
+    }
+
+    private static void checkPool(Corp corp) {
+        if(corp.poolShares < 1) throw new IllegalStateException("No pool share available for "+corp.name);
+    }
+
+    private static void checkBank(Corp corp) {
+        if(corp.bankShares < 1) throw new IllegalStateException("No bank share available for "+corp.name);
+    }
+
+    private static int calculateCost(Corp c, String buyType, int par) {
+        return switch (buyType) {
+            case "par" -> par * 2;
+            case "bank" -> c.par;
+            case "pool" -> c.price.getPrice();
+            default -> 9999999; // SHOULD NOT HAPPEN
+        };
+    }
+
+    private static int calculateSalesValue(List<Stock> sales, Game game) { return 0; } //TODO calculate sales value
 }

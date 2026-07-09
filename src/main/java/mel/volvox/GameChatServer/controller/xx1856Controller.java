@@ -1,12 +1,11 @@
 package mel.volvox.GameChatServer.controller;
 
+import mel.volvox.GameChatServer.comm.train.StockSale;
 import mel.volvox.GameChatServer.model.seating.Channel;
 import mel.volvox.GameChatServer.repository.ChannelRepo;
 import mel.volvox.GameChatServer.repository.xx1856Repo;
 
-import mel.volvox.GameChatServer.xx1856.AuctionActions;
-import mel.volvox.GameChatServer.xx1856.Board;
-import mel.volvox.GameChatServer.xx1856.Game;
+import mel.volvox.GameChatServer.xx1856.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Controller;
@@ -146,5 +145,12 @@ public class xx1856Controller {
     @ResponseBody
     Board stockPass(@PathVariable String game, @PathVariable String player) {
         return findGame(game).addMove(STOCK_PASS, player, "", 0, "");
+    }
+
+    @PutMapping("18xx/stockTurn/{game}/{player}")
+    @ResponseBody
+    Board stockTurn(@PathVariable String game, @PathVariable String player,
+                    @RequestBody StockTurn turn) {
+        return StockActions.processStockTurn(turn, player, findGame(game));
     }
 }
