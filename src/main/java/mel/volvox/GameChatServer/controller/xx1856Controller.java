@@ -134,13 +134,6 @@ public class xx1856Controller {
         return findGame(game).addMove(AUCTION_PASS, player, "", 0, "");
     }
 
-    @PutMapping("18xx/setPar/{game}/{corp}/{player}/{amount}")
-    @ResponseBody
-    Board setPar(@PathVariable String game, @PathVariable String corp,
-                 @PathVariable String player, @PathVariable int amount) {
-        return findGame(game).addMove(SET_PAR, player, corp, amount, "");
-    }
-
     @PutMapping("18xx/stockPass/{game}/{player}")
     @ResponseBody
     Board stockPass(@PathVariable String game, @PathVariable String player) {

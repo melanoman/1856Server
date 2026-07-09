@@ -237,7 +237,6 @@ public class StockActions {
             case "bank" -> game.addSub(BANK_BUY, playerName, corp.name, corp.par, "");
             case "pool" -> game.addSub(POOL_BUY, playerName, corp.name, corp.price.getPrice(), "");
         }
-        //TODO check prez change
     }
 
     private static void makeSaleSub(Game game, String playerName, Stock sale) {
