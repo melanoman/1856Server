@@ -11,6 +11,7 @@ public class Opcodes {
     public static final String CHANGE_PLAYER = "changePlayer";
     public static final String CHANGE_PRIORITY = "changePriority";
     public static final String CHANGE_CORP = "changeCorp";
+    public static final String CHANGE_PREZ = "changePrez";
 
     //AUCTION ACTIONS
     public static final String BID = "auctionBid";

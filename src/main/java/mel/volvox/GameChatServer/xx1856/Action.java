@@ -13,6 +13,7 @@ public abstract class Action implements UndoableAction<Move, Game> {
         undoMgr.registerActionType(CHANGE_PLAYER, new ChangePlayerAction());
         undoMgr.registerActionType(CHANGE_PRIORITY, new ChangePriorityAction());
         undoMgr.registerActionType(CHANGE_CORP, new ChangeCorpAction());
+        undoMgr.registerActionType(CHANGE_PREZ, new ChangePrezAction());
     }
 
     @Override
@@ -108,6 +109,29 @@ public abstract class Action implements UndoableAction<Move, Game> {
         }
     }
 
+    static class ChangePrezAction extends Action {
+        @Override public void checkAllowed(Move move, Game game) { }
+        @Override public void init(Move move, Game game) { }
+
+        @Override public void doAction(Move move, Game game) {
+            Stock oldPrez = getHolding(move.getCorp(), findPlayer(move.getDetail(), game));
+            if (oldPrez == null) throw new IllegalStateException("CORRUPTION: old prez has no shares");
+            oldPrez.isPrez = false;
+            Stock newPrez = getHolding(move.getCorp(), findPlayer(move.getPlayer(), game));
+            if (newPrez == null) throw new IllegalStateException("CORRUPTION: new prez has no shares");
+            newPrez.isPrez = true;
+        }
+
+        @Override public void undoAction(Move move, Game game) {
+            Stock oldPrez = getHolding(move.getCorp(), findPlayer(move.getDetail(), game));
+            if (oldPrez == null) throw new IllegalStateException("CORRUPTION: old prez has no shares");
+            oldPrez.isPrez = true;
+            Stock newPrez = getHolding(move.getCorp(), findPlayer(move.getPlayer(), game));
+            if (newPrez == null) throw new IllegalStateException("CORRUPTION: new prez has no shares");
+            newPrez.isPrez = false;
+        }
+    }
+
     // utility functions for locating common objects
     static Player findPlayer(String name, Game game) {
         for(Player player:game.getBoard().getPlayers()) {
@@ -176,6 +200,20 @@ public abstract class Action implements UndoableAction<Move, Game> {
         String currentName = game.getBoard().currentPlayer;
         Player next = nextPlayer(currentName, game);
         game.addSub(CHANGE_PLAYER, next.name, "", 0, currentName);
+    }
+
+    static Stock getHolding(String corpName, Player player) {
+        for(Stock s: player.getShares()) {
+            if(s.corpName.equals(corpName)) return s;
+        }
+        return null;
+    }
+
+    static Holding findPrezHolding(String corpName, Game game) {
+        for(Player p: game.getBoard().getPlayers()) for(Stock s: p.getShares()) {
+            if(s.corpName.equals(corpName) && s.isPrez) return new Holding(p.name, s);
+        }
+        throw new IllegalStateException("Prez not found for "+corpName);
     }
 
     public static class NullAction extends Action {

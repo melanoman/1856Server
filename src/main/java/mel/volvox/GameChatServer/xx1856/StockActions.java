@@ -79,7 +79,7 @@ public class StockActions {
 
         @Override
         public void init(Move move, Game game) {
-            //TODO check prez change
+            makePrezIf(move, game);
         }
 
         @Override
@@ -106,7 +106,7 @@ public class StockActions {
 
         @Override
         public void init(Move move, Game game) {
-            //TODO check prez change
+            makePrezIf(move, game);
         }
 
         @Override
@@ -258,6 +258,16 @@ public class StockActions {
     private static void addShareToPlayer(Player p, String corpName) {
         for(Stock s:p.shares) if(s.corpName.equals(corpName)) { s.amount++; return; }
         p.shares.add(new Stock(corpName, 1, false));
+    }
+
+    private static void makePrezIf(Move move, Game game) {
+        Player p = findPlayer(move.getPlayer(), game);
+        Stock s = getHolding(move.getCorp(), p);
+        if(s == null || s.isPrez) return;
+        Holding prez = findPrezHolding(move.getCorp(), game);
+        if(s.amount >= prez.share.amount) {
+            game.addSub(CHANGE_PREZ, move.getPlayer(), move.getCorp(), 0, prez.playerName);
+        }
     }
 
     private static void subtractShareFromPlayer(Player p, String corpName) {
