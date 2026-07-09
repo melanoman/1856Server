@@ -35,7 +35,7 @@ public class StockActions {
         @Override public void init(Move move, Game game) {
             makePlayerAdvance(game);
             if (game.getBoard().priorityPlayer.equals(game.getBoard().currentPlayer)) {
-                game.addMove(END_STOCK, "", "", 0, "");
+                game.addMove(END_STOCK, "", "", 0, game.getBoard().phase);
             }
         }
 
@@ -166,16 +166,20 @@ public class StockActions {
 
         @Override public void checkAllowed(Move move, Game game) { }
         @Override public void init(Move move, Game game) {
-            //TODO set number of ORs
-            //TODO pay privates
+            final Board board = game.getBoard(); //for line length only
+            game.addSub(CHANGE_CORP, "", board.corps.get(0).name, 0, board.currentCorp);
         }
 
         @Override public void doAction(Move move, Game game) {
-
+            game.getBoard().phase = Game.Era.OP.name();
+            game.getBoard().OR = 1;
+            game.getBoard().maxOR = calculateMaxOR(game);
+            payPrivates(game);
         }
 
         @Override public void undoAction(Move move, Game game) {
-
+            game.getBoard().phase = move.getDetail();
+            refundPrivates(game);
         }
     }
 
@@ -287,5 +291,6 @@ public class StockActions {
         };
     }
 
+    private static int calculateMaxOR(Game game) { return 1; } //TODO calcMaxOR
     private static int calculateSalesValue(List<Stock> sales, Game game) { return 0; } //TODO calculate sales value
 }

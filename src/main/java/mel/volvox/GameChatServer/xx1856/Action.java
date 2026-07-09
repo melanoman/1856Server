@@ -216,6 +216,34 @@ public abstract class Action implements UndoableAction<Move, Game> {
         throw new IllegalStateException("Prez not found for "+corpName);
     }
 
+    static void payPrivates(Game game) {
+        for(Player player:game.getBoard().getPlayers()) {
+            for(String priv:player.privs) {
+                game.getBank().payPlayer(player.name, Priv.findPriv(priv).dividend);
+            }
+        }
+
+        for(Corp corp:game.getBoard().corps) {
+            for (String priv: corp.getPrivs()) {
+                game.getBank().payCorp(corp.getName(), Priv.findPriv(priv).dividend);
+            }
+        }
+    }
+
+    static void refundPrivates(Game game) {
+        for(Player player:game.getBoard().getPlayers()) {
+            for(String priv:player.privs) {
+                game.getBank().debitPlayer(player.name, Priv.findPriv(priv).dividend);
+            }
+        }
+
+        for(Corp corp:game.getBoard().corps) {
+            for (String priv: corp.getPrivs()) {
+                game.getBank().debitCorp(corp.getName(), Priv.findPriv(priv).dividend);
+            }
+        }
+    }
+
     public static class NullAction extends Action {
         @Override public void doAction(Move move, Game game) { }
         @Override public void undoAction(Move move, Game game) { }
