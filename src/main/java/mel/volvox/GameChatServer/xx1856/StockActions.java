@@ -172,7 +172,7 @@ public class StockActions {
 
         @Override public void doAction(Move move, Game game) {
             game.getBoard().phase = Game.Era.OP.name();
-            game.getBoard().OR = 1;
+            game.getBoard().thisOR = 1;
             game.getBoard().maxOR = calculateMaxOR(game);
             payPrivates(game);
         }

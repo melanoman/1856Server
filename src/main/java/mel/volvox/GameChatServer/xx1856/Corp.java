@@ -24,6 +24,10 @@ public class Corp {
     int loans = 0;
     boolean incrementallyFunded;
     boolean destionationSatisfied;
+    boolean operated = false;
+    boolean bridgeRights = false;
+    boolean tunnelRights = false;
+    boolean portRights = false;
 
     Corp(String name, int tokens) {
         this.name = name;

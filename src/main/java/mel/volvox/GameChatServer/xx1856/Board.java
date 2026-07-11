@@ -26,7 +26,7 @@ public class Board {
     String priorityPlayer;
     String currentCorp;  // used for priv during auction only
 
-    int OR;
+    int thisOR;
     int maxOR;
 
     // TODO reconsider obscure items
