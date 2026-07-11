@@ -10,6 +10,26 @@ public class Bank {
         this.board = board;
     }
 
+    public void player2Corp(Player player, Corp corp, int amount) {
+        player.cash -= amount;
+        corp.cash += amount;
+    }
+
+    public void corp2Player(Corp corp, Player player, int amount) {
+        corp.cash -= amount;
+        player.cash += amount;
+    }
+
+    public void player2Escrow(Player player, Corp corp, int amount) {
+        player.cash -= amount;
+        corp.escrow += amount;
+    }
+
+    public void escrow2Player(Corp corp, Player player, int amount) {
+        corp.escrow -= amount;
+        player.cash += amount;
+    }
+
     public void payPlayer(String player, int amount) {
         board.bank -= amount;
         findPlayer(player).cash += amount;

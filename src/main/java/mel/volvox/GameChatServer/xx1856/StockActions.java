@@ -53,24 +53,25 @@ public class StockActions {
 
         @Override public void doAction(Move move, Game game) {
             Corp c = findCorp(move.getCorp(), game);
+            Player p = findPlayer(move.getPlayer(), game);
             c.par = move.getAmount();
             c.bankShares = 8;
             c.poolShares = 0;
-            game.getBank().debitPlayer(move.getPlayer(), 2 * move.getAmount());
-            c.price = StockPrice.makePar(move.getAmount());
             //TODO record float type
-            findPlayer(move.getPlayer(), game).shares.add(new Stock(c.name, 2, true));
+            if (c.incrementallyFunded) game.getBank().player2Corp(p, c, 2 * move.getAmount());
+            c.price = StockPrice.makePar(move.getAmount());
+            p.shares.add(new Stock(c.name, 2, true));
         }
 
         @Override public void undoAction(Move move, Game game) {
             Corp c = findCorp(move.getCorp(), game);
+            Player p = findPlayer(move.getPlayer(), game);
             c.par = 0;
             c.bankShares = 0;
-            c. poolShares = 0;
-            game.getBank().payPlayer(move.getPlayer(), 2 * move.getAmount());
+            c.poolShares = 0;
+            if (c.incrementallyFunded) game.getBank().corp2Player(c, p, 2 * move.getAmount());
             c.price = null;
-            //TODO clear float type
-            findPlayer(move.getPlayer(), game).shares.removeIf(x -> x.corpName.equals(move.getCorp()));
+            p.shares.removeIf(x -> x.corpName.equals(move.getCorp()));
         }
     }
 
@@ -88,7 +89,10 @@ public class StockActions {
             Corp c = findCorp(move.getCorp(), game);
             c.bankShares--;
             addShareToPlayer(p, move.getCorp());
-            game.getBank().debitPlayer(move.getPlayer(), move.getAmount());
+            if (c.incrementallyFunded) {
+                if (c.bankShares >= 5) game.getBank().player2Corp(p, c, move.getAmount());
+                else game.getBank().player2Escrow(p, c, move.getAmount());
+            }
         }
 
         @Override
@@ -97,7 +101,10 @@ public class StockActions {
             Corp c = findCorp(move.getCorp(), game);
             c.bankShares++;
             subtractShareFromPlayer(p, move.getCorp());
-            game.getBank().payPlayer(move.getPlayer(), move.getAmount());
+            if (c.incrementallyFunded) {
+                if (c.bankShares > 5) game.getBank().corp2Player(c, p, move.getAmount());
+                else game.getBank().escrow2Player(c, p, move.getAmount());
+            }
         }
     }
 

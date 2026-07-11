@@ -17,13 +17,15 @@ public class Corp {
     int bankShares = 0; // zero until set par
     int poolShares = 0;
     StockPrice price;
+    int cash = 0;
+    int escrow = 0;
     int tokensMax;
     int tokensUsed = 0;
     List <String> privs = new ArrayList<>();
     List <String> trains = new ArrayList<>();
     int loans = 0;
-    boolean incrementallyFunded;
-    boolean destionationSatisfied;
+    boolean incrementallyFunded = true;
+    boolean destionationSatisfied = false;
     boolean operated = false;
     boolean bridgeRights = false;
     boolean tunnelRights = false;
