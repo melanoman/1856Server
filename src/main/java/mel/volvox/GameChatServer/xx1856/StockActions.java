@@ -35,7 +35,7 @@ public class StockActions {
         @Override public void init(Move move, Game game) {
             makePlayerAdvance(game);
             if (game.getBoard().priorityPlayer.equals(game.getBoard().currentPlayer)) {
-                game.addMove(END_STOCK, "", "", 0, game.getBoard().phase);
+                game.addMove(END_STOCK, "", "", game.getBoard().maxOR, game.getBoard().phase);
             }
         }
 
@@ -175,6 +175,9 @@ public class StockActions {
         @Override public void init(Move move, Game game) {
             final Board board = game.getBoard(); //for line length only
             game.addSub(CHANGE_CORP, "", board.corps.get(0).name, 0, board.currentCorp);
+            //TODO check sellouts
+            //TODO check max stock -> end game
+            game.addSub(START_OP_ROUND, "", "", 0, "");
         }
 
         @Override public void doAction(Move move, Game game) {
@@ -186,7 +189,28 @@ public class StockActions {
 
         @Override public void undoAction(Move move, Game game) {
             game.getBoard().phase = move.getDetail();
+            game.getBoard().thisOR = move.getAmount() + 1;
+            game.getBoard().maxOR = move.getAmount();
             refundPrivates(game);
+        }
+    }
+
+    static class StartStockRoundAction extends Action {
+        @Override public void checkAllowed(Move move, Game game) { }
+        @Override public void init(Move move, Game game) { }
+
+        @Override
+        public void doAction(Move move, Game game) {
+            game.getBoard().phase = Game.Era.STOCK.name();
+            game.getBoard().activity = "";
+            game.getBoard().currentPlayer = game.getBoard().priorityPlayer;
+        }
+
+        @Override
+        public void undoAction(Move move, Game game) {
+            game.getBoard().phase = Game.Era.OP.name();
+            game.getBoard().activity = move.getDetail();
+            game.getBoard().currentPlayer = move.getPlayer();
         }
     }
 

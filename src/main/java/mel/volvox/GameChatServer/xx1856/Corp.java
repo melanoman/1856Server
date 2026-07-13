@@ -26,7 +26,7 @@ public class Corp {
     int loans = 0;
     boolean incrementallyFunded = true;
     boolean destionationSatisfied = false;
-    boolean operated = false;
+    boolean hasOperated = false;
     boolean bridgeRights = false;
     boolean tunnelRights = false;
     boolean portRights = false;

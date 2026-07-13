@@ -54,5 +54,6 @@ public class Game implements UndoableGame<Move> {
         GatherActions.registerAll(undoMgr);
         AuctionActions.registerAll(undoMgr);
         StockActions.registerAll(undoMgr);
+        OpActions.registerAll(undoMgr);
     }
 }

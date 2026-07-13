@@ -14,6 +14,7 @@ public abstract class Action implements UndoableAction<Move, Game> {
         undoMgr.registerActionType(CHANGE_PRIORITY, new ChangePriorityAction());
         undoMgr.registerActionType(CHANGE_CORP, new ChangeCorpAction());
         undoMgr.registerActionType(CHANGE_PREZ, new ChangePrezAction());
+        undoMgr.registerActionType(CHANGE_ACTIVITY, new ChangeActivityAction());
     }
 
     @Override
@@ -129,6 +130,20 @@ public abstract class Action implements UndoableAction<Move, Game> {
             Stock newPrez = getHolding(move.getCorp(), findPlayer(move.getPlayer(), game));
             if (newPrez == null) throw new IllegalStateException("CORRUPTION: new prez has no shares");
             newPrez.isPrez = false;
+        }
+    }
+
+
+    static class ChangeActivityAction extends Action {
+        @Override public void checkAllowed(Move move, Game game) { }
+        @Override public void init(Move move, Game game) { }
+
+        @Override public void doAction(Move move, Game game) {
+            game.getBoard().activity = move.getPlayer();
+        }
+
+        @Override public void undoAction(Move move, Game game) {
+            game.getBoard().activity = move.getDetail();
         }
     }
 

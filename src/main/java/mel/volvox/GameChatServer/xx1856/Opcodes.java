@@ -12,6 +12,7 @@ public class Opcodes {
     public static final String CHANGE_PRIORITY = "changePriority";
     public static final String CHANGE_CORP = "changeCorp";
     public static final String CHANGE_PREZ = "changePrez";
+    public static final String CHANGE_ACTIVITY = "changeActivity";
 
     //AUCTION ACTIONS
     public static final String BID = "auctionBid";
@@ -25,6 +26,7 @@ public class Opcodes {
     public static final String END_AUCTION = "endAuction";
 
     //STOCK ACTIONS
+    public static final String START_STOCK_ROUND = "startStock";
     public static final String STOCK_PASS = "stockPass";
     public static final String SET_PAR = "setPar";
     public static final String BANK_BUY = "bankBuy";
@@ -35,4 +37,7 @@ public class Opcodes {
 
     //CORP ACTIONS
     public static final String RESORT_CORP = "resort";
+    public static final String START_OP_ROUND = "startOpRound";
+    public static final String END_OP_ROUND = "endOpRound";
+    public static final String START_OP_TURN = "startOpTurn";
 }
