@@ -28,6 +28,7 @@ public class Corp {
     boolean destionationSatisfied = false;
     boolean hasOperated = false;
     boolean loanTaken = false;
+    boolean tokenLaid = false;
     boolean bridgeRights = false;
     boolean tunnelRights = false;
     boolean portRights = false;

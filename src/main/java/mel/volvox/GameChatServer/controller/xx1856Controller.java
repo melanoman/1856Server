@@ -152,4 +152,10 @@ public class xx1856Controller {
     Board takeLoan(@PathVariable String game, @PathVariable String corp) {
         return findGame(game).addMove(TAKE_LOAN, "", corp, 100, "");
     }
+
+    @PutMapping("18xx/layToken/{game}/{corp}")
+    @ResponseBody
+    Board layToken(@PathVariable String game, @PathVariable String corp) {
+        return findGame(game).addMove(LAY_TOKEN, "", corp, 0, "");
+    }
 }

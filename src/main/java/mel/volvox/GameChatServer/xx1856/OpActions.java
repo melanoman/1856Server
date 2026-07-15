@@ -13,6 +13,7 @@ public class OpActions {
         undoMgr.registerActionType(START_OP_ROUND, new StartOpRound());
         undoMgr.registerActionType(END_OP_ROUND, new EndOpRound());
         undoMgr.registerActionType(TAKE_LOAN, new TakeLoanAction());
+        undoMgr.registerActionType(LAY_TOKEN, new LayTokenAction());
     }
 
     //detail == former phase amount = 0 for reset, 1 for continue
@@ -96,6 +97,39 @@ public class OpActions {
             game.getBank().debitCorp(c.name, 100);
             c.loanTaken = false;
             c.loans--;
+        }
+    }
+
+    static class LayTokenAction extends Action {
+
+        @Override public void checkAllowed(Move move, Game game) {
+            assertPhase(game, Game.Era.OP, "LayToken");
+            assertCorpTurn(game, move.getCorp(), "LayToken");
+            Corp c = findCorp(move.getCorp(), game);
+            if(c.tokensUsed >= c.tokensMax) {
+                throw new IllegalStateException("No tokens available");
+            }
+            if(c.tokenLaid) {
+                throw new IllegalStateException("One paid token per turn");
+            }
+        }
+
+        @Override public void init(Move move, Game game) { }
+
+        @Override public void doAction(Move move, Game game) {
+            Corp c = findCorp(move.getCorp(), game);
+            int price = (c.tokensUsed < 2) ? 40 : 100;
+            game.getBank().debitCorp(c.name, price);
+            c.tokensUsed++;
+            c.tokenLaid = true;
+        }
+
+        @Override public void undoAction(Move move, Game game) {
+            Corp c = findCorp(move.getCorp(), game);
+            c.tokensUsed--;
+            int price = (c.tokensUsed < 2) ? 40 : 100;
+            game.getBank().payCorp(c.name, price);
+            c.tokenLaid = false;
         }
     }
 }
