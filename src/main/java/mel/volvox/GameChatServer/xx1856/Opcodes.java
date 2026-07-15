@@ -42,4 +42,8 @@ public class Opcodes {
     public static final String START_OP_TURN = "startOpTurn";
     public static final String TAKE_LOAN = "takeLoan";
     public static final String LAY_TOKEN = "layToken";
+
+    public static final String RESET_TOKEN = "resetToken";
+    public static final String RESET_LOAN = "resetLoan";
+    public static final String FLOAT = "float";
 }

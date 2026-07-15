@@ -12,8 +12,12 @@ public class OpActions {
     public static void registerAll(UndoManager<Move, Game, Action> undoMgr) {
         undoMgr.registerActionType(START_OP_ROUND, new StartOpRound());
         undoMgr.registerActionType(END_OP_ROUND, new EndOpRound());
+        undoMgr.registerActionType(START_OP_TURN, new StartOpTurn());
         undoMgr.registerActionType(TAKE_LOAN, new TakeLoanAction());
         undoMgr.registerActionType(LAY_TOKEN, new LayTokenAction());
+        undoMgr.registerActionType(RESET_LOAN, new ResetTokenAction());
+        undoMgr.registerActionType(RESET_TOKEN, new ResetLoanAction());
+        undoMgr.registerActionType(FLOAT, new FloatAction());
     }
 
     //detail == former phase amount = 0 for reset, 1 for continue
@@ -23,6 +27,7 @@ public class OpActions {
         @Override public void init(Move move, Game game) {
             game.addSub(CHANGE_ACTIVITY, "OP_PRE", "", 0, game.getBoard().activity);
             game.addSub(CHANGE_CORP, "", game.getBoard().corps.get(0).name, 0, game.getBoard().currentCorp);
+            game.addSub(START_OP_TURN, "", game.getBoard().corps.get(0).name, 0, "");
         }
 
         @Override public void doAction(Move move, Game game) {
@@ -40,7 +45,7 @@ public class OpActions {
         @Override public void checkAllowed(Move move, Game game) { }
 
         @Override public void init(Move move, Game game) {
-            if(game.getBoard().thisOR > game.getBoard().maxOR) {
+            if(game.getBoard().thisOR <= game.getBoard().maxOR) {
                 game.addSub(START_OP_ROUND, "", "", 0, "");
             } else {
                 game.addSub(START_STOCK_ROUND, game.getBoard().currentPlayer, "", 0, game.getBoard().activity);
@@ -62,14 +67,24 @@ public class OpActions {
 
         @Override public void init(Move move, Game game) {
             game.addSub(CHANGE_ACTIVITY, "OP_PRE", "", 0, game.getBoard().activity);
+            Corp c = findCorp(move.getCorp(), game);
+            if(c.tokensUsed == 0) {
+                //TODO if (CHECK FLOAT)
+                game.addSub(FLOAT, "", move.getCorp(), 0, "");
+                // else game.addSub(FAIL_FLOAT, "", move.getCorp(), 0, "");
+            }
+            game.addSub(RESET_TOKEN, "", move.getCorp(), c.tokenLaid?1:0, "");
+            game.addSub(RESET_LOAN, "", move.getCorp(), c.loanTaken?1:0, "");
         }
 
         @Override public void doAction(Move move, Game game) {
             game.getBoard().currentCorp = move.getCorp();
+            Corp c = findCorp(move.getCorp(), game);
         }
 
         @Override public void undoAction(Move move, Game game) {
             game.getBoard().currentCorp = move.getDetail();
+            Corp c = findCorp(move.getCorp(), game);
         }
     }
 
@@ -130,6 +145,58 @@ public class OpActions {
             int price = (c.tokensUsed < 2) ? 40 : 100;
             game.getBank().payCorp(c.name, price);
             c.tokenLaid = false;
+        }
+    }
+
+    static class ResetLoanAction extends Action {
+        @Override public void checkAllowed(Move move, Game game) { }
+        @Override public void init(Move move, Game game) { }
+
+        @Override public void doAction(Move move, Game game) {
+            findCorp(move.getCorp(), game).loanTaken = false;
+        }
+
+        @Override public void undoAction(Move move, Game game) {
+            findCorp(move.getCorp(), game).loanTaken = move.getAmount() == 1;
+        }
+    }
+
+    static class ResetTokenAction extends Action {
+        @Override public void checkAllowed(Move move, Game game) { }
+        @Override public void init(Move move, Game game) { }
+
+        @Override public void doAction(Move move, Game game) {
+            findCorp(move.getCorp(), game).tokenLaid = false;
+        }
+
+        @Override public void undoAction(Move move, Game game) {
+            findCorp(move.getCorp(), game).tokenLaid = move.getAmount() == 1;
+        }
+    }
+
+    static class FloatAction extends Action {
+        @Override public void checkAllowed(Move move, Game game) { }
+        @Override public void init(Move move, Game game) { }
+
+        @Override public void doAction(Move move, Game game) {
+            findCorp(move.getCorp(), game).tokensUsed = 1;
+        }
+
+        @Override public void undoAction(Move move, Game game) {
+            findCorp(move.getCorp(), game).tokensUsed = 0;
+        }
+    }
+
+    static class FailFloatAction extends Action {
+        @Override public void checkAllowed(Move move, Game game) { }
+        @Override public void init(Move move, Game game) { }
+
+        @Override public void doAction(Move move, Game game) {
+            findCorp(move.getCorp(), game).hasOperated = true;
+        }
+
+        @Override public void undoAction(Move move, Game game) {
+            findCorp(move.getCorp(), game).hasOperated = false;
         }
     }
 }
