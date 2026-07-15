@@ -146,4 +146,10 @@ public class xx1856Controller {
                     @RequestBody StockTurn turn) {
         return StockActions.processStockTurn(turn, player, findGame(game));
     }
+
+    @PutMapping("18xx/takeLoan/{game}/{corp}")
+    @ResponseBody
+    Board takeLoan(@PathVariable String game, @PathVariable String corp) {
+        return findGame(game).addMove(TAKE_LOAN, "", corp, 100, "");
+    }
 }

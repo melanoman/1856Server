@@ -12,6 +12,7 @@ public class OpActions {
     public static void registerAll(UndoManager<Move, Game, Action> undoMgr) {
         undoMgr.registerActionType(START_OP_ROUND, new StartOpRound());
         undoMgr.registerActionType(END_OP_ROUND, new EndOpRound());
+        undoMgr.registerActionType(TAKE_LOAN, new TakeLoanAction());
     }
 
     //detail == former phase amount = 0 for reset, 1 for continue
@@ -60,7 +61,6 @@ public class OpActions {
 
         @Override public void init(Move move, Game game) {
             game.addSub(CHANGE_ACTIVITY, "OP_PRE", "", 0, game.getBoard().activity);
-
         }
 
         @Override public void doAction(Move move, Game game) {
@@ -69,6 +69,33 @@ public class OpActions {
 
         @Override public void undoAction(Move move, Game game) {
             game.getBoard().currentCorp = move.getDetail();
+        }
+    }
+
+    static class TakeLoanAction extends Action {
+
+        @Override public void checkAllowed(Move move, Game game) {
+            assertPhase(game, Game.Era.OP, "TakeLoan");
+            assertCorpTurn(game, move.getCorp(), "TakeLoan");
+            Corp c = findCorp(move.getCorp(), game);
+            if(c.loanTaken) throw new IllegalStateException("Only one loan per turn");
+            // TODO compare holdings to number of loans out
+        }
+
+        @Override public void init(Move move, Game game) { }
+
+        @Override public void doAction(Move move, Game game) {
+            Corp c = findCorp(move.getCorp(), game);
+            game.getBank().payCorp(c.name, 100);
+            c.loanTaken = true;
+            c.loans++;
+        }
+
+        @Override public void undoAction(Move move, Game game) {
+            Corp c = findCorp(move.getCorp(), game);
+            game.getBank().debitCorp(c.name, 100);
+            c.loanTaken = false;
+            c.loans--;
         }
     }
 }

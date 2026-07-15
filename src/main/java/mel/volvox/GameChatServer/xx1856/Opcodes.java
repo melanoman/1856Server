@@ -40,4 +40,5 @@ public class Opcodes {
     public static final String START_OP_ROUND = "startOpRound";
     public static final String END_OP_ROUND = "endOpRound";
     public static final String START_OP_TURN = "startOpTurn";
+    public static final String TAKE_LOAN = "takeLoan";
 }

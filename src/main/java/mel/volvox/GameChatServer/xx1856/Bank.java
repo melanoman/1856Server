@@ -37,8 +37,8 @@ public class Bank {
     }
 
     public void payCorp(String corp, int amount) {
-        //TODO implement end-of-game trigger
-        assert false;
+        board.bank -= amount;
+        findCorp(corp).cash += amount;
     }
 
     public void debitPlayer(String player, int amount) {
@@ -47,7 +47,8 @@ public class Bank {
     }
 
     public void debitCorp(String corp, int amount) {
-        assert false;
+        board.bank += amount;
+        findCorp(corp).cash -= amount;
     }
 
     private Player findPlayer(String playerName) {
@@ -55,5 +56,12 @@ public class Bank {
             if(p.name.equals(playerName)) return p;
         }
         throw new IllegalStateException("Cannot find playerName "+ playerName);
+    }
+
+    private Corp findCorp(String corpName) {
+        for(Corp c: board.getCorps()) {
+            if(c.name.equals(corpName)) return c;
+        }
+        throw new IllegalStateException("Cannot find corpName "+ corpName);
     }
 }
