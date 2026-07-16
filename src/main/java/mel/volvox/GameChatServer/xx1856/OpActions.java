@@ -15,6 +15,7 @@ public class OpActions {
         undoMgr.registerActionType(START_OP_TURN, new StartOpTurn());
         undoMgr.registerActionType(TAKE_LOAN, new TakeLoanAction());
         undoMgr.registerActionType(LAY_TOKEN, new LayTokenAction());
+        undoMgr.registerActionType(DRILL_TILE, new DrillTileAction());
         undoMgr.registerActionType(RESET_LOAN, new ResetTokenAction());
         undoMgr.registerActionType(RESET_TOKEN, new ResetLoanAction());
         undoMgr.registerActionType(FLOAT, new FloatAction());
@@ -146,6 +147,27 @@ public class OpActions {
             int price = (c.tokensUsed < 2) ? 40 : 100;
             game.getBank().payCorp(c.name, price);
             c.tokenLaid = false;
+        }
+    }
+
+    static class DrillTileAction extends Action {
+
+        @Override public void checkAllowed(Move move, Game game) {
+            assertPhase(game, Game.Era.OP, "DrillTile");
+            assertCorpTurn(game, move.getCorp(), "DrillTile");
+            assertActivity(game, OP_PRE, "DrillTile");
+            assertCorpFunds(game, move.getCorp(), 40, "DrillTile");
+            //TODO protect against 2x tile charges same turn
+        }
+
+        @Override public void init(Move move, Game game) { }
+
+        @Override public void doAction(Move move, Game game) {
+            game.getBank().debitCorp(move.getCorp(), 40);
+        }
+
+        @Override public void undoAction(Move move, Game game) {
+            game.getBank().payCorp(move.getCorp(), 40);
         }
     }
 

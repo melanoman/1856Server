@@ -75,6 +75,12 @@ public abstract class Action implements UndoableAction<Move, Game> {
         }
     }
 
+    static void assertCorpFunds(Game game, String corp, int amount, String caller) {
+        if(findCorp(corp, game).getCash() < amount) {
+            throw new IllegalStateException("Insufficient Funds for "+caller);
+        }
+    }
+
     //must be a SUB
     static class ChangePlayerAction extends Action {
         @Override public void checkAllowed(Move move, Game game) { }

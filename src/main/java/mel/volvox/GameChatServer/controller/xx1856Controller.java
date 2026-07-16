@@ -158,4 +158,10 @@ public class xx1856Controller {
     Board layToken(@PathVariable String game, @PathVariable String corp) {
         return findGame(game).addMove(LAY_TOKEN, "", corp, 0, "");
     }
+
+    @PutMapping("18xx/drillTile/{game}/{corp}")
+    @ResponseBody
+    Board drillTile(@PathVariable String game, @PathVariable String corp) {
+        return findGame(game).addMove(DRILL_TILE, "", corp, 40, "");
+    }
 }
