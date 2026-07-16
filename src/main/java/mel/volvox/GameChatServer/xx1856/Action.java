@@ -43,6 +43,13 @@ public abstract class Action implements UndoableAction<Move, Game> {
             throw new IllegalStateException("Edited during wrong phase -- " + caller);
         }
     }
+
+    static void assertActivity(Game game, String activity, String caller) {
+        if(!activity.equals(game.getBoard().activity)) {
+            throw new IllegalStateException("This can only be done during "+activity);
+        }
+    }
+
     static void assertPhases(Game game, List<Game.Era> intended, String caller) {
         for(Game.Era era:intended) {
             if(era.name().equals(game.getBoard().phase)) return;

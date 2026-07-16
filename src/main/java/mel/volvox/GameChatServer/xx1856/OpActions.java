@@ -25,7 +25,7 @@ public class OpActions {
         @Override public void checkAllowed(Move move, Game game) { }
 
         @Override public void init(Move move, Game game) {
-            game.addSub(CHANGE_ACTIVITY, "OP_PRE", "", 0, game.getBoard().activity);
+            game.addSub(CHANGE_ACTIVITY, OP_PRE, "", 0, game.getBoard().activity);
             game.addSub(CHANGE_CORP, "", game.getBoard().corps.get(0).name, 0, game.getBoard().currentCorp);
             game.addSub(START_OP_TURN, "", game.getBoard().corps.get(0).name, 0, "");
         }
@@ -66,7 +66,7 @@ public class OpActions {
         @Override public void checkAllowed(Move move, Game game) { }
 
         @Override public void init(Move move, Game game) {
-            game.addSub(CHANGE_ACTIVITY, "OP_PRE", "", 0, game.getBoard().activity);
+            game.addSub(CHANGE_ACTIVITY, OP_PRE, "", 0, game.getBoard().activity);
             Corp c = findCorp(move.getCorp(), game);
             if(c.tokensUsed == 0) {
                 //TODO if (CHECK FLOAT)
@@ -93,6 +93,7 @@ public class OpActions {
         @Override public void checkAllowed(Move move, Game game) {
             assertPhase(game, Game.Era.OP, "TakeLoan");
             assertCorpTurn(game, move.getCorp(), "TakeLoan");
+            assertActivity(game, OP_PRE, "TakeLoan");
             Corp c = findCorp(move.getCorp(), game);
             if(c.loanTaken) throw new IllegalStateException("Only one loan per turn");
             // TODO compare holdings to number of loans out
@@ -120,6 +121,7 @@ public class OpActions {
         @Override public void checkAllowed(Move move, Game game) {
             assertPhase(game, Game.Era.OP, "LayToken");
             assertCorpTurn(game, move.getCorp(), "LayToken");
+            assertActivity(game, OP_PRE, "LayToken");
             Corp c = findCorp(move.getCorp(), game);
             if(c.tokensUsed >= c.tokensMax) {
                 throw new IllegalStateException("No tokens available");
