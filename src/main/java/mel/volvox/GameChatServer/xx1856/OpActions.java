@@ -93,7 +93,6 @@ public class OpActions {
         @Override public void checkAllowed(Move move, Game game) {
             assertPhase(game, Game.Era.OP, "TakeLoan");
             assertCorpTurn(game, move.getCorp(), "TakeLoan");
-            assertActivity(game, OP_PRE, "TakeLoan");
             Corp c = findCorp(move.getCorp(), game);
             if(c.loanTaken) throw new IllegalStateException("Only one loan per turn");
             // TODO compare holdings to number of loans out
