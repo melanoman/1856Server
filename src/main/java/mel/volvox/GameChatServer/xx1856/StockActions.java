@@ -35,7 +35,7 @@ public class StockActions {
         @Override public void init(Move move, Game game) {
             makePlayerAdvance(game);
             if (game.getBoard().priorityPlayer.equals(game.getBoard().currentPlayer)) {
-                game.addMove(END_STOCK, "", "", game.getBoard().maxOR, game.getBoard().phase);
+                game.addSub(END_STOCK, "", "", game.getBoard().maxOR, game.getBoard().phase);
             }
         }
 
