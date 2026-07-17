@@ -134,6 +134,8 @@ public abstract class Action implements UndoableAction<Move, Game> {
             Stock newPrez = getHolding(move.getCorp(), findPlayer(move.getPlayer(), game));
             if (newPrez == null) throw new IllegalStateException("CORRUPTION: new prez has no shares");
             newPrez.isPrez = true;
+            updatePort(game, move.getDetail());
+            updatePort(game, move.getPlayer());
         }
 
         @Override public void undoAction(Move move, Game game) {
@@ -143,6 +145,8 @@ public abstract class Action implements UndoableAction<Move, Game> {
             Stock newPrez = getHolding(move.getCorp(), findPlayer(move.getPlayer(), game));
             if (newPrez == null) throw new IllegalStateException("CORRUPTION: new prez has no shares");
             newPrez.isPrez = false;
+            updatePort(game, move.getDetail());
+            updatePort(game, move.getPlayer());
         }
     }
 
@@ -277,5 +281,21 @@ public abstract class Action implements UndoableAction<Move, Game> {
         @Override public void undoAction(Move move, Game game) { }
         @Override public void checkAllowed(Move move, Game game) { }
         @Override public void init(Move move, Game game) { }
+    }
+
+    //TODO refactor this somewhere better
+    public static final int YELLOW_ZONE = 50;
+    public static final int BROWN_ZONE = 40;
+    public static final int DEATH_ZONE = 25;
+    private static int shareSize(Game game, Stock s) {
+        if (findCorp(s.corpName, game).price.getPrice() <= YELLOW_ZONE) return 0;
+        return s.isPrez ? s.amount - 1 : s.amount;
+    }
+
+    static void updatePort(Game game, String player) {
+        Player p = findPlayer(player, game);
+        int count = p.privs.size();
+        for (Stock s:p.shares) count += shareSize(game, s);
+        p.port = count;
     }
 }

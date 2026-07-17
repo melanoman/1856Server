@@ -33,7 +33,8 @@ public class Opcodes {
     public static final String POOL_BUY = "poolBuy";
     public static final String STOCK_SALE = "stockSale";
     public static final String STOCK_TURN = "stockTurn";
-    public static final String END_STOCK = "endStock";
+    public static final String END_STOCK_TURN = "stockTurnOver";
+    public static final String END_STOCK_ROUND = "endStock";
 
     //CORP ACTIONS
     public static final String RESORT_CORP = "resort";

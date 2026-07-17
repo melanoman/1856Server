@@ -140,7 +140,10 @@ public class GatherActions {
             game.getBoard().currentCorp = null;
             game.getBoard().currentPlayer = null;
             game.getBoard().priorityPlayer = null;
-            for(Player p: game.getBoard().getPlayers()) p.cash = 0;
+            for(Player p: game.getBoard().getPlayers()) {
+                p.cash = 0;
+                p.port = 0;
+            }
         }
     }
 

@@ -45,12 +45,14 @@ public class AuctionActions {
         @Override public void doAction(Move move, Game game) {
             Player player = findPlayer(move.getPlayer(), game);
             player.privs.add(move.getCorp());
+            player.port = player.privs.size();
             game.getBank().debitPlayer(move.getPlayer(), calculatePrice(move, game));
         }
 
         @Override public void undoAction(Move move, Game game) {
             Player player = findPlayer(move.getPlayer(), game);
             player.privs.remove(move.getCorp());
+            player.port = player.privs.size();
             game.getBank().payPlayer(move.getPlayer(), calculatePrice(move, game));
         }
     }
@@ -98,12 +100,14 @@ public class AuctionActions {
         @Override public void doAction(Move move, Game game) {
             Player player = findPlayer(move.getPlayer(), game);
             player.privs.add(move.getCorp());
+            player.port = player.privs.size();
             game.getBoard().bids.removeIf(bid -> bid.priv.equals(move.getCorp()));
         }
 
         @Override public void undoAction(Move move, Game game) {
             Player player = findPlayer(move.getPlayer(), game);
             player.privs.removeIf(priv -> priv.equals(move.getCorp()));
+            player.port = player.privs.size();
             game.getBoard().bids.add(new Bid(move.getCorp(), move.getPlayer(), move.getAmount()));
         }
     }
@@ -252,6 +256,7 @@ public class AuctionActions {
         @Override public void doAction(Move move, Game game) {
             Player player = findPlayer(move.getPlayer(), game);
             player.privs.add(move.getCorp());
+            player.port = player.privs.size();
             game.getBank().debitPlayer(move.getPlayer(), move.getAmount());
             game.getBoard().activity = "";
         }
@@ -259,6 +264,7 @@ public class AuctionActions {
         @Override public void undoAction(Move move, Game game) {
             Player player = findPlayer(move.getPlayer(), game);
             player.privs.remove(move.getCorp());
+            player.port = player.privs.size();
             game.getBank().payPlayer(move.getPlayer(), move.getAmount());
             game.getBoard().activity = BIDOFF_ACTIVITY;
         }

@@ -16,4 +16,5 @@ public class Player {
     List<Stock> shares = new ArrayList<>();
     List<String> privs = new ArrayList<>();
     List<String> blocks = new ArrayList<>();
+    int port;
 }

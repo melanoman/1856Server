@@ -15,12 +15,13 @@ public class StockActions {
 
     public static void registerAll(UndoManager<Move, Game, Action> undoMgr) {
         undoMgr.registerActionType(STOCK_PASS, new PassAction());
-        undoMgr.registerActionType(STOCK_TURN, new Action.NullAction());
+        undoMgr.registerActionType(STOCK_TURN, new StockTurnAction());
+        undoMgr.registerActionType(END_STOCK_TURN, new EndStockTurn());
         undoMgr.registerActionType(SET_PAR, new SetParAction());
         undoMgr.registerActionType(BANK_BUY, new BuyBankAction());
         undoMgr.registerActionType(POOL_BUY, new BuyPoolAction());
         undoMgr.registerActionType(RESORT_CORP, new ResortCorpAction());
-        undoMgr.registerActionType(END_STOCK, new EndStockRoundAction());
+        undoMgr.registerActionType(END_STOCK_ROUND, new EndStockRoundAction());
     }
 
     static class PassAction extends Action {
@@ -35,7 +36,7 @@ public class StockActions {
         @Override public void init(Move move, Game game) {
             makePlayerAdvance(game);
             if (game.getBoard().priorityPlayer.equals(game.getBoard().currentPlayer)) {
-                game.addSub(END_STOCK, "", "", game.getBoard().maxOR, game.getBoard().phase);
+                game.addSub(END_STOCK_ROUND, "", "", game.getBoard().maxOR, game.getBoard().phase);
             }
         }
 
@@ -219,6 +220,13 @@ public class StockActions {
         @Override public void checkAllowed(Move move, Game game) { /* see processStockTurn */ }
         @Override public void init(Move move, Game game) { /* see processStockTurn */ }
         @Override public void doAction(Move move, Game game) { }
+        @Override public void undoAction(Move move, Game game) { updatePort(game, move.getPlayer()); }
+    }
+
+    public static class EndStockTurn extends Action {
+        @Override public void checkAllowed(Move move, Game game) { /* see processStockTurn */ }
+        @Override public void init(Move move, Game game) { /* see processStockTurn */ }
+        @Override public void doAction(Move move, Game game) { updatePort(game, move.getPlayer()); }
         @Override public void undoAction(Move move, Game game) { }
     }
 
@@ -252,6 +260,7 @@ public class StockActions {
         if (turn.buyFirst) makeBuySubs(game, playerName, turn, corp);
         for(Stock s:turn.salesList) makeSaleSub(game, playerName, s);
         if (!turn.buyFirst) makeBuySubs(game, playerName, turn, corp);
+        game.addSub(END_STOCK_TURN, playerName, "", 0, "");
         makePriorityAdvance(game);
         return game.getBoard();
     }
@@ -299,7 +308,7 @@ public class StockActions {
         Stock s = getHolding(move.getCorp(), p);
         if(s == null || s.isPrez) return;
         Holding prez = findPrezHolding(move.getCorp(), game);
-        if(s.amount >= prez.share.amount) {
+        if(s.amount > prez.share.amount) {
             game.addSub(CHANGE_PREZ, move.getPlayer(), move.getCorp(), 0, prez.playerName);
         }
     }
