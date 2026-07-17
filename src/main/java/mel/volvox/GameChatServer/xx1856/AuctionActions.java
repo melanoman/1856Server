@@ -346,6 +346,9 @@ public class AuctionActions {
             game.getBoard().phase = Game.Era.INITIAL.name();
             game.getBoard().currentCorp = "";
             for(Corp c:Corp.INIT) game.getBoard().corps.add(new Corp(c.name, c.tokensMax));
+            List<Integer> trains = new ArrayList<>();
+            for(int i=2; i<7; i++) for (int j=8-i; j>0; j--) trains.add(i);
+            game.getBoard().trains = trains;
         }
 
         @Override public void undoAction(Move move, Game game) {

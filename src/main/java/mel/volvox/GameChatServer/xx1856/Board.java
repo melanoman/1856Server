@@ -19,6 +19,7 @@ public class Board {
     List<Player> players = new ArrayList<>();
     List<Corp> corps = new ArrayList<>();
     List<Bid> bids = new ArrayList<>(); //only valid during auction
+    List<Integer> trains = new ArrayList<>();
 
     String phase = Era.GATHER.name();
     String activity = ""; // for interactive events during phases, basically subPhase
