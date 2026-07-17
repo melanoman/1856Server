@@ -16,6 +16,8 @@ public class OpActions {
         undoMgr.registerActionType(TAKE_LOAN, new TakeLoanAction());
         undoMgr.registerActionType(LAY_TOKEN, new LayTokenAction());
         undoMgr.registerActionType(DRILL_TILE, new DrillTileAction());
+        undoMgr.registerActionType(WITHHOLD, new WithholdAction());
+        undoMgr.registerActionType(PAYDIV, new PayDivAction());
         undoMgr.registerActionType(RESET_LOAN, new ResetTokenAction());
         undoMgr.registerActionType(RESET_TOKEN, new ResetLoanAction());
         undoMgr.registerActionType(FLOAT, new FloatAction());
@@ -220,6 +222,49 @@ public class OpActions {
 
         @Override public void undoAction(Move move, Game game) {
             findCorp(move.getCorp(), game).hasOperated = false;
+        }
+    }
+
+    static class WithholdAction extends Action {
+        @Override public void checkAllowed(Move move, Game game) {
+            assertPhase(game, Game.Era.OP, "Withhold");
+            assertActivity(game, OP_PRE, "Withhold");
+            assertCorpTurn(game, move.getCorp(), "Withhold");
+        }
+
+        @Override public void init(Move move, Game game) {
+            //TODO stock move (left)
+        }
+
+        @Override public void doAction(Move move, Game game) {
+            game.getBank().payCorp(move.getCorp(), move.getAmount());
+            game.getBoard().activity = OP_POST;
+        }
+
+        @Override public void undoAction(Move move, Game game) {
+            game.getBank().debitCorp(move.getCorp(), move.getAmount());
+            game.getBoard().activity = OP_PRE;
+        }
+    }
+
+    static class PayDivAction extends Action {
+        @Override public void checkAllowed(Move move, Game game) {
+            assertPhase(game, Game.Era.OP, "PayDiv");
+            assertActivity(game, OP_PRE, "PayDiv");
+            assertCorpTurn(game, move.getCorp(), "PayDiv");
+        }
+
+        @Override public void init(Move move, Game game) {
+            //TODO move stock(right)
+            //TODO handle interest
+            //TODO disburse remainder
+        }
+
+        @Override public void doAction(Move move, Game game) {
+            game.getBoard().activity = OP_POST;
+        }
+        @Override public void undoAction(Move move, Game game) {
+            game.getBoard().activity = OP_PRE;
         }
     }
 }

@@ -164,4 +164,11 @@ public class xx1856Controller {
     Board drillTile(@PathVariable String game, @PathVariable String corp) {
         return findGame(game).addMove(DRILL_TILE, "", corp, 40, "");
     }
+
+    @PutMapping("18xx/withhold/{game}/{corp}/{amount}")
+    @ResponseBody
+    Board withhold(@PathVariable String game, @PathVariable String corp,
+                   @PathVariable int amount) {
+        return findGame(game).addMove(WITHHOLD, "", corp, amount, "");
+    }
 }
