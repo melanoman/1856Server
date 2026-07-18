@@ -18,6 +18,7 @@ public class OpActions {
         undoMgr.registerActionType(DRILL_TILE, new DrillTileAction());
         undoMgr.registerActionType(WITHHOLD, new WithholdAction());
         undoMgr.registerActionType(PAYDIV, new PayDivAction());
+        undoMgr.registerActionType(PAY_INTEREST, new PayInterestAction());
         undoMgr.registerActionType(RESET_LOAN, new ResetTokenAction());
         undoMgr.registerActionType(RESET_TOKEN, new ResetLoanAction());
         undoMgr.registerActionType(FLOAT, new FloatAction());
@@ -255,9 +256,16 @@ public class OpActions {
         }
 
         @Override public void init(Move move, Game game) {
-            //TODO move stock(right)
-            //TODO handle interest
+            Corp c = findCorp(move.getCorp(), game);
+            int paid = 0;
+            if (c.cash < c.loans/10) {
+                int available = (c.cash / 10) * 10; //must be multiple of 10
+                paid = (available > c.loans*10) ? paid : available;
+                if (paid > 0) game.addSub(PAY_INTEREST, "", move.getCorp(), paid, "");
+            }
+            int due = c.loans*10 - paid;
             //TODO disburse remainder
+            //TODO move stock(right)
         }
 
         @Override public void doAction(Move move, Game game) {
@@ -265,6 +273,20 @@ public class OpActions {
         }
         @Override public void undoAction(Move move, Game game) {
             game.getBoard().activity = OP_PRE;
+        }
+    }
+
+    static class PayInterestAction extends Action {
+        @Override public void checkAllowed(Move move, Game game) { }
+        @Override public void init(Move move, Game game) { }
+
+        @Override public void doAction(Move move, Game game) {
+            game.getBank().debitCorp(move.getCorp(), move.getAmount());
+        }
+
+        @Override public void undoAction(Move move, Game game) {
+            game.getBank().payCorp(move.getCorp(), move.getAmount());
+
         }
     }
 }

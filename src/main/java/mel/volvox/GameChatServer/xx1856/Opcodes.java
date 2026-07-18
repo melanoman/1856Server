@@ -46,6 +46,7 @@ public class Opcodes {
     public static final String DRILL_TILE = "drillTile";
     public static final String WITHHOLD = "withhold";
     public static final String PAYDIV = "payDiv";
+    public static final String PAY_INTEREST = "interest";
 
     public static final String RESET_TOKEN = "resetToken";
     public static final String RESET_LOAN = "resetLoan";
