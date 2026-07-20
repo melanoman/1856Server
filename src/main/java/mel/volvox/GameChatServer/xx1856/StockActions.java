@@ -185,14 +185,12 @@ public class StockActions {
             game.getBoard().phase = Game.Era.OP.name();
             game.getBoard().thisOR = 1;
             game.getBoard().maxOR = calculateMaxOR(game);
-            payPrivates(game);
         }
 
         @Override public void undoAction(Move move, Game game) {
             game.getBoard().phase = move.getDetail();
             game.getBoard().thisOR = move.getAmount() + 1;
             game.getBoard().maxOR = move.getAmount();
-            refundPrivates(game);
         }
     }
 

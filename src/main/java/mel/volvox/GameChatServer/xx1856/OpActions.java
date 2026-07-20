@@ -32,8 +32,14 @@ public class OpActions {
 
         @Override public void init(Move move, Game game) {
             game.addSub(CHANGE_ACTIVITY, OP_PRE, "", 0, game.getBoard().activity);
-            game.addSub(CHANGE_CORP, "", game.getBoard().corps.get(0).name, 0, game.getBoard().currentCorp);
-            game.addSub(START_OP_TURN, "", game.getBoard().corps.get(0).name, 0, "");
+            Corp c = game.getBoard().corps.get(0);
+            if (c.par < 65) {
+                // TODO NULL OP ROUND
+                throw new IllegalStateException("TODO OP ROUND WITH NO COMPANIES");
+            } else {
+                game.addSub(CHANGE_CORP, "", game.getBoard().corps.get(0).name, 0, game.getBoard().currentCorp);
+                game.addSub(START_OP_TURN, "", game.getBoard().corps.get(0).name, 0, "");
+            }
         }
 
         @Override public void doAction(Move move, Game game) {

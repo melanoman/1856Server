@@ -32,14 +32,15 @@ public class Game implements UndoableGame<Move> {
         registerActions();
     }
 
-    public void load(List<Move> moves) { undoMgr.load(moves); }
-    public Board undo() { undoMgr.undo(); return board; }
-    public Board redo() { undoMgr.redo(); return board; }
-    public Board redoAll() { undoMgr.redoAll(); return board; }
+    public void load(List<Move> moves) { undoMgr.load(moves); resetWealth(); }
+    public Board undo() { undoMgr.undo(); resetWealth(); return board; }
+    public Board redo() { undoMgr.redo(); resetWealth(); return board; }
+    public Board redoAll() { undoMgr.redoAll(); resetWealth(); return board; }
 
     public Board addMove(String opcode, String player, String corp, int amount, String detail) {
         Move move = new Move(nextID(), opcode, player, corp, amount, detail, true);
         undoMgr.newTopMove(move);
+        resetWealth();
         return board;
     }
 
@@ -55,5 +56,22 @@ public class Game implements UndoableGame<Move> {
         AuctionActions.registerAll(undoMgr);
         StockActions.registerAll(undoMgr);
         OpActions.registerAll(undoMgr);
+    }
+
+    public void resetWealth() {
+        Map<String,Integer> corp2price = new HashMap<>();
+        for(Corp c: board.corps) {
+            corp2price.put(c.name, c.par < 65 ? 0 : c.price.getPrice() - 10*c.loans);
+        }
+        for(Player p: board.players) {
+            int wealth = p.cash;
+            for(String priv:p.privs) {
+                wealth += Priv.findPriv(priv).price;
+            }
+            for(Stock s:p.shares) {
+                wealth += corp2price.get(s.corpName)*s.amount;
+            }
+            p.wealth = wealth;
+        }
     }
 }
