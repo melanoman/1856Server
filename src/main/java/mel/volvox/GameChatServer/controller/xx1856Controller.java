@@ -171,4 +171,11 @@ public class xx1856Controller {
                    @PathVariable int amount) {
         return findGame(game).addMove(WITHHOLD, "", corp, amount, "");
     }
+
+    @PutMapping("18xx/paydiv/{game}/{corp}/{amount}")
+    @ResponseBody
+    Board paydiv(@PathVariable String game, @PathVariable String corp,
+                   @PathVariable int amount) {
+        return findGame(game).addMove(PAYDIV, "", corp, amount, "");
+    }
 }

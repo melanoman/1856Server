@@ -17,8 +17,10 @@ public class OpActions {
         undoMgr.registerActionType(LAY_TOKEN, new LayTokenAction());
         undoMgr.registerActionType(DRILL_TILE, new DrillTileAction());
         undoMgr.registerActionType(WITHHOLD, new WithholdAction());
+        undoMgr.registerActionType(CHANGE_RUN, new ChangeRunAction());
         undoMgr.registerActionType(PAYDIV, new PayDivAction());
         undoMgr.registerActionType(PAY_INTEREST, new PayInterestAction());
+        undoMgr.registerActionType(DISBURSE, new DisburseAction());
         undoMgr.registerActionType(RESET_LOAN, new ResetTokenAction());
         undoMgr.registerActionType(RESET_TOKEN, new ResetLoanAction());
         undoMgr.registerActionType(FLOAT, new FloatAction());
@@ -231,10 +233,15 @@ public class OpActions {
             assertPhase(game, Game.Era.OP, "Withhold");
             assertActivity(game, OP_PRE, "Withhold");
             assertCorpTurn(game, move.getCorp(), "Withhold");
+            if(move.getAmount() % 10 > 0) {
+                throw new IllegalStateException("Revenue must be a multiple of 10");
+            }
         }
 
         @Override public void init(Move move, Game game) {
             //TODO stock move (left)
+            Corp c = findCorp(move.getCorp(), game);
+            game.addSub(CHANGE_RUN, "", c.name, move.getAmount(), ""+c.lastRun);
         }
 
         @Override public void doAction(Move move, Game game) {
@@ -253,6 +260,10 @@ public class OpActions {
             assertPhase(game, Game.Era.OP, "PayDiv");
             assertActivity(game, OP_PRE, "PayDiv");
             assertCorpTurn(game, move.getCorp(), "PayDiv");
+            if(move.getAmount() % 10 > 0) {
+                throw new IllegalStateException("Revenue must be a multiple of 10");
+            }
+
         }
 
         @Override public void init(Move move, Game game) {
@@ -264,8 +275,9 @@ public class OpActions {
                 if (paid > 0) game.addSub(PAY_INTEREST, "", move.getCorp(), paid, "");
             }
             int due = c.loans*10 - paid;
-            //TODO disburse remainder
+            game.addSub(DISBURSE, "", move.getCorp(), (move.getAmount() - paid)/10, "");
             //TODO move stock(right)
+            game.addSub(CHANGE_RUN, "", c.name, move.getAmount(), ""+c.lastRun);
         }
 
         @Override public void doAction(Move move, Game game) {
@@ -273,6 +285,34 @@ public class OpActions {
         }
         @Override public void undoAction(Move move, Game game) {
             game.getBoard().activity = OP_PRE;
+        }
+    }
+
+    static class DisburseAction extends Action {
+        @Override public void checkAllowed(Move move, Game game) { }
+        @Override public void init(Move move, Game game) { }
+
+        @Override public void doAction(Move move, Game game) {
+            for(Player p:game.getBoard().getPlayers()) {
+                for(Stock s:p.shares) {
+                    if(s.corpName.equals(move.getCorp())) {
+                        game.getBank().payPlayer(p.name, s.amount * move.getAmount());
+                    }
+                }
+            }
+            game.getBank().payCorp(move.getCorp(), findCorp(move.getCorp(), game).poolShares * move.getAmount());
+        }
+
+        @Override public void undoAction(Move move, Game game) {
+            for(Player p:game.getBoard().getPlayers()) {
+                for(Stock s:p.shares) {
+                    if(s.corpName.equals(move.getCorp())) {
+                        game.getBank().debitPlayer(p.name, s.amount * move.getAmount());
+                    }
+                }
+            }
+            game.getBank().debitCorp(move.getCorp(), findCorp(move.getCorp(), game).poolShares * move.getAmount());
+
         }
     }
 
@@ -287,6 +327,21 @@ public class OpActions {
         @Override public void undoAction(Move move, Game game) {
             game.getBank().payCorp(move.getCorp(), move.getAmount());
 
+        }
+    }
+
+    static class ChangeRunAction extends Action {
+        @Override public void checkAllowed(Move move, Game game) { }
+        @Override public void init(Move move, Game game) { }
+
+        @Override
+        public void doAction(Move move, Game game) {
+            findCorp(move.getCorp(), game).lastRun = move.getAmount();
+        }
+
+        @Override
+        public void undoAction(Move move, Game game) {
+            findCorp(move.getCorp(), game).lastRun = Integer.parseInt(move.getDetail());
         }
     }
 }

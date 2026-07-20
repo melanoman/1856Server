@@ -24,6 +24,7 @@ public class Corp {
     List <String> privs = new ArrayList<>();
     List <String> trains = new ArrayList<>();
     int loans = 0;
+    int lastRun = 0;
     boolean incrementallyFunded = true;
     boolean destionationSatisfied = false;
     boolean hasOperated = false;
