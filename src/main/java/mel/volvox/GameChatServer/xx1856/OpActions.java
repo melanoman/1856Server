@@ -24,6 +24,8 @@ public class OpActions {
         undoMgr.registerActionType(RESET_LOAN, new ResetTokenAction());
         undoMgr.registerActionType(RESET_TOKEN, new ResetLoanAction());
         undoMgr.registerActionType(FLOAT, new FloatAction());
+        undoMgr.registerActionType(DESTINATION_REACHED, new DestinationAction());
+        undoMgr.registerActionType(RELEASE_ESCROW, new ReleaseEscrow());
     }
 
     //detail == former phase amount = 0 for reset, 1 for continue
@@ -269,7 +271,12 @@ public class OpActions {
             if(move.getAmount() % 10 > 0) {
                 throw new IllegalStateException("Revenue must be a multiple of 10");
             }
-
+            Corp c = findCorp(move.getCorp(), game);
+            int overhead = c.loans*10 - c.cash;
+            if (overhead < 0) overhead = 0;
+            if (move.getAmount() < 10 - overhead) {
+                throw new IllegalStateException("Minimum payout is $10");
+            }
         }
 
         @Override public void init(Move move, Game game) {
@@ -333,6 +340,47 @@ public class OpActions {
         @Override public void undoAction(Move move, Game game) {
             game.getBank().payCorp(move.getCorp(), move.getAmount());
 
+        }
+    }
+
+    static class DestinationAction extends Action {
+        @Override public void checkAllowed(Move move, Game game) {
+            assertPhase(game, Game.Era.OP, "DestReached");
+            assertCorpTurn(game, move.getCorp(), "DestReached");
+            Corp c = findCorp(move.getCorp(), game);
+            if(c.destinationSatisfied) throw new IllegalStateException("Dest Already Reached");
+        }
+
+        @Override public void init(Move move, Game game) {
+            Corp c = findCorp(move.getCorp(), game);
+            if(c.escrow > 0) game.addSub(RELEASE_ESCROW, "", move.getCorp(), c.escrow, "");
+        }
+
+        @Override
+        public void doAction(Move move, Game game) {
+            findCorp(move.getCorp(), game).destinationSatisfied = true;
+        }
+
+        @Override
+        public void undoAction(Move move, Game game) {
+            findCorp(move.getCorp(), game).destinationSatisfied = false;
+        }
+    }
+
+    static class ReleaseEscrow extends Action {
+        @Override public void checkAllowed(Move move, Game game) { }
+        @Override public void init(Move move, Game game) { }
+
+        @Override
+        public void doAction(Move move, Game game) {
+            findCorp(move.getCorp(), game).cash += move.getAmount();
+            findCorp(move.getCorp(), game).escrow -= move.getAmount();
+        }
+
+        @Override
+        public void undoAction(Move move, Game game) {
+            findCorp(move.getCorp(), game).cash -= move.getAmount();
+            findCorp(move.getCorp(), game).escrow += move.getAmount();
         }
     }
 

@@ -178,4 +178,10 @@ public class xx1856Controller {
                    @PathVariable int amount) {
         return findGame(game).addMove(PAYDIV, "", corp, amount, "");
     }
+
+    @PutMapping("18xx/destReached/{game}/{corp}")
+    @ResponseBody
+    Board destReached(@PathVariable String game, @PathVariable String corp) {
+        return findGame(game).addMove(DESTINATION_REACHED, "", corp, 0, "");
+    }
 }
