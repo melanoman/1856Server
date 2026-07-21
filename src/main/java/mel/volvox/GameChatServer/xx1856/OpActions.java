@@ -26,6 +26,7 @@ public class OpActions {
         undoMgr.registerActionType(FLOAT, new FloatAction());
         undoMgr.registerActionType(DESTINATION_REACHED, new DestinationAction());
         undoMgr.registerActionType(RELEASE_ESCROW, new ReleaseEscrow());
+        undoMgr.registerActionType(BUY_BANK_TRAIN, new BuyBankTrainAction());
     }
 
     //detail == former phase amount = 0 for reset, 1 for continue
@@ -398,4 +399,41 @@ public class OpActions {
             findCorp(move.getCorp(), game).lastRun = Integer.parseInt(move.getDetail());
         }
     }
+
+    static class BuyBankTrainAction extends Action {
+        @Override public void checkAllowed(Move move, Game game) {
+            assertPhase(game, Game.Era.OP, "BuyBankTrain");
+            assertCorpTurn(game, move.getCorp(), "BuyBankTrain");
+            assertActivity(game, OP_POST, "BuyBankTrain");
+            Board b = game.getBoard();
+            if(b.getTrains().isEmpty()) {
+                throw new IllegalStateException("Bank sold out of numbered trains");
+            }
+            if(b.trains.get(0) != move.getAmount()) {
+                throw new IllegalStateException("Current bank train is "+b.trains.get(0)+" not "+move.getAmount());
+            }
+            assertCorpFunds(game, move.getCorp(), TRAIN_PRICE[move.getAmount()], "BuyBankTrain");
+            //TODO enforce train limit
+        }
+
+        @Override public void init(Move move, Game game) {
+            //TODO enforce train limit change
+        }
+
+        @Override public void doAction(Move move, Game game) {
+            Corp c = findCorp(move.getCorp(), game);
+            c.trains.add(move.getAmount());
+            game.getBoard().trains.remove(0);
+            game.getBank().debitCorp(c.name, TRAIN_PRICE[move.getAmount()]);
+        }
+
+        @Override public void undoAction(Move move, Game game) {
+            Corp c = findCorp(move.getCorp(), game);
+            game.getBoard().trains.add(0, move.getAmount());
+            c.trains.remove((Integer) move.getAmount());
+            game.getBank().payCorp(c.name, TRAIN_PRICE[move.getAmount()]);
+        }
+    }
+
+    public static int TRAIN_PRICE[] = { 0, 0, 100, 225, 350, 550, 700 };
 }

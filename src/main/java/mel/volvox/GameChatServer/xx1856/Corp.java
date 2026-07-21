@@ -22,7 +22,7 @@ public class Corp {
     int tokensMax;
     int tokensUsed = 0;
     List <String> privs = new ArrayList<>();
-    List <String> trains = new ArrayList<>();
+    List <Integer> trains = new ArrayList<>();
     int loans = 0;
     int lastRun = 0;
     boolean incrementallyFunded = true;

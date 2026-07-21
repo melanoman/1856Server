@@ -175,7 +175,7 @@ public class xx1856Controller {
     @PutMapping("18xx/paydiv/{game}/{corp}/{amount}")
     @ResponseBody
     Board paydiv(@PathVariable String game, @PathVariable String corp,
-                   @PathVariable int amount) {
+                 @PathVariable int amount) {
         return findGame(game).addMove(PAYDIV, "", corp, amount, "");
     }
 
@@ -183,5 +183,12 @@ public class xx1856Controller {
     @ResponseBody
     Board destReached(@PathVariable String game, @PathVariable String corp) {
         return findGame(game).addMove(DESTINATION_REACHED, "", corp, 0, "");
+    }
+
+    @PutMapping("18xx/buyBankTrain/{game}/{corp}/{train}")
+    @ResponseBody
+    Board buyBankTrain(@PathVariable String game, @PathVariable String corp,
+                       @PathVariable int train) {
+        return findGame(game).addMove(BUY_BANK_TRAIN, "", corp, train, "");
     }
 }
