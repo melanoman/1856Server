@@ -74,4 +74,9 @@ public class Game implements UndoableGame<Move> {
             p.wealth = wealth;
         }
     }
+
+    public int floatLevel() {
+        if(board.trains.size() < 3) return 6;
+        return board.trains.get(0);
+    }
 }

@@ -413,7 +413,10 @@ public class OpActions {
                 throw new IllegalStateException("Current bank train is "+b.trains.get(0)+" not "+move.getAmount());
             }
             assertCorpFunds(game, move.getCorp(), TRAIN_PRICE[move.getAmount()], "BuyBankTrain");
-            //TODO enforce train limit
+            int limit = move.getCorp().equals("CGR") ? 3 : TRAIN_LIMIT[b.trains.size()];
+            if(findCorp(move.getCorp(), game).trains.size() >= limit) {
+                throw new IllegalStateException("Too many trains");
+            }
         }
 
         @Override public void init(Move move, Game game) {
@@ -435,5 +438,13 @@ public class OpActions {
         }
     }
 
-    public static int TRAIN_PRICE[] = { 0, 0, 100, 225, 350, 550, 700 };
+    public static int[] TRAIN_PRICE = { 0, 0, 100, 225, 350, 550, 700 };
+    final static int[] TRAIN_LIMIT = {
+            2,
+            2, 2,
+            2, 2, 3,
+            3, 3, 3, 4,
+            4, 4, 4, 4, 4,
+            4, 4, 4, 4, 4, 4
+    };
 }
