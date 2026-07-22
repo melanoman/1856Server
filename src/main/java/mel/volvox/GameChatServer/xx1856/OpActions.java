@@ -116,15 +116,17 @@ public class OpActions {
         @Override public void init(Move move, Game game) { }
 
         @Override public void doAction(Move move, Game game) {
+            int amount = (game.getBoard().activity.equals(OP_POST)) ? 90 : 100;
             Corp c = findCorp(move.getCorp(), game);
-            game.getBank().payCorp(c.name, 100);
+            game.getBank().payCorp(c.name, amount);
             c.loanTaken = true;
             c.loans++;
         }
 
         @Override public void undoAction(Move move, Game game) {
+            int amount = (game.getBoard().activity.equals(OP_POST)) ? 90 : 100;
             Corp c = findCorp(move.getCorp(), game);
-            game.getBank().debitCorp(c.name, 100);
+            game.getBank().debitCorp(c.name, amount);
             c.loanTaken = false;
             c.loans--;
         }
@@ -251,15 +253,22 @@ public class OpActions {
             //TODO stock move (left)
             Corp c = findCorp(move.getCorp(), game);
             game.addSub(CHANGE_RUN, "", c.name, move.getAmount(), ""+c.lastRun);
+            if (c.cash < 0) {
+                throw new IllegalStateException("TODO HANDLE PREZ INTEREST");
+            }
         }
 
         @Override public void doAction(Move move, Game game) {
-            game.getBank().payCorp(move.getCorp(), move.getAmount());
+            Corp c = findCorp(move.getCorp(), game);
+            int amount = move.getAmount() - c.loans*10;
+            game.getBank().payCorp(move.getCorp(), amount);
             game.getBoard().activity = OP_POST;
         }
 
         @Override public void undoAction(Move move, Game game) {
-            game.getBank().debitCorp(move.getCorp(), move.getAmount());
+            Corp c = findCorp(move.getCorp(), game);
+            int amount = move.getAmount() - c.loans*10;
+            game.getBank().debitCorp(move.getCorp(), amount);
             game.getBoard().activity = OP_PRE;
         }
     }
@@ -282,14 +291,18 @@ public class OpActions {
 
         @Override public void init(Move move, Game game) {
             Corp c = findCorp(move.getCorp(), game);
-            int paid = 0;
-            if (c.cash < c.loans/10) {
-                int available = (c.cash / 10) * 10; //must be multiple of 10
-                paid = (available > c.loans*10) ? paid : available;
-                if (paid > 0) game.addSub(PAY_INTEREST, "", move.getCorp(), paid, "");
+            int interest = 10*c.loans;
+            int paid = interest;
+            if (c.cash < interest) {
+                paid = (c.cash / 10) * 10; //must be multiple of 10
             }
-            int due = c.loans*10 - paid;
-            game.addSub(DISBURSE, "", move.getCorp(), (move.getAmount() - paid)/10, "");
+            if (paid > 0) game.addSub(PAY_INTEREST, "", move.getCorp(), paid, "");
+            int due = interest - paid;
+            if (due > move.getAmount()) {
+                //TODO handle get interest from prez
+            } else {
+                game.addSub(DISBURSE, "", move.getCorp(), (move.getAmount() - paid) / 10, "");
+            }
             //TODO move stock(right)
             game.addSub(CHANGE_RUN, "", c.name, move.getAmount(), ""+c.lastRun);
         }
