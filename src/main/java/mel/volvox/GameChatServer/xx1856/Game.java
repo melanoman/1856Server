@@ -79,4 +79,12 @@ public class Game implements UndoableGame<Move> {
         if(board.trains.size() < 3) return 6;
         return board.trains.get(0);
     }
+
+    /**
+     * Highest Corp with hasOperated false or null if none found
+     */
+    public Corp nextCorp() {
+        for(Corp c: board.corps) if(!c.hasOperated) return c;
+        return null;
+    }
 }

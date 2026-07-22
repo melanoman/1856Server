@@ -191,4 +191,10 @@ public class xx1856Controller {
                        @PathVariable int train) {
         return findGame(game).addMove(BUY_BANK_TRAIN, "", corp, train, "");
     }
+
+    @PutMapping("18xx/endOpTurn/{game}/{corp}")
+    @ResponseBody
+    Board endOpTurn(@PathVariable String game, @PathVariable String corp) {
+        return findGame(game).addMove(END_OP_TURN, "", corp, 0, "");
+    }
 }

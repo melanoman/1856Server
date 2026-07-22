@@ -13,6 +13,7 @@ public class OpActions {
         undoMgr.registerActionType(START_OP_ROUND, new StartOpRound());
         undoMgr.registerActionType(END_OP_ROUND, new EndOpRound());
         undoMgr.registerActionType(START_OP_TURN, new StartOpTurn());
+        undoMgr.registerActionType(END_OP_TURN, new EndOpTurn());
         undoMgr.registerActionType(TAKE_LOAN, new TakeLoanAction());
         undoMgr.registerActionType(LAY_TOKEN, new LayTokenAction());
         undoMgr.registerActionType(DRILL_TILE, new DrillTileAction());
@@ -370,13 +371,11 @@ public class OpActions {
             if(c.escrow > 0) game.addSub(RELEASE_ESCROW, "", move.getCorp(), c.escrow, "");
         }
 
-        @Override
-        public void doAction(Move move, Game game) {
+        @Override public void doAction(Move move, Game game) {
             findCorp(move.getCorp(), game).destinationSatisfied = true;
         }
 
-        @Override
-        public void undoAction(Move move, Game game) {
+        @Override public void undoAction(Move move, Game game) {
             findCorp(move.getCorp(), game).destinationSatisfied = false;
         }
     }
@@ -385,14 +384,12 @@ public class OpActions {
         @Override public void checkAllowed(Move move, Game game) { }
         @Override public void init(Move move, Game game) { }
 
-        @Override
-        public void doAction(Move move, Game game) {
+        @Override public void doAction(Move move, Game game) {
             findCorp(move.getCorp(), game).cash += move.getAmount();
             findCorp(move.getCorp(), game).escrow -= move.getAmount();
         }
 
-        @Override
-        public void undoAction(Move move, Game game) {
+        @Override public void undoAction(Move move, Game game) {
             findCorp(move.getCorp(), game).cash -= move.getAmount();
             findCorp(move.getCorp(), game).escrow += move.getAmount();
         }
@@ -402,14 +399,41 @@ public class OpActions {
         @Override public void checkAllowed(Move move, Game game) { }
         @Override public void init(Move move, Game game) { }
 
-        @Override
-        public void doAction(Move move, Game game) {
+        @Override public void doAction(Move move, Game game) {
             findCorp(move.getCorp(), game).lastRun = move.getAmount();
         }
 
-        @Override
-        public void undoAction(Move move, Game game) {
+        @Override public void undoAction(Move move, Game game) {
             findCorp(move.getCorp(), game).lastRun = Integer.parseInt(move.getDetail());
+        }
+    }
+
+    static class EndOpTurn extends Action {
+        @Override public void checkAllowed(Move move, Game game) {
+            assertPhase(game, Game.Era.OP, "EndOpTurn");
+            assertActivity(game, OP_POST, "EndOpTurn");
+            assertCorpTurn(game, move.getCorp(), "EndOpTurn");
+            if(findCorp(move.getCorp(), game).trains.isEmpty()) {
+                throw new IllegalStateException("Must buy a train or declare no route");
+            }
+        }
+
+        @Override public void init(Move move, Game game) {
+            Corp c = game.nextCorp();
+            if (c == null) {
+                game.addSub(END_OP_ROUND, "", "", 0, "");
+            } else {
+                game.addSub(CHANGE_CORP, "", c.name, 0, move.getCorp());
+                game.addSub(START_OP_TURN, "", c.name, 0, "");
+            }
+        }
+
+        @Override public void doAction(Move move, Game game) {
+            findCorp(move.getCorp(), game).hasOperated = true;
+        }
+
+        @Override public void undoAction(Move move, Game game) {
+            findCorp(move.getCorp(), game).hasOperated = false;
         }
     }
 
