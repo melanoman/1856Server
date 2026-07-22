@@ -329,6 +329,18 @@ public class StockActions {
         };
     }
 
-    private static int calculateMaxOR(Game game) { return 1; } //TODO calcMaxOR
+    final static int[] OP_COUNT = {
+            3,
+            3, 3,
+            3, 3, 2,
+            2, 2, 2, 2,
+            2, 2, 2, 2, 1,
+            1, 1, 1, 1, 1, 1
+    };
+
+    private static int calculateMaxOR(Game game) {
+        return OP_COUNT[game.getBoard().trains.size()];
+    }
+
     private static int calculateSalesValue(List<Stock> sales, Game game) { return 0; } //TODO calculate sales value
 }
