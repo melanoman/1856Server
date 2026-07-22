@@ -21,6 +21,7 @@ public class StockActions {
         undoMgr.registerActionType(BANK_BUY, new BuyBankAction());
         undoMgr.registerActionType(POOL_BUY, new BuyPoolAction());
         undoMgr.registerActionType(RESORT_CORP, new ResortCorpAction());
+        undoMgr.registerActionType(START_STOCK_ROUND, new StartStockRoundAction());
         undoMgr.registerActionType(END_STOCK_ROUND, new EndStockRoundAction());
     }
 
