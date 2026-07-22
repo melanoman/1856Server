@@ -175,7 +175,6 @@ public class StockActions {
         @Override public void checkAllowed(Move move, Game game) { }
         @Override public void init(Move move, Game game) {
             final Board board = game.getBoard(); //for line length only
-            game.addSub(CHANGE_CORP, "", board.corps.get(0).name, 0, board.currentCorp);
             //TODO check sellouts
             //TODO check max stock -> end game
             game.addSub(START_OP_ROUND, "", "", 0, "");

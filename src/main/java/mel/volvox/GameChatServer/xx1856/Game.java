@@ -84,7 +84,7 @@ public class Game implements UndoableGame<Move> {
      * Highest Corp with hasOperated false or null if none found
      */
     public Corp nextCorp() {
-        for(Corp c: board.corps) if(!c.hasOperated) return c;
+        for(Corp c: board.corps) if(!c.hasOperated && c.par > 0) return c;
         return null;
     }
 }

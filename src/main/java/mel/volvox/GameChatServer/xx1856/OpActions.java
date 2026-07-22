@@ -22,8 +22,8 @@ public class OpActions {
         undoMgr.registerActionType(PAYDIV, new PayDivAction());
         undoMgr.registerActionType(PAY_INTEREST, new PayInterestAction());
         undoMgr.registerActionType(DISBURSE, new DisburseAction());
-        undoMgr.registerActionType(RESET_LOAN, new ResetTokenAction());
-        undoMgr.registerActionType(RESET_TOKEN, new ResetLoanAction());
+        undoMgr.registerActionType(RESET_LOAN, new ResetLoanAction());
+        undoMgr.registerActionType(RESET_TOKEN, new ResetTokenAction());
         undoMgr.registerActionType(FLOAT, new FloatAction());
         undoMgr.registerActionType(DESTINATION_REACHED, new DestinationAction());
         undoMgr.registerActionType(RELEASE_ESCROW, new ReleaseEscrow());
@@ -85,9 +85,11 @@ public class OpActions {
             game.addSub(CHANGE_ACTIVITY, OP_PRE, "", 0, game.getBoard().activity);
             Corp c = findCorp(move.getCorp(), game);
             if(c.tokensUsed == 0) {
-                //TODO if (CHECK FLOAT)
-                game.addSub(FLOAT, "", move.getCorp(), 0, "");
-                // else game.addSub(FAIL_FLOAT, "", move.getCorp(), 0, "");
+                if(10 - c.bankShares >= game.floatLevel()) {
+                    game.addSub(FLOAT, "", move.getCorp(), 0, "");
+                } else {
+                    game.addSub(END_OP_TURN, "", move.getCorp(), 0, "");
+                }
             }
             game.addSub(RESET_TOKEN, "", move.getCorp(), c.tokenLaid?1:0, "");
             game.addSub(RESET_LOAN, "", move.getCorp(), c.loanTaken?1:0, "");
@@ -95,12 +97,10 @@ public class OpActions {
 
         @Override public void doAction(Move move, Game game) {
             game.getBoard().currentCorp = move.getCorp();
-            Corp c = findCorp(move.getCorp(), game);
         }
 
         @Override public void undoAction(Move move, Game game) {
             game.getBoard().currentCorp = move.getDetail();
-            Corp c = findCorp(move.getCorp(), game);
         }
     }
 
@@ -423,8 +423,7 @@ public class OpActions {
             if (c == null) {
                 game.addSub(END_OP_ROUND, "", "", 0, "");
             } else {
-                game.addSub(CHANGE_CORP, "", c.name, 0, move.getCorp());
-                game.addSub(START_OP_TURN, "", c.name, 0, "");
+                game.addSub(START_OP_TURN, "", c.name, 0, game.getBoard().currentCorp);
             }
         }
 
