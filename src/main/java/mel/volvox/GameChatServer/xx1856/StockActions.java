@@ -59,7 +59,8 @@ public class StockActions {
             c.par = move.getAmount();
             c.bankShares = 8;
             c.poolShares = 0;
-            //TODO record float type
+            c.incrementallyFunded = game.getBoard().trains.size() > 2;
+            c.destinationSatisfied = game.getBoard().trains.size() < 6;
             if (c.incrementallyFunded) game.getBank().player2Corp(p, c, 2 * move.getAmount());
             c.price = StockPrice.makePar(move.getAmount());
             p.shares.add(new Stock(c.name, 2, true));
