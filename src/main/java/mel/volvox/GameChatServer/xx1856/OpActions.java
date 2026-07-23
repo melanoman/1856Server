@@ -28,6 +28,7 @@ public class OpActions {
         undoMgr.registerActionType(DESTINATION_REACHED, new DestinationAction());
         undoMgr.registerActionType(RELEASE_ESCROW, new ReleaseEscrow());
         undoMgr.registerActionType(BUY_BANK_TRAIN, new BuyBankTrainAction());
+        undoMgr.registerActionType(BUY_PRIV, new BuyPriv());
     }
 
     //detail == former phase amount = 0 for reset, 1 for continue
@@ -405,6 +406,47 @@ public class OpActions {
 
         @Override public void undoAction(Move move, Game game) {
             findCorp(move.getCorp(), game).lastRun = Integer.parseInt(move.getDetail());
+        }
+    }
+
+    private static Player getPrivPlayer(String privName, Game game) {
+        for (Player p:game.getBoard().getPlayers()) {
+            if(p.privs.contains(privName)) return p;
+        }
+        return null;
+    }
+
+    static class BuyPriv extends Action {
+        @Override public void checkAllowed(Move move, Game game) {
+            assertPhase(game, Game.Era.OP, "buyPriv");
+            assertCorpTurn(game, move.getCorp(), "buyPriv");
+            assertCorpFunds(game, move.getCorp(), move.getAmount(), "buyPriv");
+            Player p = findPlayer(move.getPlayer(), game);
+            if(!p.privs.contains(move.getDetail())) throw new IllegalStateException("Player does not own priv");
+            int faceValue = findPriv(move.getDetail()).price;
+            if(move.getAmount()>2*faceValue || move.getAmount()<faceValue/2) {
+                throw new IllegalStateException("Price must be between 2x and half printed value");
+            }
+        }
+
+        @Override public void init(Move move, Game game) { }
+
+        @Override public void doAction(Move move, Game game) {
+            Corp c = findCorp(move.getCorp(), game);
+            Player p = findPlayer(move.getPlayer(), game);
+            p.privs.remove(move.getDetail());
+            c.privs.add(move.getDetail());
+            game.getBank().corp2Player(c, p, move.getAmount());
+            updatePort(game, p.name);
+        }
+
+        @Override public void undoAction(Move move, Game game) {
+            Corp c = findCorp(move.getCorp(), game);
+            Player p = findPlayer(move.getPlayer(), game);
+            p.privs.add(move.getDetail());
+            c.privs.remove(move.getDetail());
+            game.getBank().player2Corp(p, c, move.getAmount());
+            updatePort(game, p.name);
         }
     }
 
