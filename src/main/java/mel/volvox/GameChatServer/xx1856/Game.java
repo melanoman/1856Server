@@ -58,6 +58,7 @@ public class Game implements UndoableGame<Move> {
         AuctionActions.registerAll(undoMgr);
         StockActions.registerAll(undoMgr);
         OpActions.registerAll(undoMgr);
+        PriceActions.registerAll(undoMgr);
     }
 
     public void resetWealth() {

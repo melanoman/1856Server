@@ -20,7 +20,6 @@ public class StockActions {
         undoMgr.registerActionType(SET_PAR, new SetParAction());
         undoMgr.registerActionType(BANK_BUY, new BuyBankAction());
         undoMgr.registerActionType(POOL_BUY, new BuyPoolAction());
-        undoMgr.registerActionType(RESORT_CORP, new ResortCorpAction());
         undoMgr.registerActionType(START_STOCK_ROUND, new StartStockRoundAction());
         undoMgr.registerActionType(END_STOCK_ROUND, new EndStockRoundAction());
     }
@@ -132,39 +131,6 @@ public class StockActions {
             subtractShareFromPlayer(p, move.getCorp());
             game.getBank().payPlayer(move.getPlayer(), move.getAmount());
         }
-    }
-
-    static class ResortCorpAction extends Action {
-        @Override public void checkAllowed(Move move, Game game) { }
-        @Override public void init(Move move, Game game) { }
-
-        @Override public void doAction(Move move, Game game) {
-            Corp c = findCorp(move.getCorp(), game);
-            game.getBoard().corps.remove(c);
-            for(int i=game.getBoard().corps.size() - 1; i >= 0; i--) {
-                Corp old = game.getBoard().corps.get(i);
-                if (compareCorpOrder(c, old) > 0) continue;
-                game.getBoard().corps.add(i+1, c);
-                return;
-            }
-            game.getBoard().corps.add(0, c);
-        }
-
-        @Override
-        public void undoAction(Move move, Game game) {
-            Corp c = findCorp(move.getCorp(), game);
-            game.getBoard().corps.remove(c);
-            game.getBoard().corps.add(move.getAmount(), c);
-        }
-    }
-
-    static int compareCorpOrder(Corp c, Corp old) {
-        if (c.par > 0 && old.par <= 0) return 1;
-        if (c.par <=0 && old.par > 0) return -1;
-        if (c.par <=0) return 0;
-        if (c.price.getPrice() > old.price.getPrice()) return 1;
-        if (c.price.getPrice() < old.price.getPrice()) return -1;
-        return (c.price.getX() - old.price.getX());
     }
 
     static class EndStockRoundAction extends Action {

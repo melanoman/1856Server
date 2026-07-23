@@ -29,10 +29,6 @@ public class OpActions {
         undoMgr.registerActionType(RELEASE_ESCROW, new ReleaseEscrow());
         undoMgr.registerActionType(BUY_BANK_TRAIN, new BuyBankTrainAction());
         undoMgr.registerActionType(BUY_PRIV, new BuyPriv());
-
-        //TODO move to PriceActions
-        undoMgr.registerActionType(PRICE_RIGHT, new MoveRight());
-        undoMgr.registerActionType(PRICE_UP, new MoveUp());
     }
 
     //detail == former phase amount = 0 for reset, 1 for continue
@@ -364,44 +360,6 @@ public class OpActions {
         @Override public void undoAction(Move move, Game game) {
             game.getBank().payCorp(move.getCorp(), move.getAmount());
 
-        }
-    }
-
-    static class MoveRight extends Action {
-        @Override public void checkAllowed(Move move, Game game) { }
-        @Override public void init(Move move, Game game) {
-            game.addSub(RESORT_CORP, "", move.getCorp(), findCorpIndex(move.getCorp(), game), "");
-        }
-
-        @Override public void doAction(Move move, Game game) {
-            Corp c = findCorp(move.getCorp(), game);
-            c.price.right();
-            if (c.price.getPrice() == 55) game.updateAllPorts(); // exiting yellow
-        }
-
-        @Override public void undoAction(Move move, Game game) {
-            Corp c = findCorp(move.getCorp(), game);
-            c.price.left();
-            if (c.price.getPrice() == 50) game.updateAllPorts(); //entering yellow
-        }
-    }
-
-    static class MoveUp extends Action {
-        @Override public void checkAllowed(Move move, Game game) { }
-        @Override public void init(Move move, Game game) {
-            game.addSub(RESORT_CORP, "", move.getCorp(), findCorpIndex(move.getCorp(), game), "");
-        }
-
-        @Override public void doAction(Move move, Game game) {
-            Corp c = findCorp(move.getCorp(), game);
-            c.price.up();
-            if (c.price.getPrice() == 55) game.updateAllPorts(); // exiting yellow
-        }
-
-        @Override public void undoAction(Move move, Game game) {
-            Corp c = findCorp(move.getCorp(), game);
-            c.price.down();
-            if (c.price.getPrice() == 50) game.updateAllPorts(); //entering yellow
         }
     }
 
