@@ -236,7 +236,7 @@ public class StockActions {
         if(game.getBoard().phase.equals(Game.Era.INITIAL.name()) && !turn.salesList.isEmpty()) {
             throw new IllegalStateException("No sales in first stock round.");
         }
-        Player player = findPlayer(playerName, game);
+        Player p = findPlayer(playerName, game);
 
         int cost = 0;
         Corp corp = null;
@@ -249,8 +249,21 @@ public class StockActions {
             }
             cost = calculateCost(corp, turn.buyType, turn.buyPar);
         }
-        //TODO are sales sellable?
-
+        int shareCount = 0;
+        for (Stock s:turn.salesList) {
+            Stock h = getHolding(s.corpName, p);
+            if(h == null || h.amount < s.amount) throw new IllegalStateException("Cannot sell more shares than you have of "+s.corpName);
+            if(findCorp(s.corpName, game).poolShares + s.amount> 5) throw new IllegalStateException("Max 50% in pool: "+s.corpName);
+            if(h.isPrez && h.amount - s.amount < 2) { // if the sale dips into a prez share
+                boolean recipientFound = false;
+                for (Player pp: game.getBoard().getPlayers()) for (Stock ss:pp.shares) {
+                    if(pp.name.equals(p.name)) continue; //looking for other players...
+                    if(!ss.corpName.equals(s.corpName)) continue; //with the same stock...
+                    if(ss.amount >= 2) recipientFound = true;
+                }
+                if(!recipientFound) throw new IllegalStateException("No one to transfer presidency to for "+s.corpName);
+            }
+        }
         if (!turn.buyFirst) cost -= calculateSalesValue(turn.salesList, game);
         if (cost > 0) assertPlayerFunds(game, playerName, cost, "stockBuy");
         //TODO check portfolio size
