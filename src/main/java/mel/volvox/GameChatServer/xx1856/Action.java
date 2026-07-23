@@ -293,7 +293,10 @@ public abstract class Action implements UndoableAction<Move, Game> {
     }
 
     static void updatePort(Game game, String player) {
-        Player p = findPlayer(player, game);
+        updatePort(game, findPlayer(player, game));
+    }
+
+    static void updatePort(Game game, Player p) {
         int count = p.privs.size();
         for (Stock s:p.shares) count += shareSize(game, s);
         p.port = count;

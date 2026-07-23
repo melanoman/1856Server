@@ -12,6 +12,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static mel.volvox.GameChatServer.xx1856.Action.updatePort;
+
 public class Game implements UndoableGame<Move> {
     @Override public void storeMove(Move move) { repo.save(move); }
     @Override public void deleteMove(Move move) { repo.delete(move); }
@@ -86,5 +88,9 @@ public class Game implements UndoableGame<Move> {
     public Corp nextCorp() {
         for(Corp c: board.corps) if(!c.hasOperated && c.par > 0) return c;
         return null;
+    }
+
+    public void updateAllPorts() {
+        for (Player p: board.players) updatePort(this, p);
     }
 }

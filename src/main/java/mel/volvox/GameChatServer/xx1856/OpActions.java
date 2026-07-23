@@ -29,6 +29,10 @@ public class OpActions {
         undoMgr.registerActionType(RELEASE_ESCROW, new ReleaseEscrow());
         undoMgr.registerActionType(BUY_BANK_TRAIN, new BuyBankTrainAction());
         undoMgr.registerActionType(BUY_PRIV, new BuyPriv());
+
+        //TODO move to PriceActions
+        undoMgr.registerActionType(PRICE_RIGHT, new MoveRight());
+        undoMgr.registerActionType(PRICE_UP, new MoveUp());
     }
 
     //detail == former phase amount = 0 for reset, 1 for continue
@@ -305,7 +309,11 @@ public class OpActions {
             } else {
                 game.addSub(DISBURSE, "", move.getCorp(), (move.getAmount() - due) / 10, "");
             }
-            //TODO move stock(right)
+            if(c.price.rightEdge()) {
+                game.addSub(PRICE_UP, "", move.getCorp(), 1, "");
+            } else {
+                game.addSub(PRICE_RIGHT, "", move.getCorp(), 1, "");
+            }
             game.addSub(CHANGE_RUN, "", c.name, move.getAmount(), ""+c.lastRun);
         }
 
@@ -356,6 +364,44 @@ public class OpActions {
         @Override public void undoAction(Move move, Game game) {
             game.getBank().payCorp(move.getCorp(), move.getAmount());
 
+        }
+    }
+
+    static class MoveRight extends Action {
+        @Override public void checkAllowed(Move move, Game game) { }
+        @Override public void init(Move move, Game game) {
+            game.addSub(RESORT_CORP, "", move.getCorp(), findCorpIndex(move.getCorp(), game), "");
+        }
+
+        @Override public void doAction(Move move, Game game) {
+            Corp c = findCorp(move.getCorp(), game);
+            c.price.right();
+            if (c.price.getPrice() == 55) game.updateAllPorts(); // exiting yellow
+        }
+
+        @Override public void undoAction(Move move, Game game) {
+            Corp c = findCorp(move.getCorp(), game);
+            c.price.left();
+            if (c.price.getPrice() == 50) game.updateAllPorts(); //entering yellow
+        }
+    }
+
+    static class MoveUp extends Action {
+        @Override public void checkAllowed(Move move, Game game) { }
+        @Override public void init(Move move, Game game) {
+            game.addSub(RESORT_CORP, "", move.getCorp(), findCorpIndex(move.getCorp(), game), "");
+        }
+
+        @Override public void doAction(Move move, Game game) {
+            Corp c = findCorp(move.getCorp(), game);
+            c.price.up();
+            if (c.price.getPrice() == 55) game.updateAllPorts(); // exiting yellow
+        }
+
+        @Override public void undoAction(Move move, Game game) {
+            Corp c = findCorp(move.getCorp(), game);
+            c.price.down();
+            if (c.price.getPrice() == 50) game.updateAllPorts(); //entering yellow
         }
     }
 
@@ -437,7 +483,7 @@ public class OpActions {
             p.privs.remove(move.getDetail());
             c.privs.add(move.getDetail());
             game.getBank().corp2Player(c, p, move.getAmount());
-            updatePort(game, p.name);
+            updatePort(game, p);
         }
 
         @Override public void undoAction(Move move, Game game) {
@@ -446,7 +492,7 @@ public class OpActions {
             p.privs.add(move.getDetail());
             c.privs.remove(move.getDetail());
             game.getBank().player2Corp(p, c, move.getAmount());
-            updatePort(game, p.name);
+            updatePort(game, p);
         }
     }
 

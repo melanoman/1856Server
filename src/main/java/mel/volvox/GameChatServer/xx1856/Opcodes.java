@@ -36,6 +36,12 @@ public class Opcodes {
     public static final String END_STOCK_TURN = "stockTurnOver";
     public static final String END_STOCK_ROUND = "endStock";
 
+    //MARKET MOVES
+    public static final String PRICE_UP = "priceUp";
+    public static final String PRICE_DOWN = "priceDown";
+    public static final String PRICE_LEFT = "priceLeft";
+    public static final String PRICE_RIGHT = "priceRight";
+
     //CORP ACTIONS
     public static final String RESORT_CORP = "resort";
     public static final String START_OP_ROUND = "startOpRound";

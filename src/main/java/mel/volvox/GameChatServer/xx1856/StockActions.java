@@ -113,14 +113,11 @@ public class StockActions {
 
     static class BuyPoolAction extends Action {
         @Override public void checkAllowed(Move move, Game game) { }
-
-        @Override
-        public void init(Move move, Game game) {
+        @Override public void init(Move move, Game game) {
             makePrezIf(move, game);
         }
 
-        @Override
-        public void doAction(Move move, Game game) {
+        @Override public void doAction(Move move, Game game) {
             Player p = findPlayer(move.getPlayer(), game);
             Corp c = findCorp(move.getCorp(), game);
             c.poolShares--;
@@ -128,8 +125,7 @@ public class StockActions {
             game.getBank().debitPlayer(move.getPlayer(), move.getAmount());
         }
 
-        @Override
-        public void undoAction(Move move, Game game) {
+        @Override public void undoAction(Move move, Game game) {
             Player p = findPlayer(move.getPlayer(), game);
             Corp c = findCorp(move.getCorp(), game);
             c.poolShares++;
@@ -139,7 +135,6 @@ public class StockActions {
     }
 
     static class ResortCorpAction extends Action {
-
         @Override public void checkAllowed(Move move, Game game) { }
         @Override public void init(Move move, Game game) { }
 
