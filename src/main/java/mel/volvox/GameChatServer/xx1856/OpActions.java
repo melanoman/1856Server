@@ -303,7 +303,7 @@ public class OpActions {
             if (due > move.getAmount()) {
                 //TODO handle get interest from prez
             } else {
-                game.addSub(DISBURSE, "", move.getCorp(), (move.getAmount() - paid) / 10, "");
+                game.addSub(DISBURSE, "", move.getCorp(), (move.getAmount() - due) / 10, "");
             }
             //TODO move stock(right)
             game.addSub(CHANGE_RUN, "", c.name, move.getAmount(), ""+c.lastRun);
