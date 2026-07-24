@@ -43,7 +43,7 @@ public class Opcodes {
     public static final String PRICE_LEFT = "priceLeft";
     public static final String PRICE_RIGHT = "priceRight";
 
-    //CORP ACTIONS
+    //OP ACTIONS
     public static final String START_OP_ROUND = "startOpRound";
     public static final String END_OP_ROUND = "endOpRound";
     public static final String START_OP_TURN = "startOpTurn";
@@ -58,10 +58,14 @@ public class Opcodes {
     public static final String CHANGE_RUN = "changeRun";
     public static final String DESTINATION_REACHED = "destinationReached";
     public static final String RELEASE_ESCROW = "releaseEscrow";
+
+    //TRAIN ACTIONS
     public static final String BUY_BANK_TRAIN = "buyBankTrain";
     public static final String BUY_CORP_TRAIN = "buyCorpTrain";
     public static final String BUY_PRIV = "buyPriv";
+    public static final String RUST = "rust";
 
+    //RESET ACTIONS
     public static final String RESET_TOKEN = "resetToken";
     public static final String RESET_LOAN = "resetLoan";
     public static final String FLOAT = "float";

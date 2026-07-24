@@ -27,8 +27,6 @@ public class OpActions {
         undoMgr.registerActionType(FLOAT, new FloatAction());
         undoMgr.registerActionType(DESTINATION_REACHED, new DestinationAction());
         undoMgr.registerActionType(RELEASE_ESCROW, new ReleaseEscrow());
-        undoMgr.registerActionType(BUY_BANK_TRAIN, new BuyBankTrainAction());
-        undoMgr.registerActionType(BUY_CORP_TRAIN, new BuyCorpTrain());
         undoMgr.registerActionType(BUY_PRIV, new BuyPriv());
     }
 
@@ -73,7 +71,6 @@ public class OpActions {
         @Override public void doAction(Move move, Game game) {
             game.getBoard().thisOR++;
         }
-
         @Override public void undoAction(Move move, Game game) {
             game.getBoard().thisOR--;
         }
@@ -482,108 +479,4 @@ public class OpActions {
             findCorp(move.getCorp(), game).hasOperated = false;
         }
     }
-
-    static class BuyBankTrainAction extends Action {
-        @Override public void checkAllowed(Move move, Game game) {
-            assertPhase(game, Game.Era.OP, "BuyBankTrain");
-            assertCorpTurn(game, move.getCorp(), "BuyBankTrain");
-            assertActivity(game, OP_POST, "BuyBankTrain");
-            Board b = game.getBoard();
-            if(b.getTrains().isEmpty()) {
-                throw new IllegalStateException("Bank sold out of numbered trains");
-            }
-            if(b.trains.get(0) != move.getAmount()) {
-                throw new IllegalStateException("Current bank train is "+b.trains.get(0)+" not "+move.getAmount());
-            }
-            assertCorpFunds(game, move.getCorp(), TRAIN_PRICE[move.getAmount()], "BuyBankTrain");
-            int limit = move.getCorp().equals("CGR") ? 3 : TRAIN_LIMIT[b.trains.size()];
-            if(findCorp(move.getCorp(), game).trains.size() >= limit) {
-                throw new IllegalStateException("Too many trains");
-            }
-        }
-
-        @Override public void init(Move move, Game game) {
-            //TODO enforce train limit change
-        }
-
-        @Override public void doAction(Move move, Game game) {
-            Corp c = findCorp(move.getCorp(), game);
-            c.trains.add(move.getAmount());
-            game.getBoard().trains.remove(0);
-            game.getBank().debitCorp(c.name, TRAIN_PRICE[move.getAmount()]);
-        }
-
-        @Override public void undoAction(Move move, Game game) {
-            Corp c = findCorp(move.getCorp(), game);
-            game.getBoard().trains.add(0, move.getAmount());
-            c.trains.remove((Integer) move.getAmount());
-            game.getBank().payCorp(c.name, TRAIN_PRICE[move.getAmount()]);
-        }
-    }
-
-    //player=train corp=buyer detail=seller amount=price
-    static class BuyCorpTrain extends Action {
-        @Override public void checkAllowed(Move move, Game game) {
-            assertPhase(game, Game.Era.OP, "BuyCorpTrain");
-            assertCorpTurn(game, move.getCorp(), "BuyCorpTrain");
-            assertActivity(game, OP_POST, "BuyCorpTrain");
-            if(move.getAmount() < 1) {
-                throw new IllegalStateException("Minimum Price is $1");
-            }
-            assertCorpFunds(game, move.getCorp(), move.getAmount(), "BuyCorpTrain");
-            int train = trainValue(move.getPlayer());
-            // TODO enforce CGR at face value
-            Corp seller = findCorp(move.getDetail(), game);
-            if (!seller.trains.contains(train)) {
-                throw new IllegalStateException("Seller " + seller.name + " does not have train " + move.getPlayer());
-            }
-            int limit = move.getCorp().equals("CGR") ? 3 : TRAIN_LIMIT[game.getBoard().trains.size()];
-            if(findCorp(move.getCorp(), game).trains.size() >= limit) {
-                throw new IllegalStateException("Too many trains");
-            }
-        }
-
-        @Override public void init(Move move, Game game) { }
-
-        @Override public void doAction(Move move, Game game) {
-            Corp buyer = findCorp(move.getCorp(), game);
-            Corp seller = findCorp(move.getDetail(), game);
-            Integer train = trainValue(move.getPlayer());
-            int price = move.getAmount();
-            buyer.cash -= price;
-            seller.cash += price;
-            seller.trains.remove(train);
-            buyer.trains.add(train);
-        }
-
-        @Override public void undoAction(Move move, Game game) {
-            Corp buyer = findCorp(move.getCorp(), game);
-            Corp seller = findCorp(move.getDetail(), game);
-            Integer train = trainValue(move.getPlayer());
-            int price = move.getAmount();
-            seller.cash -= price;
-            buyer.cash += price;
-            buyer.trains.remove(train);
-            seller.trains.add(train);
-        }
-    }
-
-    private static int trainValue(String s) {
-        if("D".equals(s)) return 0;
-        try {
-            return Integer.parseInt(s);
-        } catch (NumberFormatException e) {
-            throw new IllegalStateException("Unknown train type "+s);
-        }
-    }
-
-    public static int[] TRAIN_PRICE = { 1100, 0, 100, 225, 350, 550, 700 };
-    final static int[] TRAIN_LIMIT = {
-            2,
-            2, 2,
-            2, 2, 3,
-            3, 3, 3, 4,
-            4, 4, 4, 4, 4,
-            4, 4, 4, 4, 4, 4
-    };
 }
