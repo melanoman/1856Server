@@ -1,6 +1,5 @@
 package mel.volvox.GameChatServer.controller;
 
-import mel.volvox.GameChatServer.comm.train.StockSale;
 import mel.volvox.GameChatServer.model.seating.Channel;
 import mel.volvox.GameChatServer.repository.ChannelRepo;
 import mel.volvox.GameChatServer.repository.xx1856Repo;

@@ -220,7 +220,7 @@ public class StockActions {
                 for (Player pp: game.getBoard().getPlayers()) for (Stock ss:pp.shares) {
                     if(pp.name.equals(p.name)) continue; //looking for other players...
                     if(!ss.corpName.equals(s.corpName)) continue; //with the same stock...
-                    if(ss.amount >= 2) recipientFound = true;
+                    if(ss.amount >= 2) { recipientFound = true; break; }
                 }
                 if(!recipientFound) throw new IllegalStateException("No one to transfer presidency to for "+s.corpName);
             }
