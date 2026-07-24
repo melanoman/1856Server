@@ -192,6 +192,14 @@ public class xx1856Controller {
         return findGame(game).addMove(BUY_BANK_TRAIN, "", corp, train, "");
     }
 
+    @PutMapping("18xx/buyCorpTrain/{game}/{buyer}/{train}/{seller}/{price}")
+    @ResponseBody
+    Board buyCorpTrain(@PathVariable String game, @PathVariable String buyer,
+                       @PathVariable int train, @PathVariable String seller,
+                       @PathVariable int price) {
+        return findGame(game).addMove(BUY_CORP_TRAIN, ""+train, buyer, price, seller);
+    }
+
     @PutMapping("18xx/endOpTurn/{game}/{corp}")
     @ResponseBody
     Board endOpTurn(@PathVariable String game, @PathVariable String corp) {
