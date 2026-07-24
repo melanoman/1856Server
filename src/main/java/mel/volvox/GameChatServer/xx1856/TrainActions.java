@@ -11,9 +11,10 @@ import static mel.volvox.GameChatServer.xx1856.Opcodes.*;
 
 public class TrainActions {
     public static void registerAll(UndoManager<Move, Game, Action> undoMgr) {
-        undoMgr.registerActionType(BUY_BANK_TRAIN, new BuyBankTrainAction());
+        undoMgr.registerActionType(BUY_BANK_TRAIN, new BuyBankTrain());
         undoMgr.registerActionType(BUY_CORP_TRAIN, new BuyCorpTrain());
         undoMgr.registerActionType(RUST, new RustAction());
+        undoMgr.registerActionType(BUY_PRIV, new BuyPriv());
     }
 
     static int getRustSize(int bankTrainCount) {
@@ -69,7 +70,7 @@ public class TrainActions {
         }
     }
 
-    static class BuyBankTrainAction extends Action {
+    static class BuyBankTrain extends Action {
         @Override public void checkAllowed(Move move, Game game) {
             assertPhase(game, Game.Era.OP, "BuyBankTrain");
             assertCorpTurn(game, move.getCorp(), "BuyBankTrain");
@@ -112,6 +113,40 @@ public class TrainActions {
             game.getBoard().trains.add(0, move.getAmount());
             c.trains.remove((Integer) move.getAmount());
             game.getBank().payCorp(c.name, TRAIN_PRICE[move.getAmount()]);
+        }
+    }
+
+    static class BuyPriv extends Action {
+        @Override public void checkAllowed(Move move, Game game) {
+            assertPhase(game, Game.Era.OP, "buyPriv");
+            assertCorpTurn(game, move.getCorp(), "buyPriv");
+            assertCorpFunds(game, move.getCorp(), move.getAmount(), "buyPriv");
+            Player p = findPlayer(move.getPlayer(), game);
+            if(!p.privs.contains(move.getDetail())) throw new IllegalStateException("Player does not own priv");
+            int faceValue = findPriv(move.getDetail()).price;
+            if(move.getAmount()>2*faceValue || move.getAmount()<faceValue/2) {
+                throw new IllegalStateException("Price must be between 2x and half printed value");
+            }
+        }
+
+        @Override public void init(Move move, Game game) { }
+
+        @Override public void doAction(Move move, Game game) {
+            Corp c = findCorp(move.getCorp(), game);
+            Player p = findPlayer(move.getPlayer(), game);
+            p.privs.remove(move.getDetail());
+            c.privs.add(move.getDetail());
+            game.getBank().corp2Player(c, p, move.getAmount());
+            updatePort(game, p);
+        }
+
+        @Override public void undoAction(Move move, Game game) {
+            Corp c = findCorp(move.getCorp(), game);
+            Player p = findPlayer(move.getPlayer(), game);
+            p.privs.add(move.getDetail());
+            c.privs.remove(move.getDetail());
+            game.getBank().player2Corp(p, c, move.getAmount());
+            updatePort(game, p);
         }
     }
 
