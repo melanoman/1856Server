@@ -64,6 +64,7 @@ public class Opcodes {
     public static final String BUY_CORP_TRAIN = "buyCorpTrain";
     public static final String BUY_PRIV = "buyPriv";
     public static final String RUST = "rust";
+    public static final String RUST_PRIV = "rustPriv";
 
     //RESET ACTIONS
     public static final String RESET_TOKEN = "resetToken";

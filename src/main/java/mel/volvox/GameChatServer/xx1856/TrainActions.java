@@ -4,7 +4,9 @@ import mel.volvox.GameChatServer.model.xx1856.Move;
 import mel.volvox.undo.UndoManager;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static mel.volvox.GameChatServer.xx1856.OpActions.OP_POST;
 import static mel.volvox.GameChatServer.xx1856.Opcodes.*;
@@ -15,6 +17,7 @@ public class TrainActions {
         undoMgr.registerActionType(BUY_CORP_TRAIN, new BuyCorpTrain());
         undoMgr.registerActionType(RUST, new RustAction());
         undoMgr.registerActionType(BUY_PRIV, new BuyPriv());
+        undoMgr.registerActionType(RUST_PRIV, new RustPriv());
     }
 
     static int getRustSize(int bankTrainCount) {
@@ -22,6 +25,8 @@ public class TrainActions {
         if(bankTrainCount == 1) return 3;
         return -1;
     }
+
+    static final int PRIV_RUST_SIZE = 4;
 
     //player=train corp=buyer detail=seller amount=price
     static class BuyCorpTrain extends Action {
@@ -96,7 +101,22 @@ public class TrainActions {
                 if(t == rustSize) rustList.add(c);
             }
             for(Corp c: rustList) game.addSub(RUST, "", c.name, rustSize, "");
-            //TODO RUST PRIVS
+
+
+            if (game.getBoard().trains.size() == PRIV_RUST_SIZE) {
+                List<String> nuke = new ArrayList<>();
+                for(Player p:game.getBoard().players) for(String pp:p.privs) nuke.add(pp+":"+p.name);
+                for(String s:nuke) {
+                    String[] ss = s.split(":", 2);
+                    game.addSub(RUST_PRIV, ss[1], "", 0, ss[0]);
+                }
+                nuke = new ArrayList<>();
+                for(Corp c:game.getBoard().corps) for(String pp:c.privs) nuke.add(pp+":"+c.name);
+                for(String s:nuke) {
+                    String[] ss = s.split(":", 2);
+                    game.addSub(RUST_PRIV, "", ss[1], 0, ss[0]);
+                }
+            }
             //TODO trigger CGR formation
             //TODO enforce train limit change
         }
@@ -169,6 +189,27 @@ public class TrainActions {
 
         @Override public void undoAction(Move move, Game game) {
             findCorp((move.getCorp()), game).trains.add(0, move.getAmount());
+        }
+    }
+
+    static class RustPriv extends Action {
+        @Override public void checkAllowed(Move move, Game game) { }
+        @Override public void init(Move move, Game game) { }
+
+        @Override public void doAction(Move move, Game game) {
+            if(move.getPlayer().isEmpty()) {
+                findCorp(move.getCorp(), game).privs.remove(move.getDetail());
+            } else {
+                findPlayer(move.getPlayer(), game).privs.remove(move.getDetail());
+            }
+        }
+
+        @Override public void undoAction(Move move, Game game) {
+            if (move.getPlayer().isEmpty()) {
+                findCorp(move.getCorp(), game).privs.add(0, move.getDetail());
+            } else {
+                findPlayer(move.getPlayer(), game).privs.add(0, move.getDetail());
+            }
         }
     }
 
