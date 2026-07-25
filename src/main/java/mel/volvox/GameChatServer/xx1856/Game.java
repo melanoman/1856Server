@@ -95,4 +95,24 @@ public class Game implements UndoableGame<Move> {
     public void updateAllPorts() {
         for (Player p: board.players) updatePort(this, p);
     }
+
+    final static int[] EARLY_PORTFOLIO_LIMIT = { 20, 16, 13, 11 };
+    final static int [][] LATE_PORTFOLIO_LIMIT = {
+            {10, 8, 7, 6},
+            {13, 10, 8, 7},
+            {15, 12, 10, 8},
+            {18, 14, 11, 10},
+            {20, 16, 13, 11},
+            {22, 18, 15, 12},
+            {25, 20, 16, 14},
+            {28, 22, 18, 15}
+    };
+
+    public int portfolioLimit() {
+        if (board.trains.size() > 1) {
+            return EARLY_PORTFOLIO_LIMIT[board.players.size()-3];
+        } else {
+            return LATE_PORTFOLIO_LIMIT[board.corps.size()-4][board.players.size()-3];
+        }
+    }
 }

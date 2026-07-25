@@ -4,9 +4,7 @@ import mel.volvox.GameChatServer.model.xx1856.Move;
 import mel.volvox.undo.UndoManager;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import static mel.volvox.GameChatServer.xx1856.OpActions.OP_POST;
 import static mel.volvox.GameChatServer.xx1856.Opcodes.*;

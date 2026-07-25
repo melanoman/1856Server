@@ -124,6 +124,7 @@ public class GatherActions {
             game.getBoard().currentPlayer = game.getBoard().getPlayers().get(0).name;
             game.getBoard().priorityPlayer = game.getBoard().getPlayers().get(0).name;
             game.getBoard().bank = 10500;
+            game.getBoard().portfolioLimit = Game.EARLY_PORTFOLIO_LIMIT[newOrder.size()-3];
             int startAmount = 1500 / game.getBoard().getPlayers().size();
             for(Player p: game.getBoard().getPlayers()) p.cash = startAmount;
         }
