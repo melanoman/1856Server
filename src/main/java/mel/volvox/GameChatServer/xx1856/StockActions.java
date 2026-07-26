@@ -213,8 +213,8 @@ public class StockActions {
             corp = findCorp(turn.buyCorp, game);
             switch(turn.buyType) {
                 case "par" -> checkPar(corp, turn.buyPar);
-                case "bank" -> checkBank(corp);
-                case "pool" -> checkPool(corp);
+                case "bank" -> checkBank(corp, p);
+                case "pool" -> checkPool(corp, p);
             }
             cost = calculateCost(corp, turn.buyType, turn.buyPar);
         }
@@ -269,14 +269,26 @@ public class StockActions {
         game.addSub(STOCK_SALE, playerName, sale.corpName, sale.amount, previewDrop(sale, game));
     }
 
+    //TODO move to PRICE_ACTIONS
     private static String previewDrop(Stock sale, Game game) { return ""+0; } //TODO preview drop
 
-    private static void checkPool(Corp corp) {
-        if(corp.poolShares < 1) throw new IllegalStateException("No pool share available for "+corp.name);
+    private static void checkSixty(Corp c, Player p) {
+        if(c.price.getPrice() > BROWN_ZONE) {
+            Stock s = getHolding(c.name, p);
+            if (s != null && s.amount >= 6) {
+                throw new IllegalStateException("Max 60% per player unless in brown zone");
+            }
+        }
     }
 
-    private static void checkBank(Corp corp) {
+    private static void checkPool(Corp corp, Player p) {
+        if(corp.poolShares < 1) throw new IllegalStateException("No pool share available for "+corp.name);
+        checkSixty(corp, p);
+    }
+
+    private static void checkBank(Corp corp, Player p) {
         if(corp.bankShares < 1) throw new IllegalStateException("No bank share available for "+corp.name);
+        checkSixty(corp, p);
     }
 
     private static void addShareToPlayer(Player p, String corpName) {
