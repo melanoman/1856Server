@@ -4,6 +4,7 @@ import mel.volvox.GameChatServer.comm.train.StockPrice;
 import mel.volvox.GameChatServer.model.xx1856.Move;
 import mel.volvox.undo.UndoManager;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static mel.volvox.GameChatServer.xx1856.Action.*;
@@ -134,11 +135,18 @@ public class StockActions {
     }
 
     static class EndStockRoundAction extends Action {
-
         @Override public void checkAllowed(Move move, Game game) { }
         @Override public void init(Move move, Game game) {
             final Board board = game.getBoard(); //for line length only
-            //TODO check sellouts
+            List<Corp> risers = new ArrayList<>();
+            for(Corp c: game.getBoard().corps) {
+                if (c.bankShares<1 && c.poolShares<1 && c.par>0) { //sold out
+                    risers.add(c);
+                }
+            }
+            for(Corp c:risers) {
+                game.addSub(PRICE_UP, "", c.name, 0, "");
+            }
             //TODO check max stock -> end game
             game.addSub(START_OP_ROUND, "", "", 0, "");
         }
