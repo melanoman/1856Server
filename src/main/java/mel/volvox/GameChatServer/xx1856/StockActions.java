@@ -222,15 +222,23 @@ public class StockActions {
         for (Stock s:turn.salesList) {
             Stock h = getHolding(s.corpName, p);
             if(h == null || h.amount < s.amount) throw new IllegalStateException("Cannot sell more shares than you have of "+s.corpName);
-            if(findCorp(s.corpName, game).poolShares + s.amount> 5) throw new IllegalStateException("Max 50% in pool: "+s.corpName);
+            Corp cc = findCorp(s.corpName, game);
+            if(cc.poolShares + s.amount> 5) throw new IllegalStateException("Max 50% in pool: "+s.corpName);
             if(h.isPrez && h.amount - s.amount < 2) { // if the sale dips into a prez share
                 boolean recipientFound = false;
-                for (Player pp: game.getBoard().getPlayers()) for (Stock ss:pp.shares) {
-                    if(pp.name.equals(p.name)) continue; //looking for other players...
-                    if(!ss.corpName.equals(s.corpName)) continue; //with the same stock...
-                    if(ss.amount >= 2) { recipientFound = true; break; }
+                for (Player pp : game.getBoard().getPlayers())
+                    for (Stock ss : pp.shares) {
+                        if (pp.name.equals(p.name)) continue; //looking for other players...
+                        if (!ss.corpName.equals(s.corpName)) continue; //with the same stock...
+                        if (ss.amount >= 2) {
+                            recipientFound = true;
+                            break;
+                        }
+                    }
+                if (!corpWillClose(cc, previewDrop(s, game))) {
+                    if (!recipientFound)
+                        throw new IllegalStateException("No one to transfer presidency to for " + s.corpName);
                 }
-                if(!recipientFound) throw new IllegalStateException("No one to transfer presidency to for "+s.corpName);
             }
         }
         if (!turn.buyFirst) cost -= calculateSalesValue(turn.salesList, game);
@@ -244,6 +252,10 @@ public class StockActions {
         game.addSub(END_STOCK_TURN, playerName, "", 0, "");
         makePriorityAdvance(game);
         return game.getBoard();
+    }
+
+    private static boolean corpWillClose(Corp cc, int drop) {
+        return false; //TODO implement corpWillClose
     }
 
     private static void checkPar(Corp corp, int amount) {
@@ -266,11 +278,12 @@ public class StockActions {
 
     private static void makeSaleSub(Game game, String playerName, Stock sale) {
         Corp c = findCorp(sale.corpName, game);
-        game.addSub(STOCK_SALE, playerName, sale.corpName, sale.amount, previewDrop(sale, game));
+        game.addSub(STOCK_SALE, playerName, sale.corpName, sale.amount, ""+previewDrop(sale, game));
     }
 
-    //TODO move to PRICE_ACTIONS
-    private static String previewDrop(Stock sale, Game game) { return ""+0; } //TODO preview drop
+    private static int previewDrop(Stock sale, Game game) {
+        return findCorp(sale.corpName, game).price.previewDrop(sale.amount);
+    }
 
     private static void checkSixty(Corp c, Player p) {
         if(c.price.getPrice() > BROWN_ZONE) {
