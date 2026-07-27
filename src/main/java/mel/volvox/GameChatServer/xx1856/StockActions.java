@@ -21,6 +21,7 @@ public class StockActions {
         undoMgr.registerActionType(SET_PAR, new SetParAction());
         undoMgr.registerActionType(BANK_BUY, new BuyBankAction());
         undoMgr.registerActionType(POOL_BUY, new BuyPoolAction());
+        undoMgr.registerActionType(STOCK_SALE, new SaleAction());
         undoMgr.registerActionType(START_STOCK_ROUND, new StartStockRoundAction());
         undoMgr.registerActionType(END_STOCK_ROUND, new EndStockRoundAction());
     }
@@ -43,6 +44,32 @@ public class StockActions {
 
         @Override public void doAction(Move move, Game game) { }
         @Override public void undoAction(Move move, Game game) { }
+    }
+
+    static class SaleAction extends Action {
+        @Override public void checkAllowed(Move move, Game game) { }
+        @Override public void init(Move move, Game game) {
+            //TODO price down
+            //TODO close company (in price down)
+        }
+        @Override public void doAction(Move move, Game game) {
+            Player p = findPlayer(move.getPlayer(), game);
+            Corp c = findCorp(move.getCorp(), game);
+            subtractSharesFromPlayer(p, c.name, move.getAmount());
+            c.poolShares += move.getAmount();
+            int total = c.price.getPrice() * move.getAmount();
+            game.getBank().payPlayer(move.getPlayer(), total);
+            updatePort(game, p);
+        }
+        @Override public void undoAction(Move move, Game game) {
+            Player p = findPlayer(move.getPlayer(), game);
+            Corp c = findCorp(move.getCorp(), game);
+            c.poolShares -= move.getAmount();
+            addSharesToPlayer(p, c.name, move.getAmount());
+            int total = c.price.getPrice() * move.getAmount();
+            game.getBank().debitPlayer(move.getPlayer(), total);
+            updatePort(game, p);
+        }
     }
 
     static class SetParAction extends Action {
@@ -91,7 +118,7 @@ public class StockActions {
             Player p = findPlayer(move.getPlayer(), game);
             Corp c = findCorp(move.getCorp(), game);
             c.bankShares--;
-            addShareToPlayer(p, move.getCorp());
+            addSharesToPlayer(p, move.getCorp(), 1);
             if (c.incrementallyFunded) {
                 if (c.bankShares >= 5) game.getBank().player2Corp(p, c, move.getAmount());
                 else game.getBank().player2Escrow(p, c, move.getAmount());
@@ -103,7 +130,7 @@ public class StockActions {
             Player p = findPlayer(move.getPlayer(), game);
             Corp c = findCorp(move.getCorp(), game);
             c.bankShares++;
-            subtractShareFromPlayer(p, move.getCorp());
+            subtractSharesFromPlayer(p, move.getCorp(), 1);
             if (c.incrementallyFunded) {
                 if (c.bankShares > 5) game.getBank().corp2Player(c, p, move.getAmount());
                 else game.getBank().escrow2Player(c, p, move.getAmount());
@@ -121,7 +148,7 @@ public class StockActions {
             Player p = findPlayer(move.getPlayer(), game);
             Corp c = findCorp(move.getCorp(), game);
             c.poolShares--;
-            addShareToPlayer(p, move.getCorp());
+            addSharesToPlayer(p, move.getCorp(), 1);
             game.getBank().debitPlayer(move.getPlayer(), move.getAmount());
         }
 
@@ -129,7 +156,7 @@ public class StockActions {
             Player p = findPlayer(move.getPlayer(), game);
             Corp c = findCorp(move.getCorp(), game);
             c.poolShares++;
-            subtractShareFromPlayer(p, move.getCorp());
+            subtractSharesFromPlayer(p, move.getCorp(), 1);
             game.getBank().payPlayer(move.getPlayer(), move.getAmount());
         }
     }
@@ -236,8 +263,7 @@ public class StockActions {
                         }
                     }
                 if (!corpWillClose(cc, previewDrop(s, game))) {
-                    if (!recipientFound)
-                        throw new IllegalStateException("No one to transfer presidency to for " + s.corpName);
+                    if (!recipientFound) throw new IllegalStateException("No one to transfer presidency to for " + s.corpName);
                 }
             }
         }
@@ -304,9 +330,9 @@ public class StockActions {
         checkSixty(corp, p);
     }
 
-    private static void addShareToPlayer(Player p, String corpName) {
-        for(Stock s:p.shares) if(s.corpName.equals(corpName)) { s.amount++; return; }
-        p.shares.add(new Stock(corpName, 1, false));
+    private static void addSharesToPlayer(Player p, String corpName, int amount) {
+        for(Stock s:p.shares) if(s.corpName.equals(corpName)) { s.amount += amount; return; }
+        p.shares.add(new Stock(corpName, amount, false));
     }
 
     private static void makePrezIf(Move move, Game game) {
@@ -319,13 +345,16 @@ public class StockActions {
         }
     }
 
-    private static void subtractShareFromPlayer(Player p, String corpName) {
+    private static void subtractSharesFromPlayer(Player p, String corpName, int amount) {
         Stock nuke = null;
         for(Stock s:p.shares) if(s.corpName.equals(corpName)) {
-            s.amount--;
+            s.amount -= amount;
             if (s.amount == 0) nuke = s;
+            if (s.amount < 0) { // SHOULD NEVER HAPPEN
+                throw new IllegalStateException("Trying to remove unfound shares of " + corpName + " from " + p.name);
+            }
         }
-        p.shares.remove(nuke);
+        if (nuke != null) p.shares.remove(nuke);
     }
 
     private static int calculateCost(Corp c, String buyType, int par) {
@@ -350,5 +379,9 @@ public class StockActions {
         return OP_COUNT[game.getBoard().trains.size()];
     }
 
-    private static int calculateSalesValue(List<Stock> sales, Game game) { return 0; } //TODO calculate sales value
+    private static int calculateSalesValue(List<Stock> sales, Game game) {
+        int value = 0;
+        for(Stock s: sales) value += findCorp(s.corpName, game).price.getPrice();
+        return value;
+    }
 }
