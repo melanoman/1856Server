@@ -269,7 +269,7 @@ public class StockActions {
         }
         if (!turn.buyFirst) cost -= calculateSalesValue(turn.salesList, game);
         if (cost > 0) assertPlayerFunds(game, playerName, cost, "stockBuy");
-        //TODO check portfolio size
+        checkPortfolioLimit(p, turn, game);
 
         game.addMove(STOCK_TURN, playerName, "", 0, "");
         if (turn.buyFirst) makeBuySubs(game, playerName, turn, corp);
@@ -278,6 +278,19 @@ public class StockActions {
         game.addSub(END_STOCK_TURN, playerName, "", 0, "");
         makePriorityAdvance(game);
         return game.getBoard();
+    }
+
+    private static void checkPortfolioLimit(Player p, StockTurn turn, Game game) {
+        if(turn.buyType == null || turn.buyType.isEmpty()) return;
+        if(p.port < game.portfolioLimit()) return;
+        if(!turn.buyFirst) {
+            for(Stock s: turn.salesList) {
+                if (s.amount == 0) return;
+                Corp c = findCorp(s.corpName, game);
+                if (c.price.getPrice() > YELLOW_ZONE) return;
+            }
+        }
+        throw new IllegalStateException("Maximum Portfolio size is "+game.portfolioLimit());
     }
 
     private static boolean corpWillClose(Corp cc, int drop) {
