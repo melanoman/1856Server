@@ -15,6 +15,7 @@ public abstract class Action implements UndoableAction<Move, Game> {
         undoMgr.registerActionType(CHANGE_CORP, new ChangeCorpAction());
         undoMgr.registerActionType(CHANGE_PREZ, new ChangePrezAction());
         undoMgr.registerActionType(CHANGE_ACTIVITY, new ChangeActivityAction());
+        undoMgr.registerActionType(GAME_OVER, new EndGameAction());
     }
 
     @Override
@@ -274,6 +275,19 @@ public abstract class Action implements UndoableAction<Move, Game> {
                 game.getBank().debitCorp(corp.getName(), Priv.findPriv(priv).dividend);
             }
         }
+    }
+
+    public static class EndGameAction extends Action {
+        @Override public void doAction(Move move, Game game) {
+            game.getBoard().phase = Game.Era.DONE.name();
+        }
+
+        @Override public void undoAction(Move move, Game game) {
+            game.getBoard().phase = move.getDetail();
+        }
+
+        @Override public void checkAllowed(Move move, Game game) { }
+        @Override public void init(Move move, Game game) { }
     }
 
     public static class NullAction extends Action {

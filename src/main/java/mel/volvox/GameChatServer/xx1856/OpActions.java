@@ -60,7 +60,13 @@ public class OpActions {
         @Override public void checkAllowed(Move move, Game game) { }
 
         @Override public void init(Move move, Game game) {
-            if(game.getBoard().thisOR <= game.getBoard().maxOR) {
+            boolean maxEnd = false;
+            for(Corp c: game.getBoard().corps) {
+                if (c.par > 0 && c.price.isMax()) maxEnd = true;
+            }
+            if (maxEnd) {
+                game.addSub(GAME_OVER, "", "", 0, Game.Era.OP.name());
+            } else if(game.getBoard().thisOR <= game.getBoard().maxOR) {
                 game.addSub(START_OP_ROUND, "", "", 0, "");
             } else {
                 game.addSub(START_STOCK_ROUND, game.getBoard().currentPlayer, "", 0, game.getBoard().activity);

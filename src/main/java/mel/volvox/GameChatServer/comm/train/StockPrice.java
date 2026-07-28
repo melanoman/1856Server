@@ -93,6 +93,13 @@ public class StockPrice {
         }
     }
 
+    /**
+     * would a drop of the indicated size result in a closure?
+     */
+    public boolean willClose(int drop) {
+        return y+drop-x >= 9;
+    }
+
     public static int encodePrice(StockPrice price) {
         return price.getPrice() +
                 price.getX() * 1000 +
@@ -105,5 +112,9 @@ public class StockPrice {
         out.setX(code%100000 / 1000);
         out.setY(code/100000);
         return out;
+    }
+
+    public boolean isMax() {
+        return price == 450;
     }
 }

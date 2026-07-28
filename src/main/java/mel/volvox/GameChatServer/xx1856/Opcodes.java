@@ -70,4 +70,5 @@ public class Opcodes {
     public static final String RESET_TOKEN = "resetToken";
     public static final String RESET_LOAN = "resetLoan";
     public static final String FLOAT = "float";
+    public static final String GAME_OVER = "gameOver";
 }

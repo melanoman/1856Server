@@ -49,8 +49,7 @@ public class StockActions {
     static class SaleAction extends Action {
         @Override public void checkAllowed(Move move, Game game) { }
         @Override public void init(Move move, Game game) {
-            //TODO price down
-            //TODO close company (in price down)
+            game.addSub(PRICE_DOWN, "", move.getCorp(), Integer.parseInt(move.getDetail()), "");
         }
         @Override public void doAction(Move move, Game game) {
             Player p = findPlayer(move.getPlayer(), game);
@@ -171,10 +170,14 @@ public class StockActions {
                     risers.add(c);
                 }
             }
+            boolean maxEnd = false;
             for(Corp c:risers) {
                 game.addSub(PRICE_UP, "", c.name, 0, "");
+                if (c.price.isMax()) maxEnd = true;
             }
-            //TODO check max stock -> end game
+            if (maxEnd) {
+                game.addSub(GAME_OVER, "", "", 0, Game.Era.STOCK.name());
+            }
             game.addSub(START_OP_ROUND, "", "", 0, "");
         }
 
@@ -250,10 +253,11 @@ public class StockActions {
             Stock h = getHolding(s.corpName, p);
             if(h == null || h.amount < s.amount) throw new IllegalStateException("Cannot sell more shares than you have of "+s.corpName);
             Corp cc = findCorp(s.corpName, game);
+            if(cc.par <= 0) throw new IllegalStateException("Cannot sell parless shares of "+s.corpName);
             if(cc.poolShares + s.amount> 5) throw new IllegalStateException("Max 50% in pool: "+s.corpName);
             if(h.isPrez && h.amount - s.amount < 2) { // if the sale dips into a prez share
                 boolean recipientFound = false;
-                for (Player pp : game.getBoard().getPlayers())
+                for (Player pp : game.getBoard().getPlayers()) {
                     for (Stock ss : pp.shares) {
                         if (pp.name.equals(p.name)) continue; //looking for other players...
                         if (!ss.corpName.equals(s.corpName)) continue; //with the same stock...
@@ -262,7 +266,8 @@ public class StockActions {
                             break;
                         }
                     }
-                if (!corpWillClose(cc, previewDrop(s, game))) {
+                }
+                if (!cc.price.willClose(previewDrop(s, game))) {
                     if (!recipientFound) throw new IllegalStateException("No one to transfer presidency to for " + s.corpName);
                 }
             }
@@ -291,10 +296,6 @@ public class StockActions {
             }
         }
         throw new IllegalStateException("Maximum Portfolio size is "+game.portfolioLimit());
-    }
-
-    private static boolean corpWillClose(Corp cc, int drop) {
-        return false; //TODO implement corpWillClose
     }
 
     private static void checkPar(Corp corp, int amount) {
