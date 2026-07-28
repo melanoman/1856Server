@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 import static mel.volvox.GameChatServer.xx1856.Action.updatePort;
+import static mel.volvox.GameChatServer.xx1856.Opcodes.BANK_BREAK;
 
 public class Game implements UndoableGame<Move> {
     @Override public void storeMove(Move move) { repo.save(move); }
@@ -43,6 +44,9 @@ public class Game implements UndoableGame<Move> {
         Move move = new Move(nextID(), opcode, player, corp, amount, detail, true);
         undoMgr.newTopMove(move);
         resetWealth();
+        if(board.bank < 0 && !board.bankBroke) {
+            addSub(BANK_BREAK, "", "", 0, "");
+        }
         return board;
     }
 

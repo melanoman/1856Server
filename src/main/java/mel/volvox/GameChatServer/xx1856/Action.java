@@ -15,6 +15,7 @@ public abstract class Action implements UndoableAction<Move, Game> {
         undoMgr.registerActionType(CHANGE_CORP, new ChangeCorpAction());
         undoMgr.registerActionType(CHANGE_PREZ, new ChangePrezAction());
         undoMgr.registerActionType(CHANGE_ACTIVITY, new ChangeActivityAction());
+        undoMgr.registerActionType(BANK_BREAK, new BreakAction());
         undoMgr.registerActionType(GAME_OVER, new EndGameAction());
     }
 
@@ -286,6 +287,17 @@ public abstract class Action implements UndoableAction<Move, Game> {
             game.getBoard().phase = move.getDetail();
         }
 
+        @Override public void checkAllowed(Move move, Game game) { }
+        @Override public void init(Move move, Game game) { }
+    }
+
+    public static class BreakAction extends Action {
+        @Override public void doAction(Move move, Game game) {
+            game.getBoard().bankBroke = true;
+        }
+        @Override public void undoAction(Move move, Game game) {
+            game.getBoard().bankBroke = false;
+        }
         @Override public void checkAllowed(Move move, Game game) { }
         @Override public void init(Move move, Game game) { }
     }

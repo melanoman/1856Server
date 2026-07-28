@@ -33,4 +33,5 @@ public class Board {
     // TODO reconsider obscure items
     int flosDiscount = 0;
     int portfolioLimit = 0;
+    boolean bankBroke = false;
 }

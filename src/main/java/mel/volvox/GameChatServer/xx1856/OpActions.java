@@ -68,6 +68,8 @@ public class OpActions {
                 game.addSub(GAME_OVER, "", "", 0, Game.Era.OP.name());
             } else if(game.getBoard().thisOR <= game.getBoard().maxOR) {
                 game.addSub(START_OP_ROUND, "", "", 0, "");
+            } else if (game.getBoard().bankBroke) {
+                game.addSub(GAME_OVER, "", "", 0, Game.Era.OP.name());
             } else {
                 game.addSub(START_STOCK_ROUND, game.getBoard().currentPlayer, "", 0, game.getBoard().activity);
             }
