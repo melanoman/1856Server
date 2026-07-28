@@ -27,7 +27,6 @@ public class StockActions {
     }
 
     static class PassAction extends Action {
-
         @Override public void checkAllowed(Move move, Game game) {
             assertPhases(game, STOCK_OR_INITIAL, "stockPass");
             if(!move.getPlayer().equals(game.getBoard().currentPlayer)) {
@@ -51,6 +50,7 @@ public class StockActions {
         @Override public void init(Move move, Game game) {
             game.addSub(PRICE_DOWN, "", move.getCorp(), Integer.parseInt(move.getDetail()), "");
         }
+
         @Override public void doAction(Move move, Game game) {
             Player p = findPlayer(move.getPlayer(), game);
             Corp c = findCorp(move.getCorp(), game);
@@ -60,6 +60,7 @@ public class StockActions {
             game.getBank().payPlayer(move.getPlayer(), total);
             updatePort(game, p);
         }
+
         @Override public void undoAction(Move move, Game game) {
             Player p = findPlayer(move.getPlayer(), game);
             Corp c = findCorp(move.getCorp(), game);
@@ -172,7 +173,7 @@ public class StockActions {
             }
             boolean maxEnd = false;
             for(Corp c:risers) {
-                game.addSub(PRICE_UP, "", c.name, 0, "");
+                game.addSub(PRICE_UP, "", c.name, 1, "");
                 if (c.price.isMax()) maxEnd = true;
             }
             if (maxEnd) {

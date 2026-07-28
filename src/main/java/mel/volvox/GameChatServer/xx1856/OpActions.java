@@ -257,11 +257,15 @@ public class OpActions {
         }
 
         @Override public void init(Move move, Game game) {
-            //TODO stock move (left)
             Corp c = findCorp(move.getCorp(), game);
             game.addSub(CHANGE_RUN, "", c.name, move.getAmount(), ""+c.lastRun);
             if (c.cash < 0) {
                 throw new IllegalStateException("TODO HANDLE PREZ INTEREST");
+            }
+            if(c.price.leftEdge()) {
+                game.addSub(PRICE_DOWN, "", c.name, 1, "");
+            } else {
+                game.addSub(PRICE_LEFT, "", c.name, 1, "");
             }
         }
 
