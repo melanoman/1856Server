@@ -167,7 +167,7 @@ public class StockActions {
             List<Corp> risers = new ArrayList<>();
             for(Corp c: game.getBoard().corps) {
                 if (c.bankShares<1 && c.poolShares<1 && c.par>0) { //sold out
-                    risers.add(c);
+                    if (c.price.getY() > 0) risers.add(c);
                 }
             }
             boolean maxEnd = false;
