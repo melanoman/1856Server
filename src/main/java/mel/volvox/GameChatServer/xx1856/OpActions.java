@@ -15,6 +15,7 @@ public class OpActions {
         undoMgr.registerActionType(START_OP_TURN, new StartOpTurn());
         undoMgr.registerActionType(END_OP_TURN, new EndOpTurn());
         undoMgr.registerActionType(TAKE_LOAN, new TakeLoanAction());
+        undoMgr.registerActionType(REPAY_LOAN, new RepayLoanAction());
         undoMgr.registerActionType(LAY_TOKEN, new LayTokenAction());
         undoMgr.registerActionType(DRILL_TILE, new DrillTileAction());
         undoMgr.registerActionType(WITHHOLD, new WithholdAction());
@@ -107,6 +108,29 @@ public class OpActions {
 
         @Override public void undoAction(Move move, Game game) {
             game.getBoard().currentCorp = move.getDetail();
+        }
+    }
+
+    static class RepayLoanAction extends Action {
+        @Override public void checkAllowed(Move move, Game game) {
+            assertPhase(game, Game.Era.OP, "RepayLoan");
+            assertCorpTurn(game, move.getCorp(), "RepayLoan");
+            assertActivity(game, OP_POST, "RepayLoan");
+            assertCorpFunds(game, move.getCorp(), 100, "RepayLoan");
+        }
+
+        @Override public void init(Move move, Game game) { }
+
+        @Override public void doAction(Move move, Game game) {
+            Corp c = findCorp(move.getCorp(), game);
+            c.loans--;
+            game.getBank().debitCorp(move.getCorp(), 100);
+        }
+
+        @Override public void undoAction(Move move, Game game) {
+            Corp c = findCorp(move.getCorp(), game);
+            c.loans++;
+            game.getBank().payCorp(move.getCorp(), 100);
         }
     }
 

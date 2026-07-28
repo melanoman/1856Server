@@ -211,4 +211,10 @@ public class xx1856Controller {
                   @PathVariable String priv, @PathVariable String player, @PathVariable int price) {
         return findGame(game).addMove(BUY_PRIV, player, corp, price, priv);
     }
+
+    @PutMapping("18xx/repayLoan/{game}/{corp}")
+    @ResponseBody
+    Board repayLoan(@PathVariable String game, @PathVariable String corp) {
+        return findGame(game).addMove(REPAY_LOAN, "", corp, 0, "");
+    }
 }

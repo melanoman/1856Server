@@ -59,6 +59,7 @@ public class Opcodes {
     public static final String CHANGE_RUN = "changeRun";
     public static final String DESTINATION_REACHED = "destinationReached";
     public static final String RELEASE_ESCROW = "releaseEscrow";
+    public static final String REPAY_LOAN = "repayLoan";
 
     //TRAIN ACTIONS
     public static final String BUY_BANK_TRAIN = "buyBankTrain";
