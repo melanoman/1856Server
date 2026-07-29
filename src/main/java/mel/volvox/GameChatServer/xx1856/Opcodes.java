@@ -58,6 +58,8 @@ public class Opcodes {
     public static final String DRILL_TILE = "drillTile";
     public static final String LAY_TOKEN = "layToken";
     public static final String PLACE_PORT = "placePort";
+    public static final String BUY_BRIDGE = "buyBridge";
+    public static final String BUY_TUNNEL = "buyTunnel";
 
     public static final String WITHHOLD = "withhold";
     public static final String PAYDIV = "payDiv";

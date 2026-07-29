@@ -17,6 +17,8 @@ public class TrainActions {
         undoMgr.registerActionType(BUY_PRIV, new BuyPriv());
         undoMgr.registerActionType(RUST_PRIV, new RustPriv());
         undoMgr.registerActionType(PLACE_PORT, new PlacePort());
+        undoMgr.registerActionType(BUY_BRIDGE, new BuyBridge());
+        undoMgr.registerActionType(BUY_TUNNEL, new BuyTunnel());
     }
 
     static int getRustSize(int bankTrainCount) {
@@ -219,6 +221,56 @@ public class TrainActions {
             Corp c = findCorp(move.getCorp(), game);
             c.portRights = false;
             c.privs.add(move.getAmount(), Priv.GLS);
+        }
+    }
+
+    static class BuyBridge extends Action {
+        @Override public void checkAllowed(Move move, Game game) {
+            assertPhase(game, Game.Era.OP, "BuyBridge");
+            assertCorpTurn(game, move.getCorp(), "BuyBridge");
+            assertCorpFunds(game, move.getCorp(), 50, "BuyBridge");
+            if(game.getBoard().bridgeTokens < 1) throw new IllegalStateException("No bridge tokens remain");
+        }
+
+        @Override public void init(Move move, Game game) { }
+
+        @Override public void doAction(Move move, Game game) {
+            Corp c = findCorp(move.getCorp(), game);
+            game.getBank().debitCorp(move.getCorp(), 50);
+            game.getBoard().bridgeTokens--;
+            c.bridgeRights = true;
+        }
+
+        @Override public void undoAction(Move move, Game game) {
+            Corp c = findCorp(move.getCorp(), game);
+            game.getBank().payCorp(move.getCorp(), 50);
+            game.getBoard().bridgeTokens++;
+            c.bridgeRights = false;
+        }
+    }
+
+    static class BuyTunnel extends Action {
+        @Override public void checkAllowed(Move move, Game game) {
+            assertPhase(game, Game.Era.OP, "BuyTunnel");
+            assertCorpTurn(game, move.getCorp(), "BuyTunnel");
+            assertCorpFunds(game, move.getCorp(), 50, "BuyTunnel");
+            if(game.getBoard().tunnelTokens < 1) throw new IllegalStateException("No tunnel tokens remain");
+        }
+
+        @Override public void init(Move move, Game game) { }
+
+        @Override public void doAction(Move move, Game game) {
+            Corp c = findCorp(move.getCorp(), game);
+            game.getBank().debitCorp(move.getCorp(), 50);
+            game.getBoard().tunnelTokens--;
+            c.tunnelRights = true;
+        }
+
+        @Override public void undoAction(Move move, Game game) {
+            Corp c = findCorp(move.getCorp(), game);
+            game.getBank().payCorp(move.getCorp(), 50);
+            game.getBoard().tunnelTokens++;
+            c.tunnelRights = false;
         }
     }
 

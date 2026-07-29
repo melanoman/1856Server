@@ -3,7 +3,6 @@ package mel.volvox.GameChatServer.xx1856;
 import mel.volvox.GameChatServer.model.xx1856.Move;
 import mel.volvox.undo.UndoManager;
 
-import static mel.volvox.GameChatServer.xx1856.Action.findCorp;
 import static mel.volvox.GameChatServer.xx1856.Opcodes.*;
 
 public class OpActions {

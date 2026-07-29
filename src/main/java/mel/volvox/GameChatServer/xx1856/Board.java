@@ -30,9 +30,10 @@ public class Board {
     int thisOR;
     int maxOR;
 
-    // TODO reconsider obscure items
     int flosDiscount = 0;
     int portfolioLimit = 0;
     boolean bankBroke = false;
     int generation = 1;
+    int bridgeTokens = 3;
+    int tunnelTokens = 3;
 }

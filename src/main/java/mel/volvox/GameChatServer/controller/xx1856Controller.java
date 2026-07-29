@@ -226,4 +226,16 @@ public class xx1856Controller {
         int index = findCorp(corp, g).getPrivs().indexOf(Priv.GLS);
         return g.addMove(PLACE_PORT, "", corp, index, "");
     }
+
+    @PutMapping("18xx/buyBridge/{game}/{corp}")
+    @ResponseBody
+    Board buyBridge(@PathVariable String game, @PathVariable String corp) {
+        return findGame(game).addMove(BUY_BRIDGE, "", corp, 50, "");
+    }
+
+    @PutMapping("18xx/buyTunnel/{game}/{corp}")
+    @ResponseBody
+    Board buyTunnel(@PathVariable String game, @PathVariable String corp) {
+        return findGame(game).addMove(BUY_TUNNEL, "", corp, 50, "");
+    }
 }
