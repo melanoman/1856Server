@@ -245,6 +245,7 @@ public class StockActions {
             game.getBoard().phase = Game.Era.STOCK.name();
             game.getBoard().activity = "";
             game.getBoard().currentPlayer = game.getBoard().priorityPlayer;
+            game.getBoard().generation++;
         }
 
         @Override
@@ -252,6 +253,7 @@ public class StockActions {
             game.getBoard().phase = Game.Era.OP.name();
             game.getBoard().activity = move.getDetail();
             game.getBoard().currentPlayer = move.getPlayer();
+            game.getBoard().generation--;
         }
     }
 

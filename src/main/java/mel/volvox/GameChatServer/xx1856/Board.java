@@ -34,4 +34,5 @@ public class Board {
     int flosDiscount = 0;
     int portfolioLimit = 0;
     boolean bankBroke = false;
+    int generation = 1;
 }
