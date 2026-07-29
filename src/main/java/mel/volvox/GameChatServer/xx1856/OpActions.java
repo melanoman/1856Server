@@ -141,8 +141,8 @@ public class OpActions {
             assertPhase(game, Game.Era.OP, "TakeLoan");
             assertCorpTurn(game, move.getCorp(), "TakeLoan");
             Corp c = findCorp(move.getCorp(), game);
+            if(heldShareCount(move.getCorp(), game) <= c.loans) throw new IllegalStateException("Too many loans");
             if(c.loanTaken) throw new IllegalStateException("Only one loan per turn");
-            // TODO compare holdings to number of loans out
         }
 
         @Override public void init(Move move, Game game) { }
