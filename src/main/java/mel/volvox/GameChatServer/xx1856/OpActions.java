@@ -3,6 +3,7 @@ package mel.volvox.GameChatServer.xx1856;
 import mel.volvox.GameChatServer.model.xx1856.Move;
 import mel.volvox.undo.UndoManager;
 
+import static mel.volvox.GameChatServer.xx1856.Action.findCorp;
 import static mel.volvox.GameChatServer.xx1856.Opcodes.*;
 
 public class OpActions {
@@ -453,6 +454,16 @@ public class OpActions {
         return null;
     }
 
+    private static int heldShareCount(String corpName, Game game) {
+        int count = 0;
+        for (Player p:game.getBoard().getPlayers()) {
+            for (Stock s: p.shares) {
+                if(s.corpName.equals(corpName)) count += s.getAmount();
+            }
+        }
+        return count;
+    }
+
     static class EndOpTurn extends Action {
         @Override public void checkAllowed(Move move, Game game) {
             assertPhase(game, Game.Era.OP, "EndOpTurn");
@@ -464,6 +475,9 @@ public class OpActions {
         }
 
         @Override public void init(Move move, Game game) {
+            if (findCorp(move.getCorp(), game).loans > heldShareCount(move.getCorp(), game)) {
+                throw new IllegalStateException("TODO forced loan redemption");
+            }
             Corp c = game.nextCorp();
             if (c == null) {
                 game.addSub(END_OP_ROUND, "", "", 0, "");
