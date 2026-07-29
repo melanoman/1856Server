@@ -181,7 +181,7 @@ public abstract class Action implements UndoableAction<Move, Game> {
         throw new IllegalStateException("Unknown Private Company");
     }
 
-    static Corp findCorp(String name, Game game) {
+    public static Corp findCorp(String name, Game game) {
         for (Corp corp: game.getBoard().corps) {
             if(name.equals(corp.name)) return corp;
         }

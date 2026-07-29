@@ -16,6 +16,7 @@ public class TrainActions {
         undoMgr.registerActionType(RUST, new RustAction());
         undoMgr.registerActionType(BUY_PRIV, new BuyPriv());
         undoMgr.registerActionType(RUST_PRIV, new RustPriv());
+        undoMgr.registerActionType(PLACE_PORT, new PlacePort());
     }
 
     static int getRustSize(int bankTrainCount) {
@@ -86,7 +87,7 @@ public class TrainActions {
                 throw new IllegalStateException("Current bank train is "+b.trains.get(0)+" not "+move.getAmount());
             }
             assertCorpFunds(game, move.getCorp(), TRAIN_PRICE[move.getAmount()], "BuyBankTrain");
-            int limit = move.getCorp().equals("CGR") ? 3 : TRAIN_LIMIT[b.trains.size()];
+            int limit = move.getCorp().equals("CGR") ? 3 : TRAIN_LIMIT[b.trains.size()]; //TODO put CGR in a constant
             if(findCorp(move.getCorp(), game).trains.size() >= limit) {
                 throw new IllegalStateException("Too many trains");
             }
@@ -155,6 +156,10 @@ public class TrainActions {
             p.privs.remove(move.getDetail());
             c.privs.add(move.getDetail());
             game.getBank().corp2Player(c, p, move.getAmount());
+            switch(move.getDetail()) {
+                case Priv.NIAG -> c.bridgeRights = true;
+                case Priv.STC -> c.tunnelRights = true;
+            }
             updatePort(game, p);
         }
 
@@ -164,6 +169,10 @@ public class TrainActions {
             p.privs.add(move.getDetail());
             c.privs.remove(move.getDetail());
             game.getBank().player2Corp(p, c, move.getAmount());
+            switch(move.getDetail()) {
+                case Priv.NIAG -> c.bridgeRights = false;
+                case Priv.STC -> c.tunnelRights = false;
+            }
             updatePort(game, p);
         }
     }
@@ -187,6 +196,29 @@ public class TrainActions {
 
         @Override public void undoAction(Move move, Game game) {
             findCorp((move.getCorp()), game).trains.add(0, move.getAmount());
+        }
+    }
+
+    static class PlacePort extends Action {
+        @Override public void checkAllowed(Move move, Game game) {
+            assertPhase(game, Game.Era.OP, "PlacePort");
+            assertCorpTurn(game, move.getCorp(), "PlacePort");
+            if(!findCorp(move.getCorp(), game).privs.contains(Priv.GLS)) {
+                throw new IllegalStateException(move.getCorp()+" does not own GLS");
+            }
+        }
+        @Override public void init(Move move, Game game) { }
+
+        @Override public void doAction(Move move, Game game) {
+            Corp c = findCorp(move.getCorp(), game);
+            c.portRights = true;
+            c.privs.remove(Priv.GLS);
+        }
+
+        @Override public void undoAction(Move move, Game game) {
+            Corp c = findCorp(move.getCorp(), game);
+            c.portRights = false;
+            c.privs.add(move.getAmount(), Priv.GLS);
         }
     }
 

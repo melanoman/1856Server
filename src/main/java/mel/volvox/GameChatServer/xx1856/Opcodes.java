@@ -49,17 +49,22 @@ public class Opcodes {
     public static final String END_OP_ROUND = "endOpRound";
     public static final String START_OP_TURN = "startOpTurn";
     public static final String END_OP_TURN = "endOpTurn";
+
     public static final String TAKE_LOAN = "takeLoan";
-    public static final String LAY_TOKEN = "layToken";
+    public static final String REPAY_LOAN = "repayLoan";
+
     public static final String DRILL_TILE = "drillTile";
+    public static final String LAY_TOKEN = "layToken";
+    public static final String PLACE_PORT = "placePort";
+
     public static final String WITHHOLD = "withhold";
     public static final String PAYDIV = "payDiv";
     public static final String PAY_INTEREST = "interest";
     public static final String DISBURSE = "disburse";
     public static final String CHANGE_RUN = "changeRun";
+
     public static final String DESTINATION_REACHED = "destinationReached";
     public static final String RELEASE_ESCROW = "releaseEscrow";
-    public static final String REPAY_LOAN = "repayLoan";
 
     //TRAIN ACTIONS
     public static final String BUY_BANK_TRAIN = "buyBankTrain";

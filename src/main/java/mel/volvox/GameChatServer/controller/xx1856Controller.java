@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static mel.volvox.GameChatServer.xx1856.Action.findCorp;
 import static mel.volvox.GameChatServer.xx1856.AuctionActions.calculateBuyPrice;
 import static mel.volvox.GameChatServer.xx1856.Opcodes.*;
 
@@ -216,5 +217,13 @@ public class xx1856Controller {
     @ResponseBody
     Board repayLoan(@PathVariable String game, @PathVariable String corp) {
         return findGame(game).addMove(REPAY_LOAN, "", corp, 0, "");
+    }
+
+    @PutMapping("18xx/placePort/{game}/{corp}")
+    @ResponseBody
+    Board placePort(@PathVariable String game, @PathVariable String corp) {
+        Game g = findGame(game);
+        int index = findCorp(corp, g).getPrivs().indexOf(Priv.GLS);
+        return g.addMove(PLACE_PORT, "", corp, index, "");
     }
 }
