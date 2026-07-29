@@ -139,8 +139,11 @@ public class StockActions {
             c.bankShares--;
             addSharesToPlayer(p, move.getCorp(), 1);
             if (c.incrementallyFunded) {
-                if (c.bankShares >= 5) game.getBank().player2Corp(p, c, move.getAmount());
-                else game.getBank().player2Escrow(p, c, move.getAmount());
+                if (c.bankShares >= 5 || c.destinationSatisfied) {
+                    game.getBank().player2Corp(p, c, move.getAmount());
+                } else {
+                    game.getBank().player2Escrow(p, c, move.getAmount());
+                }
             }
         }
 
