@@ -23,6 +23,7 @@ public class StockActions {
         undoMgr.registerActionType(POOL_BUY, new BuyPoolAction());
         undoMgr.registerActionType(STOCK_SALE, new SaleAction());
         undoMgr.registerActionType(BLOCK_SALE, new BlockAction());
+        undoMgr.registerActionType(CLEAR_BLOCK, new ClearBlock());
         undoMgr.registerActionType(START_STOCK_ROUND, new StartStockRoundAction());
         undoMgr.registerActionType(END_STOCK_ROUND, new EndStockRoundAction());
     }
@@ -59,6 +60,18 @@ public class StockActions {
         }
     }
 
+    static class ClearBlock extends Action {
+        @Override public void checkAllowed(Move move, Game game) { }
+        @Override public void init(Move move, Game game) { }
+
+        @Override public void doAction(Move move, Game game) {
+            findPlayer(move.getPlayer(), game).blocks.remove(move.getCorp());
+        }
+
+        @Override public void undoAction(Move move, Game game) {
+            findPlayer((move.getPlayer()), game).blocks.add(move.getCorp());
+        }
+    }
 
     static class SaleAction extends Action {
         @Override public void checkAllowed(Move move, Game game) { }
@@ -187,6 +200,12 @@ public class StockActions {
         @Override public void checkAllowed(Move move, Game game) { }
         @Override public void init(Move move, Game game) {
             final Board board = game.getBoard(); //for line length only
+            for (Player p:board.getPlayers()) {
+                List<String> blocks = new ArrayList<>(p.blocks);
+                for(String block: blocks) {
+                    game.addSub(CLEAR_BLOCK, p.name, block, 0, "");
+                }
+            }
             List<Corp> risers = new ArrayList<>();
             for(Corp c: game.getBoard().corps) {
                 if (c.bankShares<1 && c.poolShares<1 && c.par>0) { //sold out
