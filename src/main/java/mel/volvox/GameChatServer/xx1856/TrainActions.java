@@ -239,6 +239,9 @@ public class TrainActions {
             game.getBank().debitCorp(move.getCorp(), 50);
             game.getBoard().bridgeTokens--;
             c.bridgeRights = true;
+            for (Corp cc: game.getBoard().corps) {
+                if (cc.privs.contains(Priv.NIAG)) game.getBank().payCorp(cc.name, 50);
+            }
         }
 
         @Override public void undoAction(Move move, Game game) {
@@ -246,6 +249,9 @@ public class TrainActions {
             game.getBank().payCorp(move.getCorp(), 50);
             game.getBoard().bridgeTokens++;
             c.bridgeRights = false;
+            for (Corp cc: game.getBoard().corps) {
+                if (cc.privs.contains(Priv.NIAG)) game.getBank().debitCorp(cc.name, 50);
+            }
         }
     }
 
@@ -264,6 +270,9 @@ public class TrainActions {
             game.getBank().debitCorp(move.getCorp(), 50);
             game.getBoard().tunnelTokens--;
             c.tunnelRights = true;
+            for (Corp cc: game.getBoard().corps) {
+                if (cc.privs.contains(Priv.STC)) game.getBank().payCorp(cc.name, 50);
+            }
         }
 
         @Override public void undoAction(Move move, Game game) {
@@ -271,6 +280,9 @@ public class TrainActions {
             game.getBank().payCorp(move.getCorp(), 50);
             game.getBoard().tunnelTokens++;
             c.tunnelRights = false;
+            for (Corp cc: game.getBoard().corps) {
+                if (cc.privs.contains(Priv.STC)) game.getBank().debitCorp(cc.name, 50);
+            }
         }
     }
 
