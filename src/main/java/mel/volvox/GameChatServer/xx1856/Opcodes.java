@@ -32,6 +32,7 @@ public class Opcodes {
     public static final String BANK_BUY = "bankBuy";
     public static final String POOL_BUY = "poolBuy";
     public static final String STOCK_SALE = "stockSale";
+    public static final String BLOCK_SALE = "blockSale";
     public static final String STOCK_TURN = "stockTurn";
     public static final String END_STOCK_TURN = "stockTurnOver";
     public static final String END_STOCK_ROUND = "endStock";

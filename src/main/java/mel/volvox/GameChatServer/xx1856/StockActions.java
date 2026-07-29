@@ -22,6 +22,7 @@ public class StockActions {
         undoMgr.registerActionType(BANK_BUY, new BuyBankAction());
         undoMgr.registerActionType(POOL_BUY, new BuyPoolAction());
         undoMgr.registerActionType(STOCK_SALE, new SaleAction());
+        undoMgr.registerActionType(BLOCK_SALE, new BlockAction());
         undoMgr.registerActionType(START_STOCK_ROUND, new StartStockRoundAction());
         undoMgr.registerActionType(END_STOCK_ROUND, new EndStockRoundAction());
     }
@@ -45,9 +46,27 @@ public class StockActions {
         @Override public void undoAction(Move move, Game game) { }
     }
 
+    static class BlockAction extends Action {
+        @Override public void checkAllowed(Move move, Game game) { }
+        @Override public void init(Move move, Game game) { }
+
+        @Override public void doAction(Move move, Game game) {
+            findPlayer(move.getPlayer(), game).blocks.add(move.getCorp());
+        }
+
+        @Override public void undoAction(Move move, Game game) {
+            findPlayer((move.getPlayer()), game).blocks.remove(move.getCorp());
+        }
+    }
+
+
     static class SaleAction extends Action {
         @Override public void checkAllowed(Move move, Game game) { }
         @Override public void init(Move move, Game game) {
+            Player p = findPlayer(move.getPlayer(), game);
+            if(!p.blocks.contains(move.getCorp())) {
+                game.addSub(BLOCK_SALE, move.getPlayer(), move.getCorp(), 0, "");
+            }
             game.addSub(PRICE_DOWN, "", move.getCorp(), Integer.parseInt(move.getDetail()), "");
         }
 
@@ -242,6 +261,7 @@ public class StockActions {
         Corp corp = null;
         if (turn.buyType != null) {
             corp = findCorp(turn.buyCorp, game);
+            if(p.blocks.contains(turn.buyCorp)) throw new IllegalStateException("Cannot buy same Corp after sale");
             switch(turn.buyType) {
                 case "par" -> checkPar(corp, turn.buyPar);
                 case "bank" -> checkBank(corp, p);
