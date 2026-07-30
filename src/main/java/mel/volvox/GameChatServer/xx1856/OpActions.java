@@ -169,6 +169,7 @@ public class OpActions {
             assertPhase(game, Game.Era.OP, "LayToken");
             assertCorpTurn(game, move.getCorp(), "LayToken");
             assertActivity(game, OP_PRE, "LayToken");
+            assertCorpFunds(game, move.getCorp(), 40, "LayToken");
             Corp c = findCorp(move.getCorp(), game);
             if(c.tokensUsed >= c.tokensMax) {
                 throw new IllegalStateException("No tokens available");

@@ -80,7 +80,8 @@ public class StockActions {
             if(!p.blocks.contains(move.getCorp())) {
                 game.addSub(BLOCK_SALE, move.getPlayer(), move.getCorp(), 0, "");
             }
-            game.addSub(PRICE_DOWN, "", move.getCorp(), Integer.parseInt(move.getDetail()), "");
+            int drop = Integer.parseInt(move.getDetail());
+            if (drop > 0) game.addSub(PRICE_DOWN, "", move.getCorp(), drop, "");
         }
 
         @Override public void doAction(Move move, Game game) {
