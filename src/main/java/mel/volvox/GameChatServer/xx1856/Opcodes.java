@@ -51,6 +51,7 @@ public class Opcodes {
     public static final String END_OP_ROUND = "endOpRound";
     public static final String START_OP_TURN = "startOpTurn";
     public static final String END_OP_TURN = "endOpTurn";
+    public static final String NO_ROUTE = "noRoute";
 
     public static final String TAKE_LOAN = "takeLoan";
     public static final String REPAY_LOAN = "repayLoan";

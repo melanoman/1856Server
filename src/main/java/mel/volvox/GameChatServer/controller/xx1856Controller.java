@@ -238,4 +238,10 @@ public class xx1856Controller {
     Board buyTunnel(@PathVariable String game, @PathVariable String corp) {
         return findGame(game).addMove(BUY_TUNNEL, "", corp, 50, "");
     }
+
+    @PutMapping("18xx/noRoute/{game}/{corp}")
+    @ResponseBody
+    Board noRoute(@PathVariable String game, @PathVariable String corp) {
+        return findGame(game).addMove(NO_ROUTE, "", corp, 0, "");
+    }
 }

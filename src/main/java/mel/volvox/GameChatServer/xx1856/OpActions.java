@@ -14,6 +14,7 @@ public class OpActions {
         undoMgr.registerActionType(END_OP_ROUND, new EndOpRound());
         undoMgr.registerActionType(START_OP_TURN, new StartOpTurn());
         undoMgr.registerActionType(END_OP_TURN, new EndOpTurn());
+        undoMgr.registerActionType(NO_ROUTE, new NoRoute());
         undoMgr.registerActionType(TAKE_LOAN, new TakeLoanAction());
         undoMgr.registerActionType(REPAY_LOAN, new RepayLoanAction());
         undoMgr.registerActionType(LAY_TOKEN, new LayTokenAction());
@@ -462,6 +463,25 @@ public class OpActions {
             }
         }
         return count;
+    }
+
+    static class NoRoute extends Action {
+        @Override public void checkAllowed(Move move, Game game) {
+            assertPhase(game, Game.Era.OP, "NoRoute");
+            assertActivity(game, OP_POST, "NoRoute");
+            assertCorpTurn(game, move.getCorp(), "NoRoute");
+            if(!findCorp(move.getCorp(), game).trains.isEmpty()) {
+                throw new IllegalStateException("Train found in no-train no-route action");
+            }
+        }
+
+        @Override public void init(Move move, Game game) {
+            game.addSub(END_OP_TURN, "", move.getCorp(), 0, "");
+        }
+
+        @Override public void doAction(Move move, Game game) { }
+
+        @Override public void undoAction(Move move, Game game) { }
     }
 
     static class EndOpTurn extends Action {
