@@ -20,6 +20,7 @@ public class TrainActions {
         undoMgr.registerActionType(RUST, new RustAction());
         undoMgr.registerActionType(BUY_PRIV, new BuyPriv());
         undoMgr.registerActionType(RUST_PRIV, new RustPriv());
+        undoMgr.registerActionType(RUST_PORT, new RustPort());
         undoMgr.registerActionType(PLACE_PORT, new PlacePort());
         undoMgr.registerActionType(BUY_BRIDGE, new BuyBridge());
         undoMgr.registerActionType(BUY_TUNNEL, new BuyTunnel());
@@ -32,6 +33,7 @@ public class TrainActions {
     }
 
     static final int PRIV_RUST_SIZE = 4;
+    static final int PORT_RUST_SIZE = 1;
 
     //player=train corp=buyer detail=seller amount=price
     static class BuyCorpTrain extends Action {
@@ -102,9 +104,26 @@ public class TrainActions {
                 game.addSub(RUST_PRIV, "", ss[1], 0, ss[0]);
             }
         }
-        //TODO PORT RUST
+        if (game.getBoard().trains.size() == PORT_RUST_SIZE) {
+            for(Corp c: game.getBoard().corps) {
+                if(c.portRights) {
+                    game.addSub(RUST_PORT, "", c.name, 0, "");
+                }
+            }
+        }
         //TODO CATCH TRAIN LIMIT DROPS
         //TODO CGR FORMATION (in END_OP_TURN)
+    }
+
+    static class RustPort extends Action {
+        @Override public void checkAllowed(Move move, Game game) { }
+        @Override public void init(Move move, Game game) { }
+        @Override public void doAction(Move move, Game game) {
+            findCorp(move.getCorp(), game).portRights = false;
+        }
+        @Override public void undoAction(Move move, Game game) {
+            findCorp(move.getCorp(), game).portRights = true;
+        }
     }
 
     static class BuyBankTrain extends Action {
