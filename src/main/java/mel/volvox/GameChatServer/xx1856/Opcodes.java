@@ -35,6 +35,7 @@ public class Opcodes {
     public static final String BLOCK_SALE = "blockSale";
     public static final String CLEAR_BLOCK = "clearBlock";
     public static final String STOCK_TURN = "stockTurn";
+    public static final String FORCED_SALE = "forcedSale";
     public static final String END_STOCK_TURN = "stockTurnOver";
     public static final String END_STOCK_ROUND = "endStock";
 
@@ -46,15 +47,18 @@ public class Opcodes {
     public static final String PRICE_RIGHT = "priceRight";
     public static final String CLOSE_CORP = "closeCorp";
 
+    //BANK ACTIONS
+    public static final String TAKE_LOAN = "takeLoan";
+    public static final String REPAY_LOAN = "repayLoan";
+    public static final String PREZ_PAYS = "prezPays";
+    public static final String BEGIN_FORCED_SALE = "startForcedSale";
+
     //OP ACTIONS
     public static final String START_OP_ROUND = "startOpRound";
     public static final String END_OP_ROUND = "endOpRound";
     public static final String START_OP_TURN = "startOpTurn";
     public static final String END_OP_TURN = "endOpTurn";
     public static final String NO_ROUTE = "noRoute";
-
-    public static final String TAKE_LOAN = "takeLoan";
-    public static final String REPAY_LOAN = "repayLoan";
 
     public static final String DRILL_TILE = "drillTile";
     public static final String LAY_TOKEN = "layToken";
@@ -74,6 +78,7 @@ public class Opcodes {
     //TRAIN ACTIONS
     public static final String BUY_BANK_TRAIN = "buyBankTrain";
     public static final String BUY_CORP_TRAIN = "buyCorpTrain";
+    public static final String FORCED_TRAIN = "forcedTrain";
     public static final String BUY_PRIV = "buyPriv";
     public static final String RUST = "rust";
     public static final String RUST_PRIV = "rustPriv";

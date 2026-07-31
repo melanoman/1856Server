@@ -3,6 +3,7 @@ package mel.volvox.GameChatServer.xx1856;
 import mel.volvox.GameChatServer.model.xx1856.Move;
 import mel.volvox.undo.UndoManager;
 
+import static mel.volvox.GameChatServer.xx1856.BankActions.heldShareCount;
 import static mel.volvox.GameChatServer.xx1856.Opcodes.*;
 
 public class OpActions {
@@ -15,8 +16,6 @@ public class OpActions {
         undoMgr.registerActionType(START_OP_TURN, new StartOpTurn());
         undoMgr.registerActionType(END_OP_TURN, new EndOpTurn());
         undoMgr.registerActionType(NO_ROUTE, new NoRoute());
-        undoMgr.registerActionType(TAKE_LOAN, new TakeLoanAction());
-        undoMgr.registerActionType(REPAY_LOAN, new RepayLoanAction());
         undoMgr.registerActionType(LAY_TOKEN, new LayTokenAction());
         undoMgr.registerActionType(DRILL_TILE, new DrillTileAction());
         undoMgr.registerActionType(WITHHOLD, new WithholdAction());
@@ -109,58 +108,6 @@ public class OpActions {
 
         @Override public void undoAction(Move move, Game game) {
             game.getBoard().currentCorp = move.getDetail();
-        }
-    }
-
-    static class RepayLoanAction extends Action {
-        @Override public void checkAllowed(Move move, Game game) {
-            assertPhase(game, Game.Era.OP, "RepayLoan");
-            assertCorpTurn(game, move.getCorp(), "RepayLoan");
-            assertActivity(game, OP_POST, "RepayLoan");
-            assertCorpFunds(game, move.getCorp(), 100, "RepayLoan");
-        }
-
-        @Override public void init(Move move, Game game) { }
-
-        @Override public void doAction(Move move, Game game) {
-            Corp c = findCorp(move.getCorp(), game);
-            c.loans--;
-            game.getBank().debitCorp(move.getCorp(), 100);
-        }
-
-        @Override public void undoAction(Move move, Game game) {
-            Corp c = findCorp(move.getCorp(), game);
-            c.loans++;
-            game.getBank().payCorp(move.getCorp(), 100);
-        }
-    }
-
-    static class TakeLoanAction extends Action {
-
-        @Override public void checkAllowed(Move move, Game game) {
-            assertPhase(game, Game.Era.OP, "TakeLoan");
-            assertCorpTurn(game, move.getCorp(), "TakeLoan");
-            Corp c = findCorp(move.getCorp(), game);
-            if(heldShareCount(move.getCorp(), game) <= c.loans) throw new IllegalStateException("Too many loans");
-            if(c.loanTaken) throw new IllegalStateException("Only one loan per turn");
-        }
-
-        @Override public void init(Move move, Game game) { }
-
-        @Override public void doAction(Move move, Game game) {
-            int amount = (game.getBoard().activity.equals(OP_POST)) ? 90 : 100;
-            Corp c = findCorp(move.getCorp(), game);
-            game.getBank().payCorp(c.name, amount);
-            c.loanTaken = true;
-            c.loans++;
-        }
-
-        @Override public void undoAction(Move move, Game game) {
-            int amount = (game.getBoard().activity.equals(OP_POST)) ? 90 : 100;
-            Corp c = findCorp(move.getCorp(), game);
-            game.getBank().debitCorp(c.name, amount);
-            c.loanTaken = false;
-            c.loans--;
         }
     }
 
@@ -286,7 +233,7 @@ public class OpActions {
             Corp c = findCorp(move.getCorp(), game);
             game.addSub(CHANGE_RUN, "", c.name, move.getAmount(), ""+c.lastRun);
             if (c.cash < 0) {
-                throw new IllegalStateException("TODO HANDLE PREZ INTEREST");
+                game.addSub(PREZ_PAYS, findPrez(c.name, game).name, c.name, -c.cash, BankActions.INTEREST);
             }
             if(c.price.leftEdge()) {
                 game.addSub(PRICE_DOWN, "", c.name, 1, "");
@@ -455,16 +402,6 @@ public class OpActions {
         return null;
     }
 
-    private static int heldShareCount(String corpName, Game game) {
-        int count = 0;
-        for (Player p:game.getBoard().getPlayers()) {
-            for (Stock s: p.shares) {
-                if(s.corpName.equals(corpName)) count += s.getAmount();
-            }
-        }
-        return count;
-    }
-
     static class NoRoute extends Action {
         @Override public void checkAllowed(Move move, Game game) {
             assertPhase(game, Game.Era.OP, "NoRoute");
@@ -491,6 +428,10 @@ public class OpActions {
             assertCorpTurn(game, move.getCorp(), "EndOpTurn");
             if(findCorp(move.getCorp(), game).trains.isEmpty()) {
                 throw new IllegalStateException("Must buy a train or declare no route");
+            }
+            Player p = findPrez(move.getCorp(), game);
+            if (p.cash < 0) {
+                game.addSub(BEGIN_FORCED_SALE, p.name, move.getCorp(), -p.cash, game.getBoard().activity);
             }
         }
 

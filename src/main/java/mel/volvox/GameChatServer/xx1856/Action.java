@@ -250,6 +250,13 @@ public abstract class Action implements UndoableAction<Move, Game> {
         throw new IllegalStateException("Prez not found for "+corpName);
     }
 
+    static Player findPrez(String corpName, Game game) {
+        for(Player p: game.getBoard().getPlayers()) for(Stock s: p.getShares()) {
+            if(s.corpName.equals(corpName) && s.isPrez) return p;
+        }
+        throw new IllegalStateException("Prez not found for "+corpName);
+    }
+
     static void payPrivates(Game game) {
         for(Player player:game.getBoard().getPlayers()) {
             for(String priv:player.privs) {
