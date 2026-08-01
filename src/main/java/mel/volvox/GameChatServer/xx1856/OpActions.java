@@ -240,6 +240,7 @@ public class OpActions {
             } else {
                 game.addSub(PRICE_LEFT, "", c.name, 1, "");
             }
+            //TODO close company if drops past brown zone into death zone
         }
 
         @Override public void doAction(Move move, Game game) {
@@ -268,7 +269,7 @@ public class OpActions {
             Corp c = findCorp(move.getCorp(), game);
             int overhead = c.loans*10 - c.cash;
             if (overhead < 0) overhead = 0;
-            if (move.getAmount() < 10 - overhead) {
+            if (move.getAmount() < 10 + overhead) {
                 throw new IllegalStateException("Minimum payout is $10");
             }
         }
@@ -282,11 +283,9 @@ public class OpActions {
             }
             if (paid > 0) game.addSub(PAY_INTEREST, "", move.getCorp(), paid, "");
             int due = interest - paid;
-            if (due > move.getAmount()) {
-                //TODO handle get interest from prez
-            } else {
-                game.addSub(DISBURSE, "", move.getCorp(), (move.getAmount() - due) / 10, "");
-            }
+            if (due > move.getAmount()) throw new IllegalStateException("Must withhold: unpaid interest exceeds revenue");
+            game.addSub(DISBURSE, "", move.getCorp(), (move.getAmount() - due) / 10, "");
+
             if(c.price.rightEdge()) {
                 game.addSub(PRICE_UP, "", move.getCorp(), 1, "");
             } else {
