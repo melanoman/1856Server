@@ -37,4 +37,5 @@ public class Board {
     int generation = 1;
     int bridgeTokens = 3;
     int tunnelTokens = 3;
+    boolean loansDone = false;
 }

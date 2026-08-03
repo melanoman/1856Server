@@ -10,6 +10,8 @@ public class OpActions {
     public static final String OP_PRE = "opPre";
     public static final String OP_POST = "opPost";
 
+    static final int CGR_FORMATION_SIZE = 1;
+
     public static void registerAll(UndoManager<Move, Game, Action> undoMgr) {
         undoMgr.registerActionType(START_OP_ROUND, new StartOpRound());
         undoMgr.registerActionType(END_OP_ROUND, new EndOpRound());
@@ -428,15 +430,20 @@ public class OpActions {
             if(findCorp(move.getCorp(), game).trains.isEmpty()) {
                 throw new IllegalStateException("Must buy a train or declare no route");
             }
-            Player p = findPrez(move.getCorp(), game);
-            if (p.cash < 0) {
-                game.addSub(BEGIN_FORCED_SALE, p.name, move.getCorp(), -p.cash, game.getBoard().activity);
-            }
         }
 
         @Override public void init(Move move, Game game) {
             if (findCorp(move.getCorp(), game).loans > heldShareCount(move.getCorp(), game)) {
                 throw new IllegalStateException("TODO forced loan redemption");
+            }
+            Player p = findPrez(move.getCorp(), game);
+            if (p.cash < 0) {
+                game.addSub(BEGIN_FORCED_SALE, p.name, move.getCorp(), -p.cash, game.getBoard().activity);
+                return;
+            }
+            if (!game.getBoard().loansDone && game.getBoard().trains.size() <= CGR_FORMATION_SIZE) {
+                game.addSub(CALL_LOANS, findPrez(move.getCorp(), game).name, "", 0, game.getBoard().activity);
+                return;
             }
             Corp c = game.nextCorp();
             if (c == null) {

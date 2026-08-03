@@ -10,12 +10,14 @@ public class BankActions {
     public static String INTEREST = "interest";
     public static String TRAIN = "train";
     public static String FORCED_SALE_ACTIVITY = "forceSale";
+    public static String CALL_LOAN_ACTIVITY = "callLoan";
 
     public static void registerAll(UndoManager<Move, Game, Action> undoMgr) {
         undoMgr.registerActionType(PREZ_PAYS, new PrezPays());
         undoMgr.registerActionType(TAKE_LOAN, new TakeLoanAction());
         undoMgr.registerActionType(REPAY_LOAN, new RepayLoanAction());
         undoMgr.registerActionType(BEGIN_FORCED_SALE, new BeginForcedSale());
+        undoMgr.registerActionType(CALL_LOANS, new CallLoans());
     }
 
     static class PrezPays extends Action {
@@ -106,6 +108,33 @@ public class BankActions {
         @Override public void undoAction(Move move, Game game) {
             game.getBoard().activity = move.getDetail();
         }
+    }
+
+    static class CallLoans extends Action {
+        @Override public void checkAllowed(Move move, Game game) { }
+        @Override public void init(Move move, Game game) {
+            if (move.getCorp().equals(move.getPlayer())) {
+                game.addSub(FORM_CGR, "", "", 0, "");
+                return;
+            }
+            Player p = findPlayer(move.getPlayer(), game);
+            for (Stock s: p.shares) {
+                if(!s.isPrez) continue;
+                if(findCorp(s.corpName, game).loans == 0) continue;
+                return; // at least one decision to make
+            }
+            String endPlayer = move.getCorp().isEmpty() ? move.getPlayer() : move.getCorp();
+            game.addSub(CALL_LOANS, nextPlayer(p.name, game).name, endPlayer, 0, CALL_LOAN_ACTIVITY);
+        }
+
+        @Override public void doAction(Move move, Game game) {
+            game.getBoard().activity = CALL_LOAN_ACTIVITY;
+        }
+
+        @Override public void undoAction(Move move, Game game) {
+            game.getBoard().activity = move.getDetail();
+        }
+
     }
 
     static int heldShareCount(String corpName, Game game) {

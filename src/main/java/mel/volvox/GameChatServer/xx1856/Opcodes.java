@@ -83,6 +83,7 @@ public class Opcodes {
     public static final String RUST = "rust";
     public static final String RUST_PRIV = "rustPriv";
     public static final String RUST_PORT = "rustPort";
+    public static final String FORM_CGR = "formCGR";
 
     //RESET ACTIONS
     public static final String RESET_TOKEN = "resetToken";
@@ -90,4 +91,7 @@ public class Opcodes {
     public static final String FLOAT = "float";
     public static final String BANK_BREAK = "bankBreak";
     public static final String GAME_OVER = "gameOver";
+    public static final String CALL_LOANS = "callLoans";
+    public static final String SAVE_CORP =  "saveCorp";
+    public static final String ABANDON_CORP = "abandonCorp";
 }

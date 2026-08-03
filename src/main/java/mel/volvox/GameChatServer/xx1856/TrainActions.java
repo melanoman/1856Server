@@ -83,6 +83,7 @@ public class TrainActions {
     }
 
     static void makeRustSubs(Move move, Game game) {
+        int trainCount = game.getBoard().trains.size();
         List<Corp> rustList = new ArrayList<>();
         int rustSize = getRustSize(game.getBoard().trains.size());
         if (rustSize > 0) for(Corp c:game.getBoard().corps) for(Integer t:c.trains) {
@@ -90,7 +91,7 @@ public class TrainActions {
         }
         for(Corp c: rustList) game.addSub(RUST, "", c.name, rustSize, "");
 
-        if (game.getBoard().trains.size() == PRIV_RUST_SIZE) {
+        if (trainCount == PRIV_RUST_SIZE) {
             List<String> nuke = new ArrayList<>();
             for(Player p:game.getBoard().players) for(String pp:p.privs) nuke.add(pp+":"+p.name);
             for(String s:nuke) {
@@ -104,15 +105,20 @@ public class TrainActions {
                 game.addSub(RUST_PRIV, "", ss[1], 0, ss[0]);
             }
         }
-        if (game.getBoard().trains.size() == PORT_RUST_SIZE) {
+        if (trainCount == PORT_RUST_SIZE) {
             for(Corp c: game.getBoard().corps) {
                 if(c.portRights) {
                     game.addSub(RUST_PORT, "", c.name, 0, "");
                 }
             }
         }
-        //TODO CATCH TRAIN LIMIT DROPS
-        //TODO CGR FORMATION (in END_OP_TURN)
+        for(Corp c: game.getBoard().corps) {
+            if(c.trains.size() > TRAIN_LIMIT[trainCount]) {
+                throw new IllegalStateException("TODO DROP TRAIN OVER LIMIT");
+                //game.addSub("START_TRAIN_LIMIT_DROP")
+                //return board
+            }
+        }
     }
 
     static class RustPort extends Action {
