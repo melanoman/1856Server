@@ -20,6 +20,7 @@ public class BankActions {
         undoMgr.registerActionType(BEGIN_FORCED_SALE, new BeginForcedSale());
         undoMgr.registerActionType(CALL_LOANS, new CallLoans());
         undoMgr.registerActionType(SAVE_CORP, new SaveCorp());
+        undoMgr.registerActionType(ABANDON_CORP, new AbandonCorp());
     }
 
     static class PrezPays extends Action {
@@ -118,10 +119,6 @@ public class BankActions {
             if (!game.getBoard().currentPlayer.equals(move.getPlayer())) {
                 game.addSub(CHANGE_PLAYER, move.getPlayer(), "", 0, game.getBoard().currentPlayer);
             }
-            if (move.getCorp().equals(move.getPlayer())) {
-                game.addSub(FORM_CGR, "", "", 0, "");
-                return;
-            }
             Player p = findPlayer(move.getPlayer(), game);
             for (Stock s: p.shares) {
                 if(!s.isPrez) continue;
@@ -138,14 +135,30 @@ public class BankActions {
                 }
                 if (p.cash < c.loans * 100) {
                     System.out.println(p.name+" has $"+p.cash+" but "+c.name+" needs $"+(100*c.loans));
-                    game.addSub(ABANDON_CORP, "", s.corpName, 0, "");
+                    game.addSub(ABANDON_CORP, p.name, s.corpName, 0, move.getDetail());
                     continue;
                 }
                 return; // at least one decision to make
             }
-            String endPlayer = move.getCorp().isEmpty() ? move.getPlayer() : move.getCorp();
-            String nextPlayer = nextPlayer(p.name, game).name;
-            game.addSub(CALL_LOANS, nextPlayer, endPlayer, 0, CALL_LOAN_ACTIVITY);
+            Player next = nextPlayer(p.name, game);
+            while(noCGRWork(next, game)) {
+                if(next.name.equals(move.getPlayer())) {
+                    game.addSub(FORM_CGR, findPrez(game.getBoard().currentCorp, game).name, "", 0, "");
+                    return;
+                }
+                next = nextPlayer(next.name, game);
+            }
+            game.addSub(CALL_LOANS, next.name, "", 0, CALL_LOAN_ACTIVITY);
+        }
+
+        static boolean noCGRWork(Player player, Game game) {
+            for(Stock s: player.shares) {
+                if(!s.isPrez) continue;
+                Corp c = findCorp(s.corpName, game);
+                if (c.abandoned || c.loans == 0) continue;
+                return false;
+            }
+            return true;
         }
 
         @Override public void doAction(Move move, Game game) {
@@ -162,16 +175,16 @@ public class BankActions {
             assertPhase(game, Game.Era.OP, "AbandonCorp");
             assertActivity(game, CALL_LOAN_ACTIVITY, "AbandonCorp");
             Corp c = findCorp(move.getCorp(), game);
-            if(c.abandoned) throw new IllegalStateException("Corp already abandoned");
-            if(c.cash >= c.loans * 100) throw new IllegalStateException("Corp is solvent");
+            if(c.abandoned) throw new IllegalStateException(c.name+" already abandoned");
+            if(c.cash >= c.loans * 100) throw new IllegalStateException(c.name+" is solvent");
             Player prez = findPrez(c.name, game);
             if (!prez.name.equals(move.getPlayer())) {
-                throw new IllegalStateException("Only Prez can decide to abandon");
+                throw new IllegalStateException(move.getPlayer()+" is not prez of "+c.name);
             }
         }
 
         @Override public void init(Move move, Game game) {
-            game.addSub(CALL_LOANS, move.getPlayer(), move.getCorp(), 0, move.getDetail());
+            game.addSub(CALL_LOANS, move.getPlayer(), "", 0, CALL_LOAN_ACTIVITY);
         }
 
         @Override public void doAction(Move move, Game game) {
@@ -187,6 +200,7 @@ public class BankActions {
         @Override public void checkAllowed(Move move, Game game) {
             assertPhase(game, Game.Era.OP, "SaveCorp");
             assertActivity(game, CALL_LOAN_ACTIVITY, "SaveCorp");
+            assertPlayerTurn(game, move.getPlayer(), "saveCorp");
             Corp c = findCorp(move.getCorp(), game);
             if(c.abandoned) throw new IllegalStateException("Corp already abandoned");
             if(c.loans == 0) throw new IllegalStateException("Nothing to redeem");
@@ -202,7 +216,7 @@ public class BankActions {
             int amount = c.loans;
             game.addSub(REPAY_LOAN, "", move.getCorp(), amount, "");
             game.addSub(PREZ_PAYS, move.getPlayer(), move.getCorp(), 100*amount, "");
-            game.addSub(CALL_LOANS, move.getPlayer(), move.getCorp(), 0, move.getDetail());
+            game.addSub(CALL_LOANS, move.getPlayer(), "", 0, CALL_LOAN_ACTIVITY);
         }
 
         @Override public void doAction(Move move, Game game) { }
