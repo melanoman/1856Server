@@ -3,7 +3,10 @@ package mel.volvox.GameChatServer.xx1856;
 import mel.volvox.GameChatServer.model.xx1856.Move;
 import mel.volvox.undo.UndoManager;
 
+import java.util.List;
+
 import static mel.volvox.GameChatServer.xx1856.OpActions.OP_POST;
+import static mel.volvox.GameChatServer.xx1856.OpActions.OP_PRE;
 import static mel.volvox.GameChatServer.xx1856.Opcodes.*;
 
 public class BankActions {
@@ -121,6 +124,7 @@ public class BankActions {
             for (Stock s: p.shares) {
                 if(!s.isPrez) continue;
                 Corp c = findCorp(s.corpName, game);
+                if (c.abandoned) continue;
                 if(c.loans == 0) continue;
                 if(c.cash >= 100) {
                     if(c.cash >= 100*c.loans) {
@@ -148,7 +152,28 @@ public class BankActions {
         @Override public void undoAction(Move move, Game game) {
             game.getBoard().activity = move.getDetail();
         }
+    }
 
+    static class AbandonCorp extends Action {
+        @Override public void checkAllowed(Move move, Game game) {
+            assertPhase(game, Game.Era.OP, "AbandonCorp");
+            assertActivity(game, CALL_LOAN_ACTIVITY, "AbandonCorp");
+            Corp c = findCorp(move.getCorp(), game);
+            if(c.abandoned) throw new IllegalStateException("Corp already abandoned");
+            if(c.cash >= c.loans * 100) throw new IllegalStateException("Corp is solvent");
+        }
+
+        @Override public void init(Move move, Game game) {
+            game.addSub(CALL_LOANS, move.getPlayer(), move.getCorp(), 0, move.getDetail());
+        }
+
+        @Override public void doAction(Move move, Game game) {
+            findCorp(move.getCorp(), game).abandoned = true;
+        }
+
+        @Override public void undoAction(Move move, Game game) {
+            findCorp(move.getCorp(), game).abandoned = false;
+        }
     }
 
     static int heldShareCount(String corpName, Game game) {

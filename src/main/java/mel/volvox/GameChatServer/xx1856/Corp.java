@@ -33,6 +33,7 @@ public class Corp {
     boolean bridgeRights = false;
     boolean tunnelRights = false;
     boolean portRights = false;
+    boolean abandoned = false;
 
     Corp(String name, int tokens) {
         this.name = name;
