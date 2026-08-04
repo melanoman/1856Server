@@ -130,7 +130,8 @@ public class BankActions {
                         game.addSub(REPAY_LOAN, "", s.corpName, c.cash / 100, "");
                     }
                 }
-                if (p.cash <= c.loans * 100) {
+                if (p.cash < c.loans * 100) {
+                    System.out.println(p.name+" has $"+p.cash+" but "+c.name+" needs $"+(100*c.loans));
                     game.addSub(ABANDON_CORP, "", s.corpName, 0, "");
                     continue;
                 }

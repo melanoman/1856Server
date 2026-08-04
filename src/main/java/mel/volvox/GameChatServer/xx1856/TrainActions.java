@@ -183,13 +183,17 @@ public class TrainActions {
             assertPhase(game, Game.Era.OP, "ForcedTrain");
             assertActivity(game, OP_POST, "ForcedTrain");
             assertCorpTurn(game, move.getCorp(), "ForcedTrain");
-            if(!findCorp(move.getCorp(), game).trains.isEmpty()) {
+            Corp c = findCorp(move.getCorp(), game);
+            if(!c.trains.isEmpty()) {
                 throw new IllegalStateException("No Prez contributions to train purchase unless zero trains");
             }
             Board board = game.getBoard();
             int train = cheapestTrain(board);
             if(move.getAmount() != train) {
                 throw new IllegalStateException("Must buy cheapest train when prez contributes");
+            }
+            if(c.cash >= TRAIN_PRICE[train]) {
+                throw new IllegalStateException("May not contribute when corp has enough funds.");
             }
             if("POOL".equals(move.getDetail())) {
                 if(!board.pool.contains(train)) throw new IllegalStateException("Train not in pool");
@@ -225,7 +229,7 @@ public class TrainActions {
             if (POOL.equals(move.getDetail())) {
                 game.getBoard().pool.add(move.getAmount());
             } else if (move.getAmount() > 0) {
-                game.getBoard().trains.add(move.getAmount());
+                game.getBoard().trains.add(0, move.getAmount());
             }
         }
     }
