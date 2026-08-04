@@ -3,10 +3,8 @@ package mel.volvox.GameChatServer.xx1856;
 import mel.volvox.GameChatServer.model.xx1856.Move;
 import mel.volvox.undo.UndoManager;
 
-import java.util.List;
 
 import static mel.volvox.GameChatServer.xx1856.OpActions.OP_POST;
-import static mel.volvox.GameChatServer.xx1856.OpActions.OP_PRE;
 import static mel.volvox.GameChatServer.xx1856.Opcodes.*;
 
 public class BankActions {
@@ -21,6 +19,7 @@ public class BankActions {
         undoMgr.registerActionType(REPAY_LOAN, new RepayLoanAction());
         undoMgr.registerActionType(BEGIN_FORCED_SALE, new BeginForcedSale());
         undoMgr.registerActionType(CALL_LOANS, new CallLoans());
+        undoMgr.registerActionType(SAVE_CORP, new SaveCorp());
     }
 
     static class PrezPays extends Action {
@@ -174,6 +173,28 @@ public class BankActions {
         @Override public void undoAction(Move move, Game game) {
             findCorp(move.getCorp(), game).abandoned = false;
         }
+    }
+
+    static class SaveCorp extends Action {
+        @Override public void checkAllowed(Move move, Game game) {
+            assertPhase(game, Game.Era.OP, "SaveCorp");
+            assertActivity(game, CALL_LOAN_ACTIVITY, "SaveCorp");
+            Corp c = findCorp(move.getCorp(), game);
+            if(c.abandoned) throw new IllegalStateException("Corp already abandoned");
+            if(c.loans == 0) throw new IllegalStateException("Nothing to redeem");
+            assertPlayerFunds(game, findPrez(c.name, game).name, c.loans * 100, "SaveCorp");
+        }
+
+        @Override public void init(Move move, Game game) {
+            Corp c = findCorp(move.getCorp(), game);
+            int amount = c.loans;
+            game.addSub(REPAY_LOAN, "", move.getCorp(), amount, "");
+            game.addSub(PREZ_PAYS, findPrez(move.getCorp(), game).name, move.getCorp(), 100*amount, "");
+            game.addSub(CALL_LOANS, move.getPlayer(), move.getCorp(), 0, move.getDetail());
+        }
+
+        @Override public void doAction(Move move, Game game) { }
+        @Override public void undoAction(Move move, Game game) { }
     }
 
     static int heldShareCount(String corpName, Game game) {
