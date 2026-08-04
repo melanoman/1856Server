@@ -225,7 +225,7 @@ public class xx1856Controller {
     @PutMapping("18xx/repayLoan/{game}/{corp}")
     @ResponseBody
     Board repayLoan(@PathVariable String game, @PathVariable String corp) {
-        return findGame(game).addMove(REPAY_LOAN, "", corp, 0, "");
+        return findGame(game).addMove(REPAY_LOAN, "", corp, 1, "");
     }
 
     @PutMapping("18xx/placePort/{game}/{corp}")

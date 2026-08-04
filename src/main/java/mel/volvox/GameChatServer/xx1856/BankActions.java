@@ -79,21 +79,21 @@ public class BankActions {
             assertPhase(game, Game.Era.OP, "RepayLoan");
             assertCorpTurn(game, move.getCorp(), "RepayLoan");
             assertActivity(game, OP_POST, "RepayLoan");
-            assertCorpFunds(game, move.getCorp(), 100, "RepayLoan");
+            assertCorpFunds(game, move.getCorp(), 100 * move.getAmount(), "RepayLoan");
         }
 
         @Override public void init(Move move, Game game) { }
 
         @Override public void doAction(Move move, Game game) {
             Corp c = findCorp(move.getCorp(), game);
-            c.loans--;
-            game.getBank().debitCorp(move.getCorp(), 100);
+            c.loans -= move.getAmount();
+            game.getBank().debitCorp(move.getCorp(), 100 * move.getAmount());
         }
 
         @Override public void undoAction(Move move, Game game) {
             Corp c = findCorp(move.getCorp(), game);
-            c.loans++;
-            game.getBank().payCorp(move.getCorp(), 100);
+            c.loans += move.getAmount();
+            game.getBank().payCorp(move.getCorp(), 100 * move.getAmount());
         }
     }
 
@@ -120,7 +120,20 @@ public class BankActions {
             Player p = findPlayer(move.getPlayer(), game);
             for (Stock s: p.shares) {
                 if(!s.isPrez) continue;
-                if(findCorp(s.corpName, game).loans == 0) continue;
+                Corp c = findCorp(s.corpName, game);
+                if(c.loans == 0) continue;
+                if(c.cash >= 100) {
+                    if(c.cash >= 100*c.loans) {
+                        game.addSub(REPAY_LOAN, "", s.corpName, c.loans, "");
+                        continue;
+                    } else {
+                        game.addSub(REPAY_LOAN, "", s.corpName, c.cash / 100, "");
+                    }
+                }
+                if (p.cash <= c.loans * 100) {
+                    game.addSub(ABANDON_CORP, "", s.corpName, 0, "");
+                    continue;
+                }
                 return; // at least one decision to make
             }
             String endPlayer = move.getCorp().isEmpty() ? move.getPlayer() : move.getCorp();
