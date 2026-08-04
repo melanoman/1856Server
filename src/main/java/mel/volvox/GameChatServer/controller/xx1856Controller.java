@@ -253,4 +253,18 @@ public class xx1856Controller {
     Board noRoute(@PathVariable String game, @PathVariable String corp) {
         return findGame(game).addMove(NO_ROUTE, "", corp, 0, "");
     }
+
+    @PutMapping("18xx/saveCorp/{game}/{player}/{corp}")
+    @ResponseBody
+    Board saveCorp(@PathVariable String game, @PathVariable String player,
+                   @PathVariable String corp) {
+        return findGame(game).addMove(SAVE_CORP, player, corp, 0, "");
+    }
+
+    @PutMapping("18xx/abandonCorp/{game}/{player}/{corp}")
+    @ResponseBody
+    Board abandonCorp(@PathVariable String game, @PathVariable String player,
+                      @PathVariable String corp) {
+        return findGame(game).addMove(ABANDON_CORP, player, corp, 0, "");
+    }
 }

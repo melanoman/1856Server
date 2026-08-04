@@ -160,6 +160,10 @@ public class BankActions {
             Corp c = findCorp(move.getCorp(), game);
             if(c.abandoned) throw new IllegalStateException("Corp already abandoned");
             if(c.cash >= c.loans * 100) throw new IllegalStateException("Corp is solvent");
+            Player prez = findPrez(c.name, game);
+            if (!prez.name.equals(move.getPlayer())) {
+                throw new IllegalStateException("Only Prez can decide to abandon");
+            }
         }
 
         @Override public void init(Move move, Game game) {
@@ -182,14 +186,18 @@ public class BankActions {
             Corp c = findCorp(move.getCorp(), game);
             if(c.abandoned) throw new IllegalStateException("Corp already abandoned");
             if(c.loans == 0) throw new IllegalStateException("Nothing to redeem");
-            assertPlayerFunds(game, findPrez(c.name, game).name, c.loans * 100, "SaveCorp");
+            Player prez = findPrez(c.name, game);
+            if (!prez.name.equals(move.getPlayer())) {
+                throw new IllegalStateException("Only Prez can contribute");
+            }
+            assertPlayerFunds(game, prez.name, c.loans * 100, "SaveCorp");
         }
 
         @Override public void init(Move move, Game game) {
             Corp c = findCorp(move.getCorp(), game);
             int amount = c.loans;
             game.addSub(REPAY_LOAN, "", move.getCorp(), amount, "");
-            game.addSub(PREZ_PAYS, findPrez(move.getCorp(), game).name, move.getCorp(), 100*amount, "");
+            game.addSub(PREZ_PAYS, move.getPlayer(), move.getCorp(), 100*amount, "");
             game.addSub(CALL_LOANS, move.getPlayer(), move.getCorp(), 0, move.getDetail());
         }
 
