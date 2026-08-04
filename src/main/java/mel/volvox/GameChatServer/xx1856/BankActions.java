@@ -115,6 +115,9 @@ public class BankActions {
     static class CallLoans extends Action {
         @Override public void checkAllowed(Move move, Game game) { }
         @Override public void init(Move move, Game game) {
+            if (!game.getBoard().currentPlayer.equals(move.getPlayer())) {
+                game.addSub(CHANGE_PLAYER, move.getPlayer(), "", 0, game.getBoard().currentPlayer);
+            }
             if (move.getCorp().equals(move.getPlayer())) {
                 game.addSub(FORM_CGR, "", "", 0, "");
                 return;
@@ -141,7 +144,8 @@ public class BankActions {
                 return; // at least one decision to make
             }
             String endPlayer = move.getCorp().isEmpty() ? move.getPlayer() : move.getCorp();
-            game.addSub(CALL_LOANS, nextPlayer(p.name, game).name, endPlayer, 0, CALL_LOAN_ACTIVITY);
+            String nextPlayer = nextPlayer(p.name, game).name;
+            game.addSub(CALL_LOANS, nextPlayer, endPlayer, 0, CALL_LOAN_ACTIVITY);
         }
 
         @Override public void doAction(Move move, Game game) {
