@@ -1,9 +1,8 @@
 package mel.volvox.GameChatServer.xx1856;
 
+import jakarta.persistence.criteria.CriteriaBuilder;
 import mel.volvox.GameChatServer.model.xx1856.Move;
 import mel.volvox.undo.UndoManager;
-import org.apache.catalina.AccessLog;
-
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,6 +11,7 @@ import static mel.volvox.GameChatServer.xx1856.OpActions.OP_POST;
 import static mel.volvox.GameChatServer.xx1856.Opcodes.*;
 
 public class BankActions {
+    public static String CGR = "CGR";
     public static String INTEREST = "interest";
     public static String TRAIN = "train";
     public static String FORCED_SALE_ACTIVITY = "forceSale";
@@ -30,6 +30,7 @@ public class BankActions {
         undoMgr.registerActionType(CLOSE_CORP, new CloseCorp());
         undoMgr.registerActionType(ASK_CGR_TOKENS, new AskTokens());
         undoMgr.registerActionType(ANSWER_CGR_TOKENS, new AnswerTokens());
+        undoMgr.registerActionType(DONE_DROP, new DoneDrop());
     }
 
     static class PrezPays extends Action {
@@ -261,7 +262,7 @@ public class BankActions {
                     if (tradeShares + issueCount > 20) tradeShares = 20 - issueCount;
                     issueCount += tradeShares;
                     if (tradeShares > 0) {
-                        game.addSub(ADD_SHARES, currentPlayer.getName(), "CGR", tradeShares, "");
+                        game.addSub(ADD_SHARES, currentPlayer.getName(), CGR, tradeShares, "");
                     }
                     if (tradeShares > prezShares) {
                         prezShares = tradeShares;
@@ -323,7 +324,7 @@ public class BankActions {
         @Override public void checkAllowed(Move move, Game game) { }
         @Override public void init(Move move, Game game) { }
         @Override public void doAction(Move move, Game game) {
-            findCorp("CGR", game).tokensUsed = move.getAmount();
+            findCorp(CGR, game).tokensUsed = move.getAmount();
             game.getBoard().activity = ASK_CGR_TRAINS;
         }
 
@@ -363,6 +364,31 @@ public class BankActions {
         }
     }
 
+    static class DoneDrop extends Action {
+        @Override public void checkAllowed(Move move, Game game) {
+            assertPhase(game, Game.Era.OP, "DoneDrop");
+            assertActivity(game, ASK_CGR_TRAINS, "DoneDrop");
+            Corp c = findCorp(CGR, game);
+            if(c.trains.size() > 3) throw new IllegalStateException("Too many trains");
+        }
+
+        @Override public void init(Move move, Game game) {
+            game.addSub(END_OP_TURN, "", game.getBoard().currentCorp, 0, "");
+        }
+
+        @Override public void doAction(Move move, Game game) {
+            Corp c = findCorp(CGR, game);
+            for(Integer train: c.trains) {
+                if (train == 0 || train > 4) {
+                    game.getBoard().loanerDiesel = false;
+                }
+            }
+        }
+
+        @Override public void undoAction(Move move, Game game) {
+            game.getBoard().loanerDiesel = true;
+        }
+    }
 
     static int calculatePar(List<String> losers, Game game) {
         if(losers.size() > 2) {
