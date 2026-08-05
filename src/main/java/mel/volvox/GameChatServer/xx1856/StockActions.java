@@ -158,11 +158,18 @@ public class StockActions {
         @Override public void init(Move move, Game game) { }
 
         @Override public void doAction(Move move, Game game) {
-            subtractSharesFromPlayer(findPlayer(move.getPlayer(), game), move.getCorp(), move.getAmount());
+            int amount = move.getAmount() > 0 ? move.getAmount() : -move.getAmount();
+            subtractSharesFromPlayer(findPlayer(move.getPlayer(), game), move.getCorp(), amount);
         }
 
         @Override public void undoAction(Move move, Game game) {
-            addSharesToPlayer(findPlayer(move.getPlayer(), game), move.getCorp(), move.getAmount());
+            if (move.getAmount() < 0) {
+                Player p = findPlayer(move.getPlayer(), game);
+                addSharesToPlayer(p, move.getCorp(), -move.getAmount());
+                for (Stock s: p.shares) if (s.corpName.equals(move.getCorp())) s.isPrez = true;
+            } else {
+                addSharesToPlayer(findPlayer(move.getPlayer(), game), move.getCorp(), move.getAmount());
+            }
         }
     }
 

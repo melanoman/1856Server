@@ -252,7 +252,8 @@ public class BankActions {
                         }
                     }
                     for(Stock ss: purge) {
-                        game.addSub(PURGE_SHARES, currentPlayer.getName(), ss.corpName, ss.amount, "");
+                        int amount = ss.isPrez ? -ss.amount : ss.amount;
+                        game.addSub(PURGE_SHARES, currentPlayer.getName(), ss.corpName, amount, "");
                     }
                     if (tradeShares % 2 == 1) poolShares++;
                     tradeShares /= 2;
