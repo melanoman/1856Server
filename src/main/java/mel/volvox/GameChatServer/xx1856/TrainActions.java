@@ -18,6 +18,7 @@ public class TrainActions {
         undoMgr.registerActionType(BUY_BANK_TRAIN, new BuyBankTrain());
         undoMgr.registerActionType(BUY_CORP_TRAIN, new BuyCorpTrain());
         undoMgr.registerActionType(FORCED_TRAIN, new ForcedTrain());
+        undoMgr.registerActionType(DROP_TRAIN, new DropTrain());
         undoMgr.registerActionType(RUST, new RustAction());
         undoMgr.registerActionType(BUY_PRIV, new BuyPriv());
         undoMgr.registerActionType(RUST_PRIV, new RustPriv());
@@ -455,6 +456,37 @@ public class TrainActions {
             } else {
                 findPlayer(move.getPlayer(), game).privs.add(0, move.getDetail());
             }
+        }
+    }
+
+    static class DropTrain extends Action {
+        @Override public void checkAllowed(Move move, Game game) {
+            assertPhase(game, Game.Era.OP, "DropTrain");
+            assertActivity(game, ASK_CGR_TRAINS, "DropTrain");
+            if(!"CGR".equals(move.getCorp())) throw new IllegalStateException("TODO non-CGR drops");
+            Corp c = findCorp(move.getCorp(), game);
+            if(!c.trains.contains(move.getAmount())) {
+                throw new IllegalStateException("Train not found");
+            }
+        }
+
+        @Override public void init(Move move, Game game) {
+            Corp c = findCorp(move.getCorp(), game);
+            if (c.trains.isEmpty()) {
+                game.addSub(DONE_DROP, "", move.getCorp(), 0, "");
+            }
+        }
+
+        @Override public void doAction(Move move, Game game) {
+            Corp c = findCorp(move.getCorp(), game);
+            c.trains.remove(Integer.valueOf(move.getAmount()));
+            game.getBoard().pool.add(move.getAmount());
+        }
+
+        @Override public void undoAction(Move move, Game game) {
+            Corp c = findCorp(move.getCorp(), game);
+            c.trains.add(move.getAmount());
+            game.getBoard().pool.remove(Integer.valueOf(move.getAmount()));
         }
     }
 

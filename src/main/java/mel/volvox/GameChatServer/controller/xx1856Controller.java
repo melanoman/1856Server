@@ -273,4 +273,17 @@ public class xx1856Controller {
     Board answerTokens(@PathVariable String game, @PathVariable int count) {
         return findGame(game).addMove(ANSWER_CGR_TOKENS, "", "", count, "");
     }
+
+    @PutMapping("18xx/dropTrain/{game}/{corp}/{train}")
+    @ResponseBody
+    Board dropTrain(@PathVariable String game, @PathVariable String corp,
+                    @PathVariable int train) {
+        return findGame(game).addMove(DROP_TRAIN, "", corp, train, "");
+    }
+
+    @PutMapping("18xx/doneDrop/{game}/CGR")
+    @ResponseBody
+    Board doneDrop(@PathVariable String game) {
+        return findGame(game).addMove(DONE_DROP, "", "CGR", 0, "");
+    }
 }
