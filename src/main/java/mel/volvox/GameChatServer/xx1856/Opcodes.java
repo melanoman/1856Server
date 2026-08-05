@@ -56,6 +56,7 @@ public class Opcodes {
     public static final String BEGIN_FORCED_SALE = "startForcedSale";
     public static final String CGR_SHELL = "cgrShell";
     public static final String CGR_FILL = "cgrFill";
+    public static final String REPO_CASH = "repoCash";
     public static final String ASK_CGR_TOKENS = "askCGRTokens";
     public static final String ANSWER_CGR_TOKENS = "setCGRTokens";
 

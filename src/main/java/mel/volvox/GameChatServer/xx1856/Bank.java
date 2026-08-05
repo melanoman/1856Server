@@ -41,6 +41,11 @@ public class Bank {
         findCorp(corp).cash += amount;
     }
 
+    public void payEscrow(String corp, int amount) {
+        board.bank -= amount;
+        findCorp(corp).escrow += amount;
+    }
+
     public void debitPlayer(String player, int amount) {
         board.bank += amount;
         findPlayer(player).cash -= amount;
@@ -49,6 +54,11 @@ public class Bank {
     public void debitCorp(String corp, int amount) {
         board.bank += amount;
         findCorp(corp).cash -= amount;
+    }
+
+    public void debitEscrow(String corp, int amount) {
+        board.bank += amount;
+        findCorp(corp).escrow -= amount;
     }
 
     private Player findPlayer(String playerName) {

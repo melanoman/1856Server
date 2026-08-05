@@ -310,10 +310,10 @@ public abstract class Action implements UndoableAction<Move, Game> {
     }
 
     public static class NullAction extends Action {
-        @Override public void doAction(Move move, Game game) { }
-        @Override public void undoAction(Move move, Game game) { }
         @Override public void checkAllowed(Move move, Game game) { }
         @Override public void init(Move move, Game game) { }
+        @Override public void doAction(Move move, Game game) { }
+        @Override public void undoAction(Move move, Game game) { }
     }
 
     //TODO refactor this somewhere better

@@ -34,6 +34,7 @@ public class Corp {
     boolean tunnelRights = false;
     boolean portRights = false;
     boolean abandoned = false;
+    boolean closed = false;
 
     Corp(String name, int tokens) {
         this.name = name;

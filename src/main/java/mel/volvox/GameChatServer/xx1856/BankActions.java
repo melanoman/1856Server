@@ -26,6 +26,7 @@ public class BankActions {
         undoMgr.registerActionType(SAVE_CORP, new SaveCorp());
         undoMgr.registerActionType(ABANDON_CORP, new AbandonCorp());
         undoMgr.registerActionType(FORM_CGR, new FormCGR());
+        undoMgr.registerActionType(CLOSE_CORP, new CloseCorp());
     }
 
     static class PrezPays extends Action {
@@ -251,10 +252,7 @@ public class BankActions {
                             purge.add(s);
                         }
                     }
-                    for(Stock ss: purge) {
-                        int amount = ss.isPrez ? -ss.amount : ss.amount;
-                        game.addSub(PURGE_SHARES, currentPlayer.getName(), ss.corpName, amount, "");
-                    }
+
                     if (tradeShares % 2 == 1) poolShares++;
                     tradeShares /= 2;
                     if (tradeShares + issueCount > 20) tradeShares = 20 - issueCount;
@@ -284,9 +282,7 @@ public class BankActions {
 
                 int cgrPar = calculatePar(losers, game);
                 for(String s: losers) {
-                    // TODO escrow -> bank
-                    // TODO capture trains
-                    //game.addSub(CLOSE_CORP, "", s, 0, ""); // TODO details
+                    game.addSub(CLOSE_CORP, "", s, 0, "");
                 }
                 poolShares /= 2;
                 if (poolShares + issueCount > 20) poolShares = 20 - issueCount;
@@ -307,6 +303,40 @@ public class BankActions {
             game.getBoard().loansDone = false;
         }
     }
+
+
+
+    static class CloseCorp extends Action {
+        @Override public void checkAllowed(Move move, Game game) { }
+        @Override public void init(Move move, Game game) {
+            List<Holding> purge = new ArrayList<>();
+            for(Player p: game.getBoard().players) {
+                for(Stock s: p.shares) {
+                    if (s.corpName.equals(move.getCorp())) {
+                        purge.add(new Holding(p.name, s));
+                    }
+                }
+            }
+            for (Holding h: purge) {
+                int amount = h.share.isPrez ? -h.share.amount : h.share.amount;
+                game.addSub(PURGE_SHARES, h.playerName, h.share.corpName, amount, "");
+            }
+            Corp c = findCorp(move.getCorp(), game);
+            int refund = move.getAmount() > 0 ? c.cash : 0;
+            if (refund != 0 || c.escrow != 0) game.addSub(REPO_CASH, "", c.name, refund, ""+c.escrow);
+            int index = findCorpIndex(move.getCorp(), game);
+            game.addSub(RESORT_CORP, "", move.getCorp(), index, "");
+        }
+
+        @Override public void doAction(Move move, Game game) {
+            findCorp(move.getCorp(), game).closed = true;
+        }
+
+        @Override public void undoAction(Move move, Game game) {
+            findCorp(move.getCorp(), game).closed = false;
+        }
+    }
+
 
     static int calculatePar(List<String> losers, Game game) {
         if(losers.size() > 2) {

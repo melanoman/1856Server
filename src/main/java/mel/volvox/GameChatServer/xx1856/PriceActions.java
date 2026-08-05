@@ -13,10 +13,12 @@ public class PriceActions {
         undoMgr.registerActionType(PRICE_UP, new MoveUp());
         undoMgr.registerActionType(PRICE_DOWN, new MoveDown());
         undoMgr.registerActionType(RESORT_CORP, new ResortCorpAction());
-
+        undoMgr.registerActionType(REPO_CASH, new RepoAction());
     }
 
     static int compareCorpOrder(Corp c, Corp old) {
+        if (c.closed) return -1;
+        if (old.closed) return 1;
         if (c.par > 0 && old.par <= 0) return 1;
         if (c.par <=0 && old.par > 0) return -1;
         if (c.par <=0) return 0;
@@ -46,6 +48,19 @@ public class PriceActions {
             Corp c = findCorp(move.getCorp(), game);
             game.getBoard().corps.remove(c);
             game.getBoard().corps.add(move.getAmount(), c);
+        }
+    }
+
+    static class RepoAction extends Action {
+        @Override public void checkAllowed(Move move, Game game) { }
+        @Override public void init(Move move, Game game) { }
+        @Override public void doAction(Move move, Game game) {
+            game.getBank().debitCorp(move.getCorp(), move.getAmount());
+            game.getBank().debitEscrow(move.getCorp(), Integer.parseInt(move.getDetail()));
+        }
+        @Override public void undoAction(Move move, Game game) {
+            game.getBank().payCorp(move.getCorp(), move.getAmount());
+            game.getBank().payEscrow(move.getCorp(), Integer.parseInt(move.getDetail()));
         }
     }
 
