@@ -1,5 +1,6 @@
 package mel.volvox.GameChatServer.xx1856;
 
+import mel.volvox.GameChatServer.comm.train.StockPrice;
 import mel.volvox.GameChatServer.model.xx1856.Move;
 import mel.volvox.undo.UndoManager;
 
@@ -24,6 +25,8 @@ public class TrainActions {
         undoMgr.registerActionType(PLACE_PORT, new PlacePort());
         undoMgr.registerActionType(BUY_BRIDGE, new BuyBridge());
         undoMgr.registerActionType(BUY_TUNNEL, new BuyTunnel());
+        undoMgr.registerActionType(CGR_SHELL, new CgrPhaseI());
+        undoMgr.registerActionType(CGR_FILL, new CgrPhaseII());
     }
 
     static int getRustSize(int bankTrainCount) {
@@ -274,6 +277,57 @@ public class TrainActions {
             }
             updatePort(game, p);
         }
+    }
+
+    static class CgrPhaseI extends Action {
+        @Override public void checkAllowed(Move move, Game game) { }
+        @Override public void init(Move move, Game game) { }
+
+        @Override public void doAction(Move move, Game game) {
+            Corp cgr = new Corp("CGR", 10);
+            Player p = findPlayer(move.getPlayer(), game);
+            for (Stock s: p.shares) if("CGR".equals(s.corpName)) s.isPrez = true;
+            cgr.cash = Integer.parseInt(move.getCorp());
+            cgr.poolShares = move.getAmount();
+            cgr.bankShares = Integer.parseInt(move.getDetail());
+            game.getBoard().corps.add(cgr);
+        }
+
+        @Override public void undoAction(Move move, Game game) {
+            game.getBoard().corps.removeIf(x->x.name.equals("CGR"));
+        }
+    }
+
+    static class CgrPhaseII extends Action {
+        @Override public void checkAllowed(Move move, Game game) { }
+        @Override public void init(Move move, Game game) {
+            game.addSub(RESORT_CORP, "", "CGR", 0, "");
+        }
+
+        @Override public void doAction(Move move, Game game) {
+            Corp cgr = findCorp("CGR", game);
+            cgr.par = Integer.parseInt(move.getPlayer());
+            cgr.price = makeCGRPrice(cgr.par);
+            // TODO extract halfShare info from Corp field
+            cgr.hasOperated = move.getAmount()/4 % 2 == 1;
+            cgr.bridgeRights = move.getAmount()/2 % 2 == 1;
+            cgr.tunnelRights = move.getAmount() % 2 == 1;
+            // TODO extract trains
+            for (int i=0; i< move.getDetail().length(); i++) {
+                cgr.trains.add(parseTrain(move.getDetail().charAt(i)));
+            }
+        }
+
+        @Override public void undoAction(Move move, Game game) {
+        }
+    }
+
+    private static StockPrice makeCGRPrice(int par) {
+        return new StockPrice(par, 5, 0); //TODO figure out correct location
+    }
+
+    private static Integer parseTrain(char c) {
+        return c - '0';
     }
 
     private static int trainValue(String s) {

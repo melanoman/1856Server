@@ -21,6 +21,8 @@ public class StockActions {
         undoMgr.registerActionType(SET_PAR, new SetParAction());
         undoMgr.registerActionType(BANK_BUY, new BuyBankAction());
         undoMgr.registerActionType(POOL_BUY, new BuyPoolAction());
+        undoMgr.registerActionType(ADD_SHARES, new AddShareAction());
+        undoMgr.registerActionType(PURGE_SHARES, new PurgeShareAction());
         undoMgr.registerActionType(STOCK_SALE, new SaleAction());
         undoMgr.registerActionType(BLOCK_SALE, new BlockAction());
         undoMgr.registerActionType(CLEAR_BLOCK, new ClearBlock());
@@ -138,16 +140,40 @@ public class StockActions {
         }
     }
 
+    static class AddShareAction extends Action {
+        @Override public void checkAllowed(Move move, Game game) { }
+        @Override public void init(Move move, Game game) { }
+
+        @Override public void doAction(Move move, Game game) {
+            addSharesToPlayer(findPlayer(move.getPlayer(), game), move.getCorp(), move.getAmount());
+        }
+
+        @Override public void undoAction(Move move, Game game) {
+            subtractSharesFromPlayer(findPlayer(move.getPlayer(), game), move.getCorp(), move.getAmount());
+        }
+    }
+
+    static class PurgeShareAction extends Action {
+        @Override public void checkAllowed(Move move, Game game) { }
+        @Override public void init(Move move, Game game) { }
+
+        @Override public void doAction(Move move, Game game) {
+            subtractSharesFromPlayer(findPlayer(move.getPlayer(), game), move.getCorp(), move.getAmount());
+        }
+
+        @Override public void undoAction(Move move, Game game) {
+            addSharesToPlayer(findPlayer(move.getPlayer(), game), move.getCorp(), move.getAmount());
+        }
+    }
+
     static class BuyBankAction extends Action {
         @Override public void checkAllowed(Move move, Game game) { }
 
-        @Override
-        public void init(Move move, Game game) {
+        @Override public void init(Move move, Game game) {
             makePrezIf(move, game);
         }
 
-        @Override
-        public void doAction(Move move, Game game) {
+        @Override public void doAction(Move move, Game game) {
             Player p = findPlayer(move.getPlayer(), game);
             Corp c = findCorp(move.getCorp(), game);
             c.bankShares--;
@@ -161,8 +187,7 @@ public class StockActions {
             }
         }
 
-        @Override
-        public void undoAction(Move move, Game game) {
+        @Override public void undoAction(Move move, Game game) {
             Player p = findPlayer(move.getPlayer(), game);
             Corp c = findCorp(move.getCorp(), game);
             c.bankShares++;

@@ -4,6 +4,9 @@ import mel.volvox.GameChatServer.model.xx1856.Move;
 import mel.volvox.undo.UndoManager;
 
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static mel.volvox.GameChatServer.xx1856.OpActions.OP_POST;
 import static mel.volvox.GameChatServer.xx1856.Opcodes.*;
 
@@ -12,6 +15,7 @@ public class BankActions {
     public static String TRAIN = "train";
     public static String FORCED_SALE_ACTIVITY = "forceSale";
     public static String CALL_LOAN_ACTIVITY = "callLoan";
+    public static String FORM_CGR_ACTIVITY = "formCGR";
 
     public static void registerAll(UndoManager<Move, Game, Action> undoMgr) {
         undoMgr.registerActionType(PREZ_PAYS, new PrezPays());
@@ -21,6 +25,7 @@ public class BankActions {
         undoMgr.registerActionType(CALL_LOANS, new CallLoans());
         undoMgr.registerActionType(SAVE_CORP, new SaveCorp());
         undoMgr.registerActionType(ABANDON_CORP, new AbandonCorp());
+        undoMgr.registerActionType(FORM_CGR, new FormCGR());
     }
 
     static class PrezPays extends Action {
@@ -120,6 +125,7 @@ public class BankActions {
                 game.addSub(CHANGE_PLAYER, move.getPlayer(), "", 0, game.getBoard().currentPlayer);
             }
             Player p = findPlayer(move.getPlayer(), game);
+
             for (Stock s: p.shares) {
                 if(!s.isPrez) continue;
                 Corp c = findCorp(s.corpName, game);
@@ -134,7 +140,6 @@ public class BankActions {
                     }
                 }
                 if (p.cash < c.loans * 100) {
-                    System.out.println(p.name+" has $"+p.cash+" but "+c.name+" needs $"+(100*c.loans));
                     game.addSub(ABANDON_CORP, p.name, s.corpName, 0, move.getDetail());
                     continue;
                 }
@@ -143,7 +148,7 @@ public class BankActions {
             Player next = nextPlayer(p.name, game);
             while(noCGRWork(next, game)) {
                 if(next.name.equals(move.getPlayer())) {
-                    game.addSub(FORM_CGR, findPrez(game.getBoard().currentCorp, game).name, "", 0, "");
+                    game.addSub(FORM_CGR, findPrez(game.getBoard().currentCorp, game).name, "", 0, game.getBoard().activity);
                     return;
                 }
                 next = nextPlayer(next.name, game);
@@ -221,6 +226,94 @@ public class BankActions {
 
         @Override public void doAction(Move move, Game game) { }
         @Override public void undoAction(Move move, Game game) { }
+    }
+
+    static class FormCGR extends Action {
+        @Override public void checkAllowed(Move move, Game game) { }
+        @Override public void init(Move move, Game game) {
+            List<String> losers = new ArrayList<>();
+            for(Corp c: game.getBoard().corps) if(c.abandoned) losers.add(c.name);
+            if(losers.isEmpty()) {
+                throw new IllegalStateException("TODO ABORT CGR FORMATION / NEXT OP TURN");
+            } else  {
+                int issueCount = 0;
+                int poolShares = 0;
+                int prezShares = 0;
+                String prezName = "";
+                Player startPlayer = findPlayer(game.getBoard().currentPlayer, game);
+                Player currentPlayer = startPlayer;
+                do {
+                    List<Stock> purge = new ArrayList<>();
+                    int tradeShares = 0;
+                    for(Stock s: currentPlayer.shares) {
+                        if(losers.contains(s.corpName)) {
+                            tradeShares += s.amount;
+                            purge.add(s);
+                        }
+                    }
+                    for(Stock ss: purge) {
+                        game.addSub(PURGE_SHARES, currentPlayer.getName(), ss.corpName, ss.amount, "");
+                    }
+                    if (tradeShares % 2 == 1) poolShares++;
+                    tradeShares /= 2;
+                    if (tradeShares + issueCount > 20) tradeShares = 20 - issueCount;
+                    issueCount += tradeShares;
+                    if (tradeShares > 0) {
+                        game.addSub(ADD_SHARES, currentPlayer.getName(), "CGR", tradeShares, "");
+                    }
+                    if (tradeShares > prezShares) {
+                        prezShares = tradeShares;
+                        prezName = currentPlayer.name;
+                    }
+                    currentPlayer = nextPlayer(currentPlayer.name, game);
+                } while(currentPlayer != startPlayer);
+                int looseCash = 0;
+                boolean bridgeRights = false;
+                boolean tunnelRights = false;
+                boolean hasOperated = false;
+                StringBuilder cgrTrains = new StringBuilder(); // each char is a train
+                for(Corp c: game.getBoard().corps) if(losers.contains(c.name)) {
+                    poolShares += c.poolShares;
+                    looseCash += c.cash;
+                    if (c.bridgeRights) bridgeRights = true;
+                    if (c.tunnelRights) tunnelRights = true;
+                    if (c.hasOperated) hasOperated = true;
+                    for(Integer train: c.trains) cgrTrains.append(train);
+                }
+
+                int cgrPar = calculatePar(losers, game);
+                for(String s: losers) {
+                    // TODO escrow -> bank
+                    // TODO capture trains
+                    //game.addSub(CLOSE_CORP, "", s, 0, ""); // TODO details
+                }
+                poolShares /= 2;
+                if (poolShares + issueCount > 20) poolShares = 20 - issueCount;
+                if (poolShares < 0) poolShares = 0;
+                boolean halfShares = (poolShares + issueCount > 10);
+                int bankShares = (halfShares ? 20 : 10) - issueCount - poolShares;
+                game.addSub(CGR_SHELL, prezName, ""+looseCash, poolShares, ""+bankShares);
+                int rights = (hasOperated ? 4 : 0) + (bridgeRights ? 2: 0) + (tunnelRights ? 1 : 0);
+                game.addSub(CGR_FILL, ""+cgrPar, ""+halfShares, rights, cgrTrains.toString());
+                //game.addSub(ASK_CGR_TOKENS, "", "", 0, game.getBoard().activity);
+            }
+        }
+
+        @Override public void doAction(Move move, Game game) {
+            game.getBoard().loansDone = true;
+        }
+        @Override public void undoAction(Move move, Game game) {
+            game.getBoard().loansDone = false;
+        }
+    }
+
+    static int calculatePar(List<String> losers, Game game) {
+        if(losers.size() > 2) {
+            // TODO big calc
+        } else {
+            // TODO small calc
+        }
+        return 100;
     }
 
     static int heldShareCount(String corpName, Game game) {

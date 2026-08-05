@@ -72,6 +72,7 @@ public class Game implements UndoableGame<Move> {
         for(Corp c: board.corps) {
             corp2price.put(c.name, c.par < 65 ? 0 : c.price.getPrice() - 10*c.loans);
         }
+        corp2price.put("CGR", 100); //TODO HACK UNTIL CGR PAR IS CALCULATED
         for(Player p: board.players) {
             int wealth = p.cash;
             for(String priv:p.privs) {
