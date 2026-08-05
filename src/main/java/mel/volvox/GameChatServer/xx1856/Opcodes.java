@@ -59,6 +59,7 @@ public class Opcodes {
     public static final String REPO_CASH = "repoCash";
     public static final String ASK_CGR_TOKENS = "askCGRTokens";
     public static final String ANSWER_CGR_TOKENS = "setCGRTokens";
+    public static final String ASK_CGR_TRAINS = "askCGRTrainDrop";
 
     //OP ACTIONS
     public static final String START_OP_ROUND = "startOpRound";

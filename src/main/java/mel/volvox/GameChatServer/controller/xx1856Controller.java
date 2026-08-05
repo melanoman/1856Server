@@ -267,4 +267,10 @@ public class xx1856Controller {
                       @PathVariable String corp) {
         return findGame(game).addMove(ABANDON_CORP, player, corp, 0, "");
     }
+
+    @PutMapping("18xx/answerTokens/{game}/{count}")
+    @ResponseBody
+    Board answerTokens(@PathVariable String game, @PathVariable int count) {
+        return findGame(game).addMove(ANSWER_CGR_TOKENS, "", "", count, "");
+    }
 }

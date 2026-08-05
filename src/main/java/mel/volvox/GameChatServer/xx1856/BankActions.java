@@ -2,6 +2,7 @@ package mel.volvox.GameChatServer.xx1856;
 
 import mel.volvox.GameChatServer.model.xx1856.Move;
 import mel.volvox.undo.UndoManager;
+import org.apache.catalina.AccessLog;
 
 
 import java.util.ArrayList;
@@ -27,6 +28,8 @@ public class BankActions {
         undoMgr.registerActionType(ABANDON_CORP, new AbandonCorp());
         undoMgr.registerActionType(FORM_CGR, new FormCGR());
         undoMgr.registerActionType(CLOSE_CORP, new CloseCorp());
+        undoMgr.registerActionType(ASK_CGR_TOKENS, new AskTokens());
+        undoMgr.registerActionType(ANSWER_CGR_TOKENS, new AnswerTokens());
     }
 
     static class PrezPays extends Action {
@@ -292,7 +295,7 @@ public class BankActions {
                 game.addSub(CGR_SHELL, prezName, ""+looseCash, poolShares, ""+bankShares);
                 int rights = (hasOperated ? 4 : 0) + (bridgeRights ? 2: 0) + (tunnelRights ? 1 : 0);
                 game.addSub(CGR_FILL, ""+cgrPar, ""+halfShares, rights, cgrTrains.toString());
-                //game.addSub(ASK_CGR_TOKENS, "", "", 0, game.getBoard().activity);
+                game.addSub(ASK_CGR_TOKENS, "", "", 0, game.getBoard().activity);
             }
         }
 
@@ -304,7 +307,30 @@ public class BankActions {
         }
     }
 
+    static class AskTokens extends Action {
+        @Override public void checkAllowed(Move move, Game game) { }
+        @Override public void init(Move move, Game game) { }
+        @Override public void doAction(Move move, Game game) {
+            game.getBoard().activity = ASK_CGR_TOKENS;
+        }
 
+        @Override public void undoAction(Move move, Game game) {
+            game.getBoard().activity = move.getDetail();
+        }
+    }
+
+    static class AnswerTokens extends Action {
+        @Override public void checkAllowed(Move move, Game game) { }
+        @Override public void init(Move move, Game game) { }
+        @Override public void doAction(Move move, Game game) {
+            findCorp("CGR", game).tokensUsed = move.getAmount();
+            game.getBoard().activity = ASK_CGR_TRAINS;
+        }
+
+        @Override public void undoAction(Move move, Game game) {
+            game.getBoard().activity = ASK_CGR_TOKENS;
+        }
+    }
 
     static class CloseCorp extends Action {
         @Override public void checkAllowed(Move move, Game game) { }
