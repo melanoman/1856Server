@@ -1,6 +1,5 @@
 package mel.volvox.GameChatServer.xx1856;
 
-import jakarta.persistence.criteria.CriteriaBuilder;
 import mel.volvox.GameChatServer.model.xx1856.Move;
 import mel.volvox.undo.UndoManager;
 
@@ -357,10 +356,12 @@ public class BankActions {
 
         @Override public void doAction(Move move, Game game) {
             findCorp(move.getCorp(), game).closed = true;
+            game.resetPortfolioLimit();
         }
 
         @Override public void undoAction(Move move, Game game) {
             findCorp(move.getCorp(), game).closed = false;
+            game.resetPortfolioLimit();
         }
     }
 

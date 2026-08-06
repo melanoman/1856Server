@@ -292,10 +292,13 @@ public class TrainActions {
             cgr.poolShares = move.getAmount();
             cgr.bankShares = Integer.parseInt(move.getDetail());
             game.getBoard().corps.add(cgr);
+            game.resetPortfolioLimit();
+
         }
 
         @Override public void undoAction(Move move, Game game) {
             game.getBoard().corps.removeIf(x->x.name.equals("CGR"));
+            game.resetPortfolioLimit();
         }
     }
 
@@ -325,11 +328,11 @@ public class TrainActions {
 
     private static StockPrice makeCGRPrice(int par) {
         int x = switch(par) {
-            case 100->5;
-            case 110->6;
-            default->2+par/25;
+            case 100->4;
+            case 110->5;
+            default->1+par/25;
         };
-        return new StockPrice(par, x, 0); //TODO figure out correct location
+        return new StockPrice(par, x, 0);
     }
 
     private static Integer parseTrain(char c) {

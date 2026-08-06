@@ -115,10 +115,22 @@ public class Game implements UndoableGame<Move> {
     };
 
     public int portfolioLimit() {
-        if (board.trains.size() > 1) {
-            return EARLY_PORTFOLIO_LIMIT[board.players.size()-3];
-        } else {
-            return LATE_PORTFOLIO_LIMIT[board.corps.size()-4][board.players.size()-3];
+        return board.portfolioLimit;
+    }
+
+    public void resetPortfolioLimit() {
+        try {
+            if (board.loansDone) {
+                int count = 0;
+                for (Corp c : board.corps) {
+                    if (!c.abandoned && !c.closed) count++;
+                }
+                board.portfolioLimit = Game.LATE_PORTFOLIO_LIMIT[count-4][board.players.size() - 3];
+            } else {
+                board.portfolioLimit = Game.EARLY_PORTFOLIO_LIMIT[board.players.size() - 3];
+            }
+        } catch (ArrayIndexOutOfBoundsException e) {
+            board.portfolioLimit = 0; // ignore transient state issues
         }
     }
 }
