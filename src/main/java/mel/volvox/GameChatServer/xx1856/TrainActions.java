@@ -468,6 +468,9 @@ public class TrainActions {
             if(!c.trains.contains(move.getAmount())) {
                 throw new IllegalStateException("Train not found");
             }
+            if(move.getAmount() > 4 || move.getAmount() == 0) {
+                throw new IllegalStateException("You may not discard permanent trains at this time");
+            }
         }
 
         @Override public void init(Move move, Game game) {
