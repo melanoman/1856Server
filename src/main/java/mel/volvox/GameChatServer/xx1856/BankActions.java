@@ -391,12 +391,20 @@ public class BankActions {
     }
 
     static int calculatePar(List<String> losers, Game game) {
-        if(losers.size() > 2) {
-            // TODO big calc
-        } else {
-            // TODO small calc
+        int smallest = 999;
+        int total = 0;
+        int size = losers.size();
+        for(String name: losers) {
+            Corp c = Action.findCorp(name, game);
+            int thisPrice = c.price.getPrice();
+            total += thisPrice;
+            if (thisPrice < smallest) smallest = thisPrice;
         }
-        return 100;
+        int raw = (size > 2) ? (total-smallest)/(size-1) : total/size;
+        if (raw < 105) return 100;
+        if (raw < 117) return 110;
+        if (raw%25 >= 12) return (1 + raw/25)*25;
+        return raw/25*25;
     }
 
     static int heldShareCount(String corpName, Game game) {

@@ -324,7 +324,12 @@ public class TrainActions {
     }
 
     private static StockPrice makeCGRPrice(int par) {
-        return new StockPrice(par, 5, 0); //TODO figure out correct location
+        int x = switch(par) {
+            case 100->5;
+            case 110->6;
+            default->2+par/25;
+        };
+        return new StockPrice(par, x, 0); //TODO figure out correct location
     }
 
     private static Integer parseTrain(char c) {
