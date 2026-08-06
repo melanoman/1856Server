@@ -40,8 +40,7 @@ public class OpActions {
             game.addSub(CHANGE_ACTIVITY, OP_PRE, "", 0, game.getBoard().activity);
             Corp c = game.getBoard().corps.get(0);
             if (c.par < 65) {
-                // TODO NULL OP ROUND
-                throw new IllegalStateException("TODO OP ROUND WITH NO COMPANIES");
+                game.addSub(END_OP_ROUND, "", "", 0, "");
             } else {
                 game.addSub(CHANGE_CORP, "", game.getBoard().corps.get(0).name, 0, game.getBoard().currentCorp);
                 game.addSub(START_OP_TURN, "", game.getBoard().corps.get(0).name, 0, "");

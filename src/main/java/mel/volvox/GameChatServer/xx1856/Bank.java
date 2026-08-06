@@ -33,7 +33,6 @@ public class Bank {
     public void payPlayer(String player, int amount) {
         board.bank -= amount;
         findPlayer(player).cash += amount;
-        //TODO implement end-of-game trigger
     }
 
     public void payCorp(String corp, int amount) {
