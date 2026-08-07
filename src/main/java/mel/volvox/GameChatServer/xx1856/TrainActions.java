@@ -98,6 +98,9 @@ public class TrainActions {
             for(Corp c:game.getBoard().corps) for(Integer t:c.trains) {
                 if(t == rustSize) rustList.add(c);
             }
+            for(Corp c:rustList) {
+                game.addSub(RUST, "", c.name, rustSize, "");
+            }
             int poolCount = Collections.frequency(game.getBoard().pool, rustSize);
             for(int i=0; i< poolCount; i++) game.addSub(RUST, "", "", rustSize, "");
         }
@@ -389,6 +392,8 @@ public class TrainActions {
             cgr.cash = Integer.parseInt(move.getCorp());
             cgr.poolShares = move.getAmount();
             cgr.bankShares = Integer.parseInt(move.getDetail());
+            cgr.incrementallyFunded = false;
+            cgr.destinationSatisfied = true;
             game.getBoard().corps.add(cgr);
             game.resetPortfolioLimit();
 
@@ -410,6 +415,7 @@ public class TrainActions {
             cgr.par = Integer.parseInt(move.getPlayer());
             cgr.price = makeCGRPrice(cgr.par);
             // TODO extract halfShare info from Corp field
+            game.getBoard().halfShares = move.getAmount()/8 % 2 == 1;
             cgr.hasOperated = move.getAmount()/4 % 2 == 1;
             cgr.bridgeRights = move.getAmount()/2 % 2 == 1;
             cgr.tunnelRights = move.getAmount() % 2 == 1;
