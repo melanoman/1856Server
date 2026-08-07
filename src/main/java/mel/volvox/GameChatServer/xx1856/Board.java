@@ -39,4 +39,5 @@ public class Board {
     int tunnelTokens = 3;
     boolean loansDone = false;
     boolean loanerDiesel = true;
+    boolean halfShares = false;
 }

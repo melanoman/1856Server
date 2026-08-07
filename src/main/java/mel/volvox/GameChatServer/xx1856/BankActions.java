@@ -288,8 +288,8 @@ public class BankActions {
                 boolean halfShares = (poolShares + issueCount > 10);
                 int bankShares = (halfShares ? 20 : 10) - issueCount - poolShares;
                 game.addSub(CGR_SHELL, prezName, ""+looseCash, poolShares, ""+bankShares);
-                int rights = (hasOperated ? 4 : 0) + (bridgeRights ? 2: 0) + (tunnelRights ? 1 : 0);
-                game.addSub(CGR_FILL, ""+cgrPar, ""+halfShares, rights, cgrTrains.toString());
+                int flags = (halfShares ? 8 : 0) + (hasOperated ? 4 : 0) + (bridgeRights ? 2: 0) + (tunnelRights ? 1 : 0);
+                game.addSub(CGR_FILL, ""+cgrPar, "", flags, cgrTrains.toString());
                 game.addSub(ASK_CGR_TOKENS, "", "", 0, game.getBoard().activity);
             }
         }
