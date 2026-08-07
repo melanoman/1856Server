@@ -90,9 +90,7 @@ public class AuctionActions {
         }
     }
 
-    static class AwardBidAction extends Action {
-        @Override public void checkAllowed(Move move, Game game) { }
-
+    static class AwardBidAction extends Action.SubAction {
         @Override public void init(Move move, Game game) {
             makePrivAdvance(game);
         }
@@ -141,10 +139,7 @@ public class AuctionActions {
         return out;
     }
 
-    static class CancelBidAction extends Action {
-        @Override public void checkAllowed(Move move, Game game) { }
-        @Override public void init(Move move, Game game) { }
-
+    static class CancelBidAction extends Action.SubAction {
         @Override public void doAction(Move move, Game game) {
             game.getBank().payPlayer(move.getPlayer(), move.getAmount());
             game.getBoard().bids.removeIf(bid -> matchBid(bid, move.getCorp(), move.getPlayer(), move.getAmount()));
@@ -156,10 +151,7 @@ public class AuctionActions {
         }
     }
 
-    static class StartBidoffAction extends Action {
-        @Override public void checkAllowed(Move move, Game game) { }
-        @Override public void init(Move move, Game game) { }
-
+    static class StartBidoffAction extends Action.SubAction {
         @Override public void doAction(Move move, Game game) {
             game.getBoard().activity = BIDOFF_ACTIVITY;
         }
@@ -321,10 +313,7 @@ public class AuctionActions {
         game.addSub(AUCTION_PAYOUT, "", "", 0, "");
     }
 
-    static class PayoutAction extends Action {
-        @Override public void checkAllowed(Move move, Game game) { }
-        @Override public void init(Move move, Game game) { }
-
+    static class PayoutAction extends Action.SubAction {
         @Override public void doAction(Move move, Game game) {
             for (Player player: game.getBoard().getPlayers()) {
                 for (String priv: player.privs) {
@@ -344,10 +333,7 @@ public class AuctionActions {
         }
     }
 
-    static class EndAuctionAction extends Action {
-        @Override public void checkAllowed(Move move, Game game) { }
-        @Override public void init(Move move, Game game) { }
-
+    static class EndAuctionAction extends Action.SubAction {
         @Override public void doAction(Move move, Game game) {
             game.getBoard().phase = Game.Era.INITIAL.name();
             game.getBoard().currentCorp = "";

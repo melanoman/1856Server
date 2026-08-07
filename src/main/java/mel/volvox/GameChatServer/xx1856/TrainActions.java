@@ -5,6 +5,7 @@ import mel.volvox.GameChatServer.model.xx1856.Move;
 import mel.volvox.undo.UndoManager;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static mel.volvox.GameChatServer.xx1856.OpActions.OP_POST;
@@ -16,6 +17,7 @@ public class TrainActions {
 
     public static void registerAll(UndoManager<Move, Game, Action> undoMgr) {
         undoMgr.registerActionType(BUY_BANK_TRAIN, new BuyBankTrain());
+        undoMgr.registerActionType(BUY_BANK_DIESEL, new BuyBankDiesel());
         undoMgr.registerActionType(BUY_CORP_TRAIN, new BuyCorpTrain());
         undoMgr.registerActionType(BUY_POOL_TRAIN, new BuyPoolTrain());
         undoMgr.registerActionType(FORCED_TRAIN, new ForcedTrain());
@@ -24,6 +26,7 @@ public class TrainActions {
         undoMgr.registerActionType(BUY_PRIV, new BuyPriv());
         undoMgr.registerActionType(RUST_PRIV, new RustPriv());
         undoMgr.registerActionType(RUST_PORT, new RustPort());
+        undoMgr.registerActionType(RETIRE_LOANER, new RetireLoaner());
         undoMgr.registerActionType(PLACE_PORT, new PlacePort());
         undoMgr.registerActionType(BUY_BRIDGE, new BuyBridge());
         undoMgr.registerActionType(BUY_TUNNEL, new BuyTunnel());
@@ -91,11 +94,13 @@ public class TrainActions {
         int trainCount = game.getBoard().trains.size();
         List<Corp> rustList = new ArrayList<>();
         int rustSize = getRustSize(game.getBoard().trains.size());
-        if (rustSize > 0) for(Corp c:game.getBoard().corps) for(Integer t:c.trains) {
-            if(t == rustSize) rustList.add(c);
+        if (rustSize > 0) {
+            for(Corp c:game.getBoard().corps) for(Integer t:c.trains) {
+                if(t == rustSize) rustList.add(c);
+            }
+            int poolCount = Collections.frequency(game.getBoard().pool, rustSize);
+            for(int i=0; i< poolCount; i++) game.addSub(RUST, "", "", rustSize, "");
         }
-        for(Corp c: rustList) game.addSub(RUST, "", c.name, rustSize, "");
-
         if (trainCount == PRIV_RUST_SIZE) {
             List<String> nuke = new ArrayList<>();
             for(Player p:game.getBoard().players) for(String pp:p.privs) nuke.add(pp+":"+p.name);
@@ -126,9 +131,7 @@ public class TrainActions {
         }
     }
 
-    static class RustPort extends Action {
-        @Override public void checkAllowed(Move move, Game game) { }
-        @Override public void init(Move move, Game game) { }
+    static class RustPort extends Action.SubAction {
         @Override public void doAction(Move move, Game game) {
             findCorp(move.getCorp(), game).portRights = false;
         }
@@ -139,6 +142,15 @@ public class TrainActions {
 
     static final int trainLimit(String corp, int size) {
         return "CGR".equals(corp) ? 3 : TRAIN_LIMIT[size];
+    }
+
+    static class RetireLoaner extends Action.SubAction {
+        @Override public void doAction(Move move, Game game) {
+            game.getBoard().loanerDiesel = false;
+        }
+        @Override public void undoAction(Move move, Game game) {
+            game.getBoard().loanerDiesel = true;
+        }
     }
 
     static class BuyPoolTrain extends Action {
@@ -174,6 +186,52 @@ public class TrainActions {
         }
     }
 
+    static class BuyBankDiesel extends Action {
+        @Override public void checkAllowed(Move move, Game game) {
+            assertPhase(game, Game.Era.OP, "BuyBankDiesel");
+            assertCorpTurn(game, move.getCorp(), "BuyBankDiesel");
+            assertActivity(game, OP_POST, "BuyBankDiesel");
+            Board b = game.getBoard();
+            if(b.getTrains().size() > 1) {
+                throw new IllegalStateException("Diesel trains not for sale yet");
+            }
+            assertCorpFunds(game, move.getCorp(), TRAIN_PRICE[0], "BuyBankDiesel");
+            int limit = trainLimit(move.getCorp(), move.getAmount());
+            if(findCorp(move.getCorp(), game).trains.size() >= limit) {
+                throw new IllegalStateException("Too many trains");
+            }
+        }
+
+        @Override public void init(Move move, Game game) {
+            List<Corp> rustList = new ArrayList<>();
+            for(Corp c:game.getBoard().corps) for(Integer t:c.trains) {
+                if(t == 4) rustList.add(c);
+            }
+            for (Corp c:rustList) {
+                game.addSub(RUST, "", c.name, 4, "");
+            }
+            int poolCount = Collections.frequency(game.getBoard().pool, 4);
+            for(int i=0; i< poolCount; i++) game.addSub(RUST, "", "", 4, "");
+
+            if("CGR".equals(move.getCorp())) {
+                game.addSub(RETIRE_LOANER, "", "", 0, "");
+            }
+        }
+
+        @Override public void doAction(Move move, Game game) {
+            Corp c = findCorp(move.getCorp(), game);
+            c.trains.add(0);
+            game.getBank().debitCorp(c.name, TRAIN_PRICE[move.getAmount()]);
+        }
+
+        @Override public void undoAction(Move move, Game game) {
+            Corp c = findCorp(move.getCorp(), game);
+            c.trains.remove(Integer.valueOf(0));
+            game.getBank().payCorp(c.name, TRAIN_PRICE[move.getAmount()]);
+        }
+    }
+
+
     static class BuyBankTrain extends Action {
         @Override public void checkAllowed(Move move, Game game) {
             assertPhase(game, Game.Era.OP, "BuyBankTrain");
@@ -195,6 +253,11 @@ public class TrainActions {
 
         @Override public void init(Move move, Game game) {
             makeRustSubs(move, game);
+            if("CGR".equals(move.getCorp())) {
+                if(move.getAmount() > 4 || move.getAmount() == 0) {
+                    game.addSub(RETIRE_LOANER, "", "", 0, "");
+                }
+            }
         }
 
         @Override public void doAction(Move move, Game game) {
@@ -318,10 +381,7 @@ public class TrainActions {
         }
     }
 
-    static class CgrPhaseI extends Action {
-        @Override public void checkAllowed(Move move, Game game) { }
-        @Override public void init(Move move, Game game) { }
-
+    static class CgrPhaseI extends Action.SubAction {
         @Override public void doAction(Move move, Game game) {
             Corp cgr = new Corp("CGR", 10);
             Player p = findPlayer(move.getPlayer(), game);
@@ -340,8 +400,7 @@ public class TrainActions {
         }
     }
 
-    static class CgrPhaseII extends Action {
-        @Override public void checkAllowed(Move move, Game game) { }
+    static class CgrPhaseII extends Action.SubAction {
         @Override public void init(Move move, Game game) {
             game.addSub(RESORT_CORP, "", "CGR", 0, "");
         }
@@ -386,16 +445,21 @@ public class TrainActions {
         }
     }
 
-    static class RustAction extends Action {
-        @Override public void checkAllowed(Move move, Game game) { }
-        @Override public void init(Move move, Game game) { }
-
+    static class RustAction extends Action.SubAction {
         @Override public void doAction(Move move, Game game) {
-            findCorp(move.getCorp(), game).trains.remove(Integer.valueOf(move.getAmount()));
+            if (move.getCorp().isEmpty()) {
+                game.getBoard().pool.remove(Integer.valueOf(move.getAmount()));
+            } else {
+                findCorp(move.getCorp(), game).trains.remove(Integer.valueOf(move.getAmount()));
+            }
         }
 
         @Override public void undoAction(Move move, Game game) {
-            findCorp((move.getCorp()), game).trains.add(0, move.getAmount());
+            if (move.getCorp().isEmpty()) {
+                game.getBoard().pool.add(move.getAmount());
+            } else {
+                findCorp((move.getCorp()), game).trains.add(0, move.getAmount());
+            }
         }
     }
 
@@ -484,10 +548,7 @@ public class TrainActions {
         }
     }
 
-    static class RustPriv extends Action {
-        @Override public void checkAllowed(Move move, Game game) { }
-        @Override public void init(Move move, Game game) { }
-
+    static class RustPriv extends Action.SubAction {
         @Override public void doAction(Move move, Game game) {
             if(move.getPlayer().isEmpty()) {
                 findCorp(move.getCorp(), game).privs.remove(move.getDetail());

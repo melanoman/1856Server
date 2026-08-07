@@ -20,7 +20,6 @@ public class GatherActions {
 
     //player = name to add
     public static class AddPlayerAction extends Action {
-
         @Override
         public void checkAllowed(Move move, Game game) {
             assertPhase(game, Game.Era.GATHER, "AddPlayer");
@@ -47,7 +46,6 @@ public class GatherActions {
 
     // player = oldname detail = newName
     static class RenamePlayerAction extends Action {
-
         @Override
         public void checkAllowed(Move move, Game game) {
             assertPhase(game, Game.Era.GATHER, "RenamePlayer");
@@ -107,10 +105,7 @@ public class GatherActions {
         public void undoAction(Move move, Game game) { }
     }
 
-    static class ShuffleAction extends Action {
-        @Override public void checkAllowed(Move move, Game game) { }
-        @Override public void init(Move move, Game game) { }
-
+    static class ShuffleAction extends Action.SubAction {
         @Override
         public void doAction(Move move, Game game) {
             List<Player> newOrder = new ArrayList<>();

@@ -316,6 +316,13 @@ public abstract class Action implements UndoableAction<Move, Game> {
         @Override public void undoAction(Move move, Game game) { }
     }
 
+    public abstract static class SubAction extends Action {
+        @Override public final void checkAllowed(Move move, Game game) {
+            throw new IllegalStateException("SubAction cannot be MainAction");
+        }
+        @Override public void init(Move move, Game game) { }
+    }
+
     //TODO refactor this somewhere better
     public static final int YELLOW_ZONE = 50;
     public static final int BROWN_ZONE = 40;

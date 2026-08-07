@@ -87,6 +87,7 @@ public class Opcodes {
 
     //TRAIN ACTIONS
     public static final String BUY_BANK_TRAIN = "buyBankTrain";
+    public static final String BUY_BANK_DIESEL = "buyBankDiesel";
     public static final String BUY_CORP_TRAIN = "buyCorpTrain";
     public static final String BUY_POOL_TRAIN = "buyPoolTrain";
     public static final String FORCED_TRAIN = "forcedTrain";
@@ -95,6 +96,7 @@ public class Opcodes {
     public static final String RUST_PRIV = "rustPriv";
     public static final String RUST_PORT = "rustPort";
     public static final String FORM_CGR = "formCGR";
+    public static final String RETIRE_LOANER = "retireLoaner";
 
     //RESET ACTIONS
     public static final String RESET_TOKEN = "resetToken";

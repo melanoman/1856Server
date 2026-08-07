@@ -33,9 +33,7 @@ public class OpActions {
     }
 
     //detail == former phase amount = 0 for reset, 1 for continue
-    static class StartOpRound extends Action {
-        @Override public void checkAllowed(Move move, Game game) { }
-
+    static class StartOpRound extends Action.SubAction {
         @Override public void init(Move move, Game game) {
             game.addSub(CHANGE_ACTIVITY, OP_PRE, "", 0, game.getBoard().activity);
             Corp c = game.getBoard().corps.get(0);
@@ -58,9 +56,7 @@ public class OpActions {
         }
     }
 
-    static class EndOpRound extends Action {
-        @Override public void checkAllowed(Move move, Game game) { }
-
+    static class EndOpRound extends Action.SubAction {
         @Override public void init(Move move, Game game) {
             boolean maxEnd = false;
             for(Corp c: game.getBoard().corps) {
@@ -86,9 +82,7 @@ public class OpActions {
     }
 
     // detail = former currentCorp
-    static class StartOpTurn extends Action {
-        @Override public void checkAllowed(Move move, Game game) { }
-
+    static class StartOpTurn extends Action.SubAction {
         @Override public void init(Move move, Game game) {
             game.addSub(CHANGE_ACTIVITY, OP_PRE, "", 0, game.getBoard().activity);
             Corp c = findCorp(move.getCorp(), game);
@@ -113,7 +107,6 @@ public class OpActions {
     }
 
     static class LayTokenAction extends Action {
-
         @Override public void checkAllowed(Move move, Game game) {
             assertPhase(game, Game.Era.OP, "LayToken");
             assertCorpTurn(game, move.getCorp(), "LayToken");
@@ -148,7 +141,6 @@ public class OpActions {
     }
 
     static class DrillTileAction extends Action {
-
         @Override public void checkAllowed(Move move, Game game) {
             assertPhase(game, Game.Era.OP, "DrillTile");
             assertCorpTurn(game, move.getCorp(), "DrillTile");
@@ -168,10 +160,7 @@ public class OpActions {
         }
     }
 
-    static class ResetLoanAction extends Action {
-        @Override public void checkAllowed(Move move, Game game) { }
-        @Override public void init(Move move, Game game) { }
-
+    static class ResetLoanAction extends Action.SubAction {
         @Override public void doAction(Move move, Game game) {
             findCorp(move.getCorp(), game).loanTaken = false;
         }
@@ -181,10 +170,7 @@ public class OpActions {
         }
     }
 
-    static class ResetTokenAction extends Action {
-        @Override public void checkAllowed(Move move, Game game) { }
-        @Override public void init(Move move, Game game) { }
-
+    static class ResetTokenAction extends Action.SubAction {
         @Override public void doAction(Move move, Game game) {
             findCorp(move.getCorp(), game).tokenLaid = false;
         }
@@ -194,10 +180,7 @@ public class OpActions {
         }
     }
 
-    static class FloatAction extends Action {
-        @Override public void checkAllowed(Move move, Game game) { }
-        @Override public void init(Move move, Game game) { }
-
+    static class FloatAction extends Action.SubAction {
         @Override public void doAction(Move move, Game game) {
             findCorp(move.getCorp(), game).tokensUsed = 1;
         }
@@ -207,10 +190,7 @@ public class OpActions {
         }
     }
 
-    static class FailFloatAction extends Action {
-        @Override public void checkAllowed(Move move, Game game) { }
-        @Override public void init(Move move, Game game) { }
-
+    static class FailFloatAction extends Action.SubAction {
         @Override public void doAction(Move move, Game game) {
             findCorp(move.getCorp(), game).hasOperated = true;
         }
@@ -303,10 +283,7 @@ public class OpActions {
         }
     }
 
-    static class DisburseAction extends Action {
-        @Override public void checkAllowed(Move move, Game game) { }
-        @Override public void init(Move move, Game game) { }
-
+    static class DisburseAction extends Action.SubAction {
         @Override public void doAction(Move move, Game game) {
             for(Player p:game.getBoard().getPlayers()) {
                 for(Stock s:p.shares) {
@@ -331,10 +308,7 @@ public class OpActions {
         }
     }
 
-    static class PayInterestAction extends Action {
-        @Override public void checkAllowed(Move move, Game game) { }
-        @Override public void init(Move move, Game game) { }
-
+    static class PayInterestAction extends Action.SubAction {
         @Override public void doAction(Move move, Game game) {
             game.getBank().debitCorp(move.getCorp(), move.getAmount());
         }
@@ -367,10 +341,7 @@ public class OpActions {
         }
     }
 
-    static class ReleaseEscrow extends Action {
-        @Override public void checkAllowed(Move move, Game game) { }
-        @Override public void init(Move move, Game game) { }
-
+    static class ReleaseEscrow extends Action.SubAction {
         @Override public void doAction(Move move, Game game) {
             findCorp(move.getCorp(), game).cash += move.getAmount();
             findCorp(move.getCorp(), game).escrow -= move.getAmount();
@@ -382,10 +353,7 @@ public class OpActions {
         }
     }
 
-    static class ChangeRunAction extends Action {
-        @Override public void checkAllowed(Move move, Game game) { }
-        @Override public void init(Move move, Game game) { }
-
+    static class ChangeRunAction extends Action.SubAction {
         @Override public void doAction(Move move, Game game) {
             findCorp(move.getCorp(), game).lastRun = move.getAmount();
         }

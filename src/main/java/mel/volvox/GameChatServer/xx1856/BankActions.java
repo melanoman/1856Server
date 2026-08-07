@@ -32,9 +32,7 @@ public class BankActions {
         undoMgr.registerActionType(DONE_DROP, new DoneDrop());
     }
 
-    static class PrezPays extends Action {
-        @Override public void checkAllowed(Move move, Game game) { }
-
+    static class PrezPays extends Action.SubAction {
         @Override public void init(Move move, Game game) {
             Player p = findPlayer(move.getPlayer(), game);
             if(move.getDetail().equals(BankActions.TRAIN)) {
@@ -58,7 +56,6 @@ public class BankActions {
     }
 
     static class TakeLoanAction extends Action {
-
         @Override public void checkAllowed(Move move, Game game) {
             assertPhase(game, Game.Era.OP, "TakeLoan");
             assertCorpTurn(game, move.getCorp(), "TakeLoan");
@@ -122,8 +119,7 @@ public class BankActions {
         }
     }
 
-    static class CallLoans extends Action {
-        @Override public void checkAllowed(Move move, Game game) { }
+    static class CallLoans extends Action.SubAction {
         @Override public void init(Move move, Game game) {
             if (!game.getBoard().currentPlayer.equals(move.getPlayer())) {
                 game.addSub(CHANGE_PLAYER, move.getPlayer(), "", 0, game.getBoard().currentPlayer);
@@ -232,8 +228,7 @@ public class BankActions {
         @Override public void undoAction(Move move, Game game) { }
     }
 
-    static class FormCGR extends Action {
-        @Override public void checkAllowed(Move move, Game game) { }
+    static class FormCGR extends Action.SubAction {
         @Override public void init(Move move, Game game) {
             List<String> losers = new ArrayList<>();
             for(Corp c: game.getBoard().corps) if(c.abandoned) losers.add(c.name);
@@ -307,9 +302,7 @@ public class BankActions {
         }
     }
 
-    static class AskTokens extends Action {
-        @Override public void checkAllowed(Move move, Game game) { }
-        @Override public void init(Move move, Game game) { }
+    static class AskTokens extends Action.SubAction {
         @Override public void doAction(Move move, Game game) {
             game.getBoard().activity = ASK_CGR_TOKENS;
         }
@@ -320,7 +313,10 @@ public class BankActions {
     }
 
     static class AnswerTokens extends Action {
-        @Override public void checkAllowed(Move move, Game game) { }
+        @Override public void checkAllowed(Move move, Game game) {
+            assertPhase(game, Game.Era.OP, "AnswerTokens");
+            assertActivity(game, ASK_CGR_TOKENS, "AnswerTokens");
+        }
         @Override public void init(Move move, Game game) { }
         @Override public void doAction(Move move, Game game) {
             findCorp(CGR, game).tokensUsed = move.getAmount();
@@ -332,8 +328,7 @@ public class BankActions {
         }
     }
 
-    static class CloseCorp extends Action {
-        @Override public void checkAllowed(Move move, Game game) { }
+    static class CloseCorp extends Action.SubAction {
         @Override public void init(Move move, Game game) {
             List<Holding> purge = new ArrayList<>();
             for(Player p: game.getBoard().players) {
