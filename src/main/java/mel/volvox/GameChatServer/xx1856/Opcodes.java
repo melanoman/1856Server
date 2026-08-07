@@ -88,6 +88,7 @@ public class Opcodes {
     //TRAIN ACTIONS
     public static final String BUY_BANK_TRAIN = "buyBankTrain";
     public static final String BUY_CORP_TRAIN = "buyCorpTrain";
+    public static final String BUY_POOL_TRAIN = "buyPoolTrain";
     public static final String FORCED_TRAIN = "forcedTrain";
     public static final String BUY_PRIV = "buyPriv";
     public static final String RUST = "rust";

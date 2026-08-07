@@ -200,6 +200,13 @@ public class xx1856Controller {
         return findGame(game).addMove(BUY_CORP_TRAIN, ""+train, buyer, price, seller);
     }
 
+    @PutMapping("18xx/buyPoolTrain/{game}/{corp}/{train}")
+    @ResponseBody
+    Board buyPoolTrain(@PathVariable String game, @PathVariable String corp,
+                       @PathVariable int train) {
+        return findGame(game).addMove(BUY_POOL_TRAIN, "", corp, train, "");
+    }
+
     @PutMapping("18xx/forcedTrain/{game}/{corp}/{train}/{source}")
     @ResponseBody
     Board forceTrainPurchase(@PathVariable String game, @PathVariable String corp,

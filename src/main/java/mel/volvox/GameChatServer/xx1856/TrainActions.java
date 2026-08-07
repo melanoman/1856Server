@@ -17,6 +17,7 @@ public class TrainActions {
     public static void registerAll(UndoManager<Move, Game, Action> undoMgr) {
         undoMgr.registerActionType(BUY_BANK_TRAIN, new BuyBankTrain());
         undoMgr.registerActionType(BUY_CORP_TRAIN, new BuyCorpTrain());
+        undoMgr.registerActionType(BUY_POOL_TRAIN, new BuyPoolTrain());
         undoMgr.registerActionType(FORCED_TRAIN, new ForcedTrain());
         undoMgr.registerActionType(DROP_TRAIN, new DropTrain());
         undoMgr.registerActionType(RUST, new RustAction());
@@ -136,6 +137,43 @@ public class TrainActions {
         }
     }
 
+    static final int trainLimit(String corp, int size) {
+        return "CGR".equals(corp) ? 3 : TRAIN_LIMIT[size];
+    }
+
+    static class BuyPoolTrain extends Action {
+        @Override public void checkAllowed(Move move, Game game) {
+            assertPhase(game, Game.Era.OP, "BuyPoolTrain");
+            assertCorpTurn(game, move.getCorp(), "BuyPoolTrain");
+            assertActivity(game, OP_POST, "BuyPoolTrain");
+            Board b = game.getBoard();
+            if(!b.pool.contains(move.getAmount())) {
+                throw new IllegalStateException("No size "+move.getAmount()+" trains in pool");
+            }
+            assertCorpFunds(game, move.getCorp(), TRAIN_PRICE[move.getAmount()], "BuyPoolTrain");
+            int limit = trainLimit(move.getCorp(), move.getAmount());
+            if(findCorp(move.getCorp(), game).trains.size() >= limit) {
+                throw new IllegalStateException("Too many trains");
+            }
+        }
+
+        @Override public void init(Move move, Game game) { }
+
+        @Override public void doAction(Move move, Game game) {
+            Corp c = findCorp(move.getCorp(), game);
+            game.getBoard().pool.remove(Integer.valueOf(move.getAmount()));
+            c.trains.add(move.getAmount());
+            game.getBank().debitCorp(c.name, TRAIN_PRICE[move.getAmount()]);
+        }
+
+        @Override public void undoAction(Move move, Game game) {
+            Corp c = findCorp(move.getCorp(), game);
+            c.trains.remove(Integer.valueOf(move.getAmount()));
+            game.getBoard().pool.add(0, move.getAmount());
+            game.getBank().payCorp(c.name, TRAIN_PRICE[move.getAmount()]);
+        }
+    }
+
     static class BuyBankTrain extends Action {
         @Override public void checkAllowed(Move move, Game game) {
             assertPhase(game, Game.Era.OP, "BuyBankTrain");
@@ -149,7 +187,7 @@ public class TrainActions {
                 throw new IllegalStateException("Current bank train is "+b.trains.get(0)+" not "+move.getAmount());
             }
             assertCorpFunds(game, move.getCorp(), TRAIN_PRICE[move.getAmount()], "BuyBankTrain");
-            int limit = move.getCorp().equals("CGR") ? 3 : TRAIN_LIMIT[b.trains.size()]; //TODO put CGR in a constant
+            int limit = trainLimit(move.getCorp(), move.getAmount());
             if(findCorp(move.getCorp(), game).trains.size() >= limit) {
                 throw new IllegalStateException("Too many trains");
             }
@@ -161,15 +199,15 @@ public class TrainActions {
 
         @Override public void doAction(Move move, Game game) {
             Corp c = findCorp(move.getCorp(), game);
-            c.trains.add(move.getAmount());
             game.getBoard().trains.remove(0);
+            c.trains.add(move.getAmount());
             game.getBank().debitCorp(c.name, TRAIN_PRICE[move.getAmount()]);
         }
 
         @Override public void undoAction(Move move, Game game) {
             Corp c = findCorp(move.getCorp(), game);
+            c.trains.remove(Integer.valueOf(move.getAmount()));
             game.getBoard().trains.add(0, move.getAmount());
-            c.trains.remove((Integer) move.getAmount());
             game.getBank().payCorp(c.name, TRAIN_PRICE[move.getAmount()]);
         }
     }
