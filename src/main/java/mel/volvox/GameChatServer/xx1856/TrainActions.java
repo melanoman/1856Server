@@ -14,6 +14,7 @@ import static mel.volvox.GameChatServer.xx1856.Opcodes.*;
 public class TrainActions {
     public static String POOL = "POOL";
     public static String BANK = "BANK";
+    public static String CGR = "CGR";
 
     public static void registerAll(UndoManager<Move, Game, Action> undoMgr) {
         undoMgr.registerActionType(BUY_BANK_TRAIN, new BuyBankTrain());
@@ -54,12 +55,17 @@ public class TrainActions {
             }
             assertCorpFunds(game, move.getCorp(), move.getAmount(), "BuyCorpTrain");
             int train = trainValue(move.getPlayer());
-            // TODO enforce CGR at face value
+            if(move.getCorp().equals(CGR) || move.getDetail().equals(CGR)) {
+                int faceValue = TRAIN_PRICE[train];
+                if(move.getAmount() != faceValue) {
+                    throw new IllegalStateException("CGR may only buy and sell trains at face value");
+                }
+            }
             Corp seller = findCorp(move.getDetail(), game);
             if (!seller.trains.contains(train)) {
                 throw new IllegalStateException("Seller " + seller.name + " does not have train " + move.getPlayer());
             }
-            int limit = move.getCorp().equals("CGR") ? 3 : TRAIN_LIMIT[game.getBoard().trains.size()];
+            int limit = move.getCorp().equals(CGR) ? 3 : TRAIN_LIMIT[game.getBoard().trains.size()];
             if(findCorp(move.getCorp(), game).trains.size() >= limit) {
                 throw new IllegalStateException("Too many trains");
             }
@@ -144,7 +150,7 @@ public class TrainActions {
     }
 
     static final int trainLimit(String corp, int size) {
-        return "CGR".equals(corp) ? 3 : TRAIN_LIMIT[size];
+        return CGR.equals(corp) ? 3 : TRAIN_LIMIT[size];
     }
 
     static class RetireLoaner extends Action.SubAction {
@@ -216,7 +222,7 @@ public class TrainActions {
             int poolCount = Collections.frequency(game.getBoard().pool, 4);
             for(int i=0; i< poolCount; i++) game.addSub(RUST, "", "", 4, "");
 
-            if("CGR".equals(move.getCorp())) {
+            if(CGR.equals(move.getCorp())) {
                 game.addSub(RETIRE_LOANER, "", "", 0, "");
             }
         }
@@ -256,7 +262,7 @@ public class TrainActions {
 
         @Override public void init(Move move, Game game) {
             makeRustSubs(move, game);
-            if("CGR".equals(move.getCorp())) {
+            if(CGR.equals(move.getCorp())) {
                 if(move.getAmount() > 4 || move.getAmount() == 0) {
                     game.addSub(RETIRE_LOANER, "", "", 0, "");
                 }
@@ -386,9 +392,9 @@ public class TrainActions {
 
     static class CgrPhaseI extends Action.SubAction {
         @Override public void doAction(Move move, Game game) {
-            Corp cgr = new Corp("CGR", 10);
+            Corp cgr = new Corp(CGR, 10);
             Player p = findPlayer(move.getPlayer(), game);
-            for (Stock s: p.shares) if("CGR".equals(s.corpName)) s.isPrez = true;
+            for (Stock s: p.shares) if(CGR.equals(s.corpName)) s.isPrez = true;
             cgr.cash = Integer.parseInt(move.getCorp());
             cgr.poolShares = move.getAmount();
             cgr.bankShares = Integer.parseInt(move.getDetail());
@@ -400,18 +406,18 @@ public class TrainActions {
         }
 
         @Override public void undoAction(Move move, Game game) {
-            game.getBoard().corps.removeIf(x->x.name.equals("CGR"));
+            game.getBoard().corps.removeIf(x->x.name.equals(CGR));
             game.resetPortfolioLimit();
         }
     }
 
     static class CgrPhaseII extends Action.SubAction {
         @Override public void init(Move move, Game game) {
-            game.addSub(RESORT_CORP, "", "CGR", 0, "");
+            game.addSub(RESORT_CORP, "", CGR, 0, "");
         }
 
         @Override public void doAction(Move move, Game game) {
-            Corp cgr = findCorp("CGR", game);
+            Corp cgr = findCorp(CGR, game);
             cgr.par = Integer.parseInt(move.getPlayer());
             cgr.price = makeCGRPrice(cgr.par);
             // TODO extract halfShare info from Corp field
@@ -576,7 +582,7 @@ public class TrainActions {
         @Override public void checkAllowed(Move move, Game game) {
             assertPhase(game, Game.Era.OP, "DropTrain");
             assertActivity(game, ASK_CGR_TRAINS, "DropTrain");
-            if(!"CGR".equals(move.getCorp())) throw new IllegalStateException("TODO non-CGR drops");
+            if(!CGR.equals(move.getCorp())) throw new IllegalStateException("TODO non-CGR drops");
             Corp c = findCorp(move.getCorp(), game);
             if(!c.trains.contains(move.getAmount())) {
                 throw new IllegalStateException("Train not found");
