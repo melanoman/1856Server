@@ -6,6 +6,7 @@ import mel.volvox.undo.UndoableAction;
 
 import java.util.List;
 
+import static mel.volvox.GameChatServer.xx1856.BankActions.CGR;
 import static mel.volvox.GameChatServer.xx1856.Opcodes.*;
 
 public abstract class Action implements UndoableAction<Move, Game> {
@@ -340,5 +341,9 @@ public abstract class Action implements UndoableAction<Move, Game> {
         int count = p.privs.size();
         for (Stock s:p.shares) count += shareSize(game, s);
         p.port = count;
+    }
+
+    static boolean pinnedPrice(Corp c, Game game) {
+        return c.name.equals(CGR) && c.trains.isEmpty() && game.getBoard().loanerDiesel;
     }
 }

@@ -83,7 +83,9 @@ public class StockActions {
                 game.addSub(BLOCK_SALE, move.getPlayer(), move.getCorp(), 0, "");
             }
             int drop = Integer.parseInt(move.getDetail());
-            if (drop > 0) game.addSub(PRICE_DOWN, "", move.getCorp(), drop, "");
+            if (drop > 0 && !pinnedPrice(findCorp(move.getCorp(), game), game)) {
+                game.addSub(PRICE_DOWN, "", move.getCorp(), drop, "");
+            }
         }
 
         @Override public void doAction(Move move, Game game) {
@@ -242,7 +244,9 @@ public class StockActions {
             List<Corp> risers = new ArrayList<>();
             for(Corp c: game.getBoard().corps) {
                 if (c.bankShares<1 && c.poolShares<1 && c.par>0) { //sold out
-                    if (c.price.getY() > 0) risers.add(c);
+                    if (c.price.getY() > 0 && !pinnedPrice(findCorp(move.getCorp(), game), game)) {
+                        risers.add(c);
+                    }
                 }
             }
             boolean maxEnd = false;

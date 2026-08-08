@@ -299,6 +299,7 @@ public class BankActions {
         }
         @Override public void undoAction(Move move, Game game) {
             game.getBoard().loansDone = false;
+            game.getBoard().halfShares = false;
         }
     }
 

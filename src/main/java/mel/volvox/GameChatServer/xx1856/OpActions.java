@@ -3,6 +3,7 @@ package mel.volvox.GameChatServer.xx1856;
 import mel.volvox.GameChatServer.model.xx1856.Move;
 import mel.volvox.undo.UndoManager;
 
+import static mel.volvox.GameChatServer.xx1856.BankActions.CGR;
 import static mel.volvox.GameChatServer.xx1856.BankActions.heldShareCount;
 import static mel.volvox.GameChatServer.xx1856.Opcodes.*;
 
@@ -216,12 +217,13 @@ public class OpActions {
             if (c.cash < 0) {
                 game.addSub(PREZ_PAYS, findPrez(c.name, game).name, c.name, -c.cash, BankActions.INTEREST);
             }
-            if(c.price.leftEdge()) {
-                game.addSub(PRICE_DOWN, "", c.name, 1, "");
-            } else {
-                game.addSub(PRICE_LEFT, "", c.name, 1, "");
+            if(!pinnedPrice(c, game)) {
+                if (c.price.leftEdge()) {
+                    game.addSub(PRICE_DOWN, "", c.name, 1, "");
+                } else {
+                    game.addSub(PRICE_LEFT, "", c.name, 1, "");
+                }
             }
-            //TODO close company if drops past brown zone into death zone
         }
 
         @Override public void doAction(Move move, Game game) {
@@ -267,10 +269,12 @@ public class OpActions {
             if (due > move.getAmount()) throw new IllegalStateException("Must withhold: unpaid interest exceeds revenue");
             game.addSub(DISBURSE, "", move.getCorp(), (move.getAmount() - due) / 10, "");
 
-            if(c.price.rightEdge()) {
-                game.addSub(PRICE_UP, "", move.getCorp(), 1, "");
-            } else {
-                game.addSub(PRICE_RIGHT, "", move.getCorp(), 1, "");
+            if(!pinnedPrice(c, game)) {
+                if (c.price.rightEdge()) {
+                    game.addSub(PRICE_UP, "", move.getCorp(), 1, "");
+                } else {
+                    game.addSub(PRICE_RIGHT, "", move.getCorp(), 1, "");
+                }
             }
             game.addSub(CHANGE_RUN, "", c.name, move.getAmount(), ""+c.lastRun);
         }
