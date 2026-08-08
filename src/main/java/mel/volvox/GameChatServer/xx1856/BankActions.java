@@ -36,7 +36,7 @@ public class BankActions {
         @Override public void init(Move move, Game game) {
             Player p = findPlayer(move.getPlayer(), game);
             if(move.getDetail().equals(BankActions.TRAIN)) {
-                game.addSub(END_OP_TURN, "", move.getCorp(), 0, "");
+                game.addSub(END_OP_TURN, "", move.getCorp(), 0, game.getBoard().activity);
             } else if (move.getDetail().equals(BankActions.INTEREST)) {
                 if(p.cash < 0) game.addSub(BEGIN_FORCED_SALE, "", move.getCorp(), -p.cash, game.getBoard().activity);
             }
@@ -370,7 +370,7 @@ public class BankActions {
         }
 
         @Override public void init(Move move, Game game) {
-            game.addSub(END_OP_TURN, "", game.getBoard().currentCorp, 0, "");
+            game.addSub(END_OP_TURN, "", game.getBoard().currentCorp, 0, game.getBoard().activity);
         }
 
         @Override public void doAction(Move move, Game game) {

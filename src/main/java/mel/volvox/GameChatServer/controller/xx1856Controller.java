@@ -232,7 +232,8 @@ public class xx1856Controller {
     @PutMapping("18xx/endOpTurn/{game}/{corp}")
     @ResponseBody
     Board endOpTurn(@PathVariable String game, @PathVariable String corp) {
-        return findGame(game).addMove(END_OP_TURN, "", corp, 0, "");
+        Game g = findGame(game);
+        return g.addMove(END_OP_TURN, "", corp, 0, g.getBoard().getActivity());
     }
 
     @PutMapping("18xx/buyPriv/{game}/{corp}/{priv}/{player}/{price}")

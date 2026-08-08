@@ -91,7 +91,7 @@ public class OpActions {
                 if(10 - c.bankShares >= game.floatLevel()) {
                     game.addSub(FLOAT, "", move.getCorp(), 0, "");
                 } else {
-                    game.addSub(END_OP_TURN, "", move.getCorp(), 0, "");
+                    game.addSub(END_OP_TURN, "", move.getCorp(), 0, game.getBoard().activity);
                 }
             }
             game.addSub(RESET_TOKEN, "", move.getCorp(), c.tokenLaid?1:0, "");
@@ -385,7 +385,7 @@ public class OpActions {
         }
 
         @Override public void init(Move move, Game game) {
-            game.addSub(END_OP_TURN, "", move.getCorp(), 0, "");
+            game.addSub(END_OP_TURN, "", move.getCorp(), 0, game.getBoard().activity);
         }
 
         @Override public void doAction(Move move, Game game) { }
@@ -430,6 +430,7 @@ public class OpActions {
 
         @Override public void undoAction(Move move, Game game) {
             findCorp(move.getCorp(), game).hasOperated = false;
+            game.getBoard().activity = move.getDetail();
         }
     }
 }
