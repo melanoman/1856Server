@@ -19,6 +19,7 @@ public class TrainActions {
     public static void registerAll(UndoManager<Move, Game, Action> undoMgr) {
         undoMgr.registerActionType(BUY_BANK_TRAIN, new BuyBankTrain());
         undoMgr.registerActionType(BUY_BANK_DIESEL, new BuyBankDiesel());
+        undoMgr.registerActionType(TRADE_IN_TRAIN, new TradeInDiesel());
         undoMgr.registerActionType(BUY_CORP_TRAIN, new BuyCorpTrain());
         undoMgr.registerActionType(BUY_POOL_TRAIN, new BuyPoolTrain());
         undoMgr.registerActionType(FORCED_TRAIN, new ForcedTrain());
@@ -93,6 +94,49 @@ public class TrainActions {
             buyer.cash += price;
             buyer.trains.remove(train);
             seller.trains.add(train);
+        }
+    }
+
+    static void makeRustFours(Game game) {
+        List<Corp> rustList = new ArrayList<>();
+        for(Corp c:game.getBoard().corps) for(Integer t:c.trains) {
+            if(t == 4) rustList.add(c);
+        }
+        for(Corp c:rustList) {
+            game.addSub(RUST, "", c.name, 4, "");
+        }
+        int poolCount = Collections.frequency(game.getBoard().pool, 4);
+        for(int i=0; i< poolCount; i++) game.addSub(RUST, "", "", 4, "");
+    }
+
+    // amount == trainSize of trade-in
+    static class TradeInDiesel extends Action {
+        @Override public void checkAllowed(Move move, Game game) {
+            assertPhase(game, Game.Era.OP, "TradeInDiesel");
+            assertActivity(game, OP_POST, "TradeInDiesel");
+            assertCorpFunds(game, move.getCorp(), 750, "TradeInDiesel");
+            Corp c = findCorp(move.getCorp(), game);
+            if(!c.trains.contains(move.getAmount())) {
+                throw new IllegalStateException("Trade-in not found");
+            }
+        }
+
+        @Override public void init(Move move, Game game) {
+            makeRustFours(game);
+        }
+
+        @Override public void doAction(Move move, Game game) {
+            Corp c = findCorp(move.getCorp(), game);
+            c.trains.remove(Integer.valueOf(move.getAmount()));
+            c.trains.add(0);
+            game.getBank().debitCorp(move.getCorp(), 750);
+        }
+
+        @Override public void undoAction(Move move, Game game) {
+            Corp c = findCorp(move.getCorp(), game);
+            c.trains.remove(Integer.valueOf(0));
+            c.trains.add(move.getAmount());
+            game.getBank().payCorp(move.getCorp(), 750);
         }
     }
 
@@ -212,16 +256,7 @@ public class TrainActions {
         }
 
         @Override public void init(Move move, Game game) {
-            List<Corp> rustList = new ArrayList<>();
-            for(Corp c:game.getBoard().corps) for(Integer t:c.trains) {
-                if(t == 4) rustList.add(c);
-            }
-            for (Corp c:rustList) {
-                game.addSub(RUST, "", c.name, 4, "");
-            }
-            int poolCount = Collections.frequency(game.getBoard().pool, 4);
-            for(int i=0; i< poolCount; i++) game.addSub(RUST, "", "", 4, "");
-
+            makeRustFours(game);
             if(CGR.equals(move.getCorp())) {
                 game.addSub(RETIRE_LOANER, "", "", 0, "");
             }
