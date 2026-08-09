@@ -20,6 +20,7 @@ public class OpActions {
         undoMgr.registerActionType(END_OP_TURN, new EndOpTurn());
         undoMgr.registerActionType(NO_ROUTE, new NoRoute());
         undoMgr.registerActionType(LAY_TOKEN, new LayTokenAction());
+        undoMgr.registerActionType(WS_TOKEN, new PlaceWSToken());
         undoMgr.registerActionType(DRILL_TILE, new DrillTileAction());
         undoMgr.registerActionType(WITHHOLD, new WithholdAction());
         undoMgr.registerActionType(CHANGE_RUN, new ChangeRunAction());
@@ -112,13 +113,13 @@ public class OpActions {
             assertPhase(game, Game.Era.OP, "LayToken");
             assertCorpTurn(game, move.getCorp(), "LayToken");
             assertActivity(game, OP_PRE, "LayToken");
-            assertCorpFunds(game, move.getCorp(), 40, "LayToken");
             Corp c = findCorp(move.getCorp(), game);
+            assertCorpFunds(game, move.getCorp(), (c.tokensUsed == 1) ? 40 : 100, "LayToken");
             if(c.tokensUsed >= c.tokensMax) {
                 throw new IllegalStateException("No tokens available");
             }
             if(c.tokenLaid) {
-                throw new IllegalStateException("One paid token per turn");
+                throw new IllegalStateException("One station token per turn");
             }
         }
 
@@ -138,6 +139,42 @@ public class OpActions {
             int price = (c.tokensUsed < 2) ? 40 : 100;
             game.getBank().payCorp(c.name, price);
             c.tokenLaid = false;
+        }
+    }
+
+    static class PlaceWSToken extends Action {
+        @Override
+        public void checkAllowed(Move move, Game game) {
+            assertPhase(game, Game.Era.OP, "PlaceWSToken");
+            assertCorpTurn(game, move.getCorp(), "PlaceWSToken");
+            assertActivity(game, OP_PRE, "PlaceWSToken");
+            Corp c = findCorp(move.getCorp(), game);
+            if (c.tokensUsed >= c.tokensMax) {
+                throw new IllegalStateException("No station tokens available");
+            }
+            if (c.tokenLaid) {
+                throw new IllegalStateException("One station token per turn");
+            }
+        }
+
+        @Override
+        public void init(Move move, Game game) {
+        }
+
+        @Override
+        public void doAction(Move move, Game game) {
+            Corp c = findCorp(move.getCorp(), game);
+            c.tokensUsed++;
+            c.tokenLaid = true;
+            c.privs.remove("WS");
+        }
+
+        @Override
+        public void undoAction(Move move, Game game) {
+            Corp c = findCorp(move.getCorp(), game);
+            c.tokensUsed--;
+            c.tokenLaid = false;
+            c.privs.add(0, "WS");
         }
     }
 

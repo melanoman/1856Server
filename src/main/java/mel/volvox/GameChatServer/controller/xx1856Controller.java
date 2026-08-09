@@ -159,6 +159,12 @@ public class xx1856Controller {
         return findGame(game).addMove(LAY_TOKEN, "", corp, 0, "");
     }
 
+    @PutMapping("18xx/placeWStoken/{game}/{corp}")
+    @ResponseBody
+    Board wsToken(@PathVariable String game, @PathVariable String corp) {
+        return findGame(game).addMove(WS_TOKEN, "", corp, 0, "");
+    }
+
     @PutMapping("18xx/drillTile/{game}/{corp}")
     @ResponseBody
     Board drillTile(@PathVariable String game, @PathVariable String corp) {
