@@ -66,7 +66,7 @@ public class TrainActions {
             if (!seller.trains.contains(train)) {
                 throw new IllegalStateException("Seller " + seller.name + " does not have train " + move.getPlayer());
             }
-            int limit = move.getCorp().equals(CGR) ? 3 : TRAIN_LIMIT[game.getBoard().trains.size()];
+            int limit = trainLimit(move.getCorp(), game.getBoard().trains.size());
             if(findCorp(move.getCorp(), game).trains.size() >= limit) {
                 throw new IllegalStateException("Too many trains");
             }
@@ -193,8 +193,8 @@ public class TrainActions {
         }
     }
 
-    static final int trainLimit(String corp, int size) {
-        return CGR.equals(corp) ? 3 : TRAIN_LIMIT[size];
+    static final int trainLimit(String corp, int bankTrainCount) {
+        return CGR.equals(corp) ? 3 : TRAIN_LIMIT[bankTrainCount];
     }
 
     static class RetireLoaner extends Action.SubAction {
@@ -216,7 +216,7 @@ public class TrainActions {
                 throw new IllegalStateException("No size "+move.getAmount()+" trains in pool");
             }
             assertCorpFunds(game, move.getCorp(), TRAIN_PRICE[move.getAmount()], "BuyPoolTrain");
-            int limit = trainLimit(move.getCorp(), move.getAmount());
+            int limit = trainLimit(move.getCorp(), game.getBoard().trains.size());
             if(findCorp(move.getCorp(), game).trains.size() >= limit) {
                 throw new IllegalStateException("Too many trains");
             }
@@ -249,7 +249,7 @@ public class TrainActions {
                 throw new IllegalStateException("Diesel trains not for sale yet");
             }
             assertCorpFunds(game, move.getCorp(), TRAIN_PRICE[0], "BuyBankDiesel");
-            int limit = trainLimit(move.getCorp(), move.getAmount());
+            int limit = trainLimit(move.getCorp(), game.getBoard().trains.size());
             if(findCorp(move.getCorp(), game).trains.size() >= limit) {
                 throw new IllegalStateException("Too many trains");
             }
@@ -289,7 +289,7 @@ public class TrainActions {
                 throw new IllegalStateException("Current bank train is "+b.trains.get(0)+" not "+move.getAmount());
             }
             assertCorpFunds(game, move.getCorp(), TRAIN_PRICE[move.getAmount()], "BuyBankTrain");
-            int limit = trainLimit(move.getCorp(), move.getAmount());
+            int limit = trainLimit(move.getCorp(), game.getBoard().trains.size());
             if(findCorp(move.getCorp(), game).trains.size() >= limit) {
                 throw new IllegalStateException("Too many trains");
             }
