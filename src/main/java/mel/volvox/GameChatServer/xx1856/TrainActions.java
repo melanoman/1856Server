@@ -193,7 +193,7 @@ public class TrainActions {
         }
     }
 
-    static final int trainLimit(String corp, int bankTrainCount) {
+    static int trainLimit(String corp, int bankTrainCount) {
         return CGR.equals(corp) ? 3 : TRAIN_LIMIT[bankTrainCount];
     }
 
