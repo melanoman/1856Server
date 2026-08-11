@@ -106,9 +106,56 @@ public class BankActions {
         }
     }
 
+    static int keepPrezLimit(Stock s, Game game) {
+        if(!s.isPrez) return s.amount;
+        int floor = 2;
+        for(Player p:game.getBoard().players) {
+            for (Stock ss:p.shares) if(s.corpName.equals(ss.corpName)) {
+                if(s == ss) continue;
+                if(ss.amount > floor) floor = ss.amount;
+            }
+        }
+        return s.amount - floor;
+    }
+
+    static boolean soloTwo(Stock s, Game game) {
+        for(Player p:game.getBoard().players) {
+            for (Stock ss:p.shares) if(s.corpName.equals(ss.corpName)) {
+                if(s == ss) continue;
+                if(ss.amount >= 2) return false;
+            }
+        }
+        return true;
+    }
+
+    static int bestSale(Stock s, boolean restricted, Game game) {
+        Corp c = Action.findCorp(s.corpName, game);
+        int limit = Math.min(s.amount, 5-c.poolShares);
+        if (restricted) {
+            limit = Math.min(limit, keepPrezLimit(s, game));
+        } else if(s.isPrez && soloTwo(s, game)) {
+            limit = Math.min(limit, s.amount - 2);
+        }
+        return limit * c.price.getPrice();
+    }
+
+    static int bestForcedSale(Player p, Move move, Game game) {
+        int out = 0;
+        for(Stock s:p.shares) {
+            boolean restricted = s.corpName.equals(move.getCorp());
+            out += bestSale(s, restricted, game);
+        }
+        return out;
+    }
+
     static class BeginForcedSale extends Action {
         @Override public void checkAllowed(Move move, Game game) { }
-        @Override public void init(Move move, Game game) { }
+        @Override public void init(Move move, Game game) {
+            Player p = findPlayer(move.getPlayer(), game);
+            if(bestForcedSale(p, move, game) < -p.cash) {
+                game.addSub(GAME_OVER, "", "", 0, Game.Era.OP.name());
+            }
+        }
 
         @Override public void doAction(Move move, Game game) {
             game.getBoard().activity = FORCED_SALE_ACTIVITY;
