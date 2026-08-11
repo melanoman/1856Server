@@ -445,9 +445,9 @@ public class OpActions {
             int limit = heldShareCount(move.getCorp(), game);
             if (c.loans > limit) {
                 game.addSub(REPAY_LOAN, "", move.getCorp(), c.loans - limit, "");
-                if (c.cash < 0) {
-                    game.addSub(PREZ_PAYS, p.name, c.name, -c.cash, "");
-                }
+            }
+            if (c.cash < 0) {
+                game.addSub(PREZ_PAYS, p.name, c.name, -c.cash, "");
             }
             if (p.cash < 0) {
                 game.addSub(BEGIN_FORCED_SALE, p.name, move.getCorp(), -p.cash, game.getBoard().activity);
