@@ -455,12 +455,10 @@ public class TrainActions {
             Corp cgr = findCorp(CGR, game);
             cgr.par = Integer.parseInt(move.getPlayer());
             cgr.price = makeCGRPrice(cgr.par);
-            // TODO extract halfShare info from Corp field
             game.getBoard().halfShares = move.getAmount()/8 % 2 == 1;
             cgr.hasOperated = move.getAmount()/4 % 2 == 1;
             cgr.bridgeRights = move.getAmount()/2 % 2 == 1;
             cgr.tunnelRights = move.getAmount() % 2 == 1;
-            // TODO extract trains
             for (int i=0; i< move.getDetail().length(); i++) {
                 cgr.trains.add(parseTrain(move.getDetail().charAt(i)));
             }
