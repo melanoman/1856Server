@@ -1,5 +1,6 @@
 package mel.volvox.GameChatServer.xx1856;
 
+import mel.volvox.GameChatServer.comm.train.StockSale;
 import mel.volvox.GameChatServer.model.xx1856.Move;
 import mel.volvox.undo.UndoManager;
 
@@ -22,6 +23,7 @@ public class BankActions {
         undoMgr.registerActionType(TAKE_LOAN, new TakeLoanAction());
         undoMgr.registerActionType(REPAY_LOAN, new RepayLoanAction());
         undoMgr.registerActionType(BEGIN_FORCED_SALE, new BeginForcedSale());
+        undoMgr.registerActionType(BANKRUPTCY_SALE, new FireSale());
         undoMgr.registerActionType(CALL_LOANS, new CallLoans());
         undoMgr.registerActionType(SAVE_CORP, new SaveCorp());
         undoMgr.registerActionType(ABANDON_CORP, new AbandonCorp());
@@ -128,7 +130,7 @@ public class BankActions {
         return true;
     }
 
-    static int bestSale(Stock s, boolean restricted, Game game) {
+    static int bestSale(Stock s, boolean restricted, boolean price, Game game) {
         Corp c = Action.findCorp(s.corpName, game);
         int limit = Math.min(s.amount, 5-c.poolShares);
         if (restricted) {
@@ -136,23 +138,43 @@ public class BankActions {
         } else if(s.isPrez && soloTwo(s, game)) {
             limit = Math.min(limit, s.amount - 2);
         }
-        return limit * c.price.getPrice();
+        return price ? limit * c.price.getPrice() : limit;
     }
 
+    static final boolean PRICE_STYLE = true;
+    static final boolean SHARE_STYLE = false;
     static int bestForcedSale(Player p, Move move, Game game) {
         int out = 0;
         for(Stock s:p.shares) {
             boolean restricted = s.corpName.equals(move.getCorp());
-            out += bestSale(s, restricted, game);
+            out += bestSale(s, restricted, PRICE_STYLE, game);
         }
         return out;
     }
 
-    static class BeginForcedSale extends Action {
-        @Override public void checkAllowed(Move move, Game game) { }
+    static class FireSale extends Action.SubAction {
+        @Override public void init(Move move, Game game) {
+            Player p = findPlayer(move.getPlayer(), game);
+            List<Stock> sales = new ArrayList<>();
+            for(Stock s: p.shares) {
+                boolean restricted = s.corpName.equals(move.getCorp());
+                int shareCount = bestSale(s, restricted, SHARE_STYLE, game);
+                if(shareCount > 0) sales.add(new Stock(s.corpName, shareCount, s.isPrez));
+            }
+            for(Stock sale:sales) {
+                StockActions.makeSaleSub(game, p.name, sale);
+            }
+        }
+
+        @Override public void doAction(Move move, Game game) { }
+        @Override public void undoAction(Move move, Game game) { }
+    }
+
+    static class BeginForcedSale extends Action.SubAction {
         @Override public void init(Move move, Game game) {
             Player p = findPlayer(move.getPlayer(), game);
             if(bestForcedSale(p, move, game) < -p.cash) {
+                game.addSub(BANKRUPTCY_SALE, move.getPlayer(), move.getCorp(), 0, "");
                 game.addSub(GAME_OVER, "", "", 0, Game.Era.OP.name());
             }
         }

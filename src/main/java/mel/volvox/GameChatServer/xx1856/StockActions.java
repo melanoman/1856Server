@@ -398,7 +398,7 @@ public class StockActions {
         }
     }
 
-    private static void makeSaleSub(Game game, String playerName, Stock sale) {
+    static void makeSaleSub(Game game, String playerName, Stock sale) {
         Corp c = findCorp(sale.corpName, game);
         game.addSub(STOCK_SALE, playerName, sale.corpName, sale.amount, ""+previewDrop(sale, game));
     }

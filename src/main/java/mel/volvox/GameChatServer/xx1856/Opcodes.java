@@ -109,4 +109,5 @@ public class Opcodes {
     public static final String CALL_LOANS = "callLoans";
     public static final String SAVE_CORP =  "saveCorp";
     public static final String ABANDON_CORP = "abandonCorp";
+    public static final String BANKRUPTCY_SALE = "swanDiveSale";
 }
