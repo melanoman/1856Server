@@ -75,6 +75,13 @@ public class StockActions {
         }
     }
 
+    static int countPlayerShares(Player p, String corpName) {
+        for(Stock s: p.shares) if (s.corpName.equals(corpName)) {
+            return s.amount;
+        }
+        return 0;
+    }
+
     static class SaleAction extends Action {
         @Override public void checkAllowed(Move move, Game game) { }
         @Override public void init(Move move, Game game) {
@@ -85,6 +92,18 @@ public class StockActions {
             int drop = Integer.parseInt(move.getDetail());
             if (drop > 0 && !pinnedPrice(findCorp(move.getCorp(), game), game)) {
                 game.addSub(PRICE_DOWN, "", move.getCorp(), drop, "");
+            }
+            int max = countPlayerShares(p, move.getCorp());
+            Player prez = p;
+            for(Player pp = nextPlayer(p.name, game); p != pp; pp = nextPlayer(pp.name, game)) {
+                int other = countPlayerShares(pp, move.getCorp());
+                if(other > max) {
+                    max = other;
+                    prez = pp;
+                }
+            }
+            if (prez != p) {
+                game.addSub(CHANGE_PREZ, prez.name, move.getCorp(), 0, p.name);
             }
         }
 
@@ -244,7 +263,7 @@ public class StockActions {
             List<Corp> risers = new ArrayList<>();
             for(Corp c: game.getBoard().corps) {
                 if (c.bankShares<1 && c.poolShares<1 && c.par>0) { //sold out
-                    if (c.price.getY() > 0 && !pinnedPrice(findCorp(move.getCorp(), game), game)) {
+                    if (c.price.getY() > 0 && !pinnedPrice(c, game)) {
                         risers.add(c);
                     }
                 }
