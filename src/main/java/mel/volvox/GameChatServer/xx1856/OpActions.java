@@ -3,7 +3,6 @@ package mel.volvox.GameChatServer.xx1856;
 import mel.volvox.GameChatServer.model.xx1856.Move;
 import mel.volvox.undo.UndoManager;
 
-import static mel.volvox.GameChatServer.xx1856.BankActions.CGR;
 import static mel.volvox.GameChatServer.xx1856.BankActions.heldShareCount;
 import static mel.volvox.GameChatServer.xx1856.Opcodes.*;
 
@@ -441,10 +440,15 @@ public class OpActions {
         }
 
         @Override public void init(Move move, Game game) {
-            if (findCorp(move.getCorp(), game).loans > heldShareCount(move.getCorp(), game)) {
-                throw new IllegalStateException("TODO forced loan redemption");
-            }
+            Corp c = findCorp(move.getCorp(), game);
             Player p = findPrez(move.getCorp(), game);
+            int limit = heldShareCount(move.getCorp(), game);
+            if (c.loans > limit) {
+                game.addSub(REPAY_LOAN, "", move.getCorp(), c.loans - limit, "");
+                if (c.cash < 0) {
+                    game.addSub(PREZ_PAYS, p.name, c.name, -c.cash, "");
+                }
+            }
             if (p.cash < 0) {
                 game.addSub(BEGIN_FORCED_SALE, p.name, move.getCorp(), -p.cash, game.getBoard().activity);
                 return;
@@ -453,11 +457,11 @@ public class OpActions {
                 game.addSub(CALL_LOANS, findPrez(move.getCorp(), game).name, "", 0, game.getBoard().activity);
                 return;
             }
-            Corp c = game.nextCorp();
-            if (c == null) {
+            Corp cc = game.nextCorp();
+            if (cc == null) {
                 game.addSub(END_OP_ROUND, "", "", 0, "");
             } else {
-                game.addSub(START_OP_TURN, "", c.name, 0, game.getBoard().currentCorp);
+                game.addSub(START_OP_TURN, "", cc.name, 0, game.getBoard().currentCorp);
             }
         }
 
