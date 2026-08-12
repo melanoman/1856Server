@@ -85,7 +85,9 @@ public class StockActions {
     static class SaleAction extends Action {
         @Override public void checkAllowed(Move move, Game game) { }
         @Override public void init(Move move, Game game) {
+            Player oldPrez = findPrez(move.getCorp(), game);
             Player p = findPlayer(move.getPlayer(), game);
+            boolean checkPrez = oldPrez == p;
             if(!p.blocks.contains(move.getCorp())) {
                 game.addSub(BLOCK_SALE, move.getPlayer(), move.getCorp(), 0, "");
             }
@@ -94,16 +96,18 @@ public class StockActions {
                 game.addSub(PRICE_DOWN, "", move.getCorp(), drop, "");
             }
             int max = countPlayerShares(p, move.getCorp());
-            Player prez = p;
-            for(Player pp = nextPlayer(p.name, game); p != pp; pp = nextPlayer(pp.name, game)) {
-                int other = countPlayerShares(pp, move.getCorp());
-                if(other > max) {
-                    max = other;
-                    prez = pp;
+            if(checkPrez) {
+                Player prez = p;
+                for (Player pp = nextPlayer(p.name, game); p != pp; pp = nextPlayer(pp.name, game)) {
+                    int other = countPlayerShares(pp, move.getCorp());
+                    if (other > max) {
+                        max = other;
+                        prez = pp;
+                    }
                 }
-            }
-            if (prez != p) {
-                game.addSub(CHANGE_PREZ, prez.name, move.getCorp(), 0, p.name);
+                if (prez != p) {
+                    game.addSub(CHANGE_PREZ, prez.name, move.getCorp(), 0, p.name);
+                }
             }
         }
 
