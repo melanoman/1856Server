@@ -141,9 +141,13 @@ public abstract class Action implements UndoableAction<Move, Game> {
         }
 
         @Override public void undoAction(Move move, Game game) {
-            Stock oldPrez = getHolding(move.getCorp(), findPlayer(move.getDetail(), game));
-            if (oldPrez == null) throw new IllegalStateException("CORRUPTION: old prez has no shares");
-            oldPrez.isPrez = true;
+            Player oldPrez = findPlayer(move.getDetail(), game);
+            Stock oldStock = getHolding(move.getCorp(), oldPrez);
+            if (oldStock == null) {
+                oldPrez.shares.add(new Stock(move.getCorp(), 0, true));
+            } else {
+                oldStock.isPrez = true;
+            }
             Stock newPrez = getHolding(move.getCorp(), findPlayer(move.getPlayer(), game));
             if (newPrez == null) throw new IllegalStateException("CORRUPTION: new prez has no shares");
             newPrez.isPrez = false;
