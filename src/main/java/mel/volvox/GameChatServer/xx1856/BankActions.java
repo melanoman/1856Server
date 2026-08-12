@@ -369,12 +369,14 @@ public class BankActions {
         @Override public void undoAction(Move move, Game game) {
             game.getBoard().loansDone = false;
             game.getBoard().halfShares = false;
+            for(Player p:game.getBoard().players) updatePort(game, p);
         }
     }
 
     static class AskTokens extends Action.SubAction {
         @Override public void doAction(Move move, Game game) {
             game.getBoard().activity = ASK_CGR_TOKENS;
+            for (Player p: game.getBoard().players) updatePort(game, p);
         }
 
         @Override public void undoAction(Move move, Game game) {

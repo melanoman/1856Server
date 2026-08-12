@@ -219,11 +219,15 @@ public class OpActions {
 
     static class FloatAction extends Action.SubAction {
         @Override public void doAction(Move move, Game game) {
-            findCorp(move.getCorp(), game).tokensUsed = 1;
+            Corp c = findCorp(move.getCorp(), game);
+            c.tokensUsed = 1;
+            if(!c.incrementallyFunded) game.getBank().payCorp(c.name, 10*c.par);
         }
 
         @Override public void undoAction(Move move, Game game) {
-            findCorp(move.getCorp(), game).tokensUsed = 0;
+            Corp c = findCorp(move.getCorp(), game);
+            c.tokensUsed = 0;
+            if(!c.incrementallyFunded) game.getBank().debitCorp(c.name, 10*c.par);
         }
     }
 
