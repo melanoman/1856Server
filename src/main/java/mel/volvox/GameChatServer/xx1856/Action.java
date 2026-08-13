@@ -332,7 +332,9 @@ public abstract class Action implements UndoableAction<Move, Game> {
     public static final int BROWN_ZONE = 40;
     public static final int DEATH_ZONE = 25;
     private static int shareSize(Game game, Stock s) {
-        if (findCorp(s.corpName, game).price.getPrice() <= YELLOW_ZONE) return 0;
+        Corp c = findCorp(s.corpName, game);
+        if (c.price.getPrice() <= YELLOW_ZONE) return 0;
+        if (game.getBoard().halfShares && "CGR".equals(s.corpName)) return (s.amount + 1)/2;
         return s.isPrez ? s.amount - 1 : s.amount;
     }
 
