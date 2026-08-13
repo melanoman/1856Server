@@ -53,7 +53,7 @@ public class Opcodes {
     public static final String TAKE_LOAN = "takeLoan";
     public static final String REPAY_LOAN = "repayLoan";
     public static final String PREZ_PAYS = "prezPays";
-    public static final String BEGIN_FORCED_SALE = "startForcedSale";
+    public static final String START_FORCED_SALE = "startForcedSale";
     public static final String CGR_SHELL = "cgrShell";
     public static final String CGR_FILL = "cgrFill";
     public static final String REPO_CASH = "repoCash";
@@ -99,6 +99,8 @@ public class Opcodes {
     public static final String RUST_PORT = "rustPort";
     public static final String FORM_CGR = "formCGR";
     public static final String RETIRE_LOANER = "retireLoaner";
+    public static final String START_TRAIN_DROP = "rustDrop";
+    public static final String TRAIN_DROP = "trainDrop";
 
     //RESET ACTIONS
     public static final String RESET_TOKEN = "resetToken";

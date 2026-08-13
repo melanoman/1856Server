@@ -34,6 +34,7 @@ public class TrainActions {
         undoMgr.registerActionType(BUY_TUNNEL, new BuyTunnel());
         undoMgr.registerActionType(CGR_SHELL, new CgrPhaseI());
         undoMgr.registerActionType(CGR_FILL, new CgrPhaseII());
+        undoMgr.registerActionType(START_TRAIN_DROP, new RustDrop());
     }
 
     static int getRustSize(int bankTrainCount) {
@@ -177,10 +178,19 @@ public class TrainActions {
         }
         for(Corp c: game.getBoard().corps) {
             if(c.trains.size() > TRAIN_LIMIT[trainCount]) {
-                throw new IllegalStateException("TODO DROP TRAIN OVER LIMIT");
-                //game.addSub("START_TRAIN_LIMIT_DROP")
-                //return board
+                game.addSub(START_TRAIN_DROP, "", "", 0, game.getBoard().activity);
             }
+        }
+    }
+
+    static class RustDrop extends Action.SubAction {
+        @Override public void doAction(Move move, Game game) {
+            game.getBoard().activity = TRAIN_DROP;
+        }
+
+        @Override
+        public void undoAction(Move move, Game game) {
+            game.getBoard().activity = move.getDetail();
         }
     }
 

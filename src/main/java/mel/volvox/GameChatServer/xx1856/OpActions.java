@@ -454,7 +454,7 @@ public class OpActions {
                 game.addSub(PREZ_PAYS, p.name, c.name, -c.cash, "");
             }
             if (p.cash < 0) {
-                game.addSub(BEGIN_FORCED_SALE, p.name, move.getCorp(), -p.cash, game.getBoard().activity);
+                game.addSub(START_FORCED_SALE, p.name, move.getCorp(), -p.cash, game.getBoard().activity);
                 return;
             }
             if (!game.getBoard().loansDone && game.getBoard().trains.size() <= CGR_FORMATION_SIZE) {

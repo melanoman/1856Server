@@ -1,6 +1,5 @@
 package mel.volvox.GameChatServer.xx1856;
 
-import mel.volvox.GameChatServer.comm.train.StockSale;
 import mel.volvox.GameChatServer.model.xx1856.Move;
 import mel.volvox.undo.UndoManager;
 
@@ -22,7 +21,7 @@ public class BankActions {
         undoMgr.registerActionType(PREZ_PAYS, new PrezPays());
         undoMgr.registerActionType(TAKE_LOAN, new TakeLoanAction());
         undoMgr.registerActionType(REPAY_LOAN, new RepayLoanAction());
-        undoMgr.registerActionType(BEGIN_FORCED_SALE, new BeginForcedSale());
+        undoMgr.registerActionType(START_FORCED_SALE, new BeginForcedSale());
         undoMgr.registerActionType(BANKRUPTCY_SALE, new FireSale());
         undoMgr.registerActionType(CALL_LOANS, new CallLoans());
         undoMgr.registerActionType(SAVE_CORP, new SaveCorp());
@@ -40,7 +39,7 @@ public class BankActions {
             if(move.getDetail().equals(BankActions.TRAIN)) {
                 game.addSub(END_OP_TURN, "", move.getCorp(), 0, game.getBoard().activity);
             } else if (move.getDetail().equals(BankActions.INTEREST)) {
-                if(p.cash < 0) game.addSub(BEGIN_FORCED_SALE, "", move.getCorp(), -p.cash, game.getBoard().activity);
+                if(p.cash < 0) game.addSub(START_FORCED_SALE, "", move.getCorp(), -p.cash, game.getBoard().activity);
             }
         }
 
