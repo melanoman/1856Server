@@ -60,7 +60,7 @@ public class Opcodes {
     public static final String ASK_CGR_TOKENS = "askCGRTokens";
     public static final String ANSWER_CGR_TOKENS = "setCGRTokens";
     public static final String ASK_CGR_TRAINS = "askCGRTrainDrop";
-    public static final String DROP_TRAIN = "dropTrain";
+    public static final String DROP_CGR_TRAIN = "dropTrain";
     public static final String DONE_DROP = "doneDrop";
 
     //OP ACTIONS
@@ -99,8 +99,8 @@ public class Opcodes {
     public static final String RUST_PORT = "rustPort";
     public static final String FORM_CGR = "formCGR";
     public static final String RETIRE_LOANER = "retireLoaner";
-    public static final String START_TRAIN_DROP = "rustDrop";
-    public static final String TRAIN_DROP = "trainDrop";
+    public static final String ASK_RUST_DROP = "rustDrop";
+    public static final String RUST_DROP = "trainDrop";
 
     //RESET ACTIONS
     public static final String RESET_TOKEN = "resetToken";

@@ -23,7 +23,7 @@ public class TrainActions {
         undoMgr.registerActionType(BUY_CORP_TRAIN, new BuyCorpTrain());
         undoMgr.registerActionType(BUY_POOL_TRAIN, new BuyPoolTrain());
         undoMgr.registerActionType(FORCED_TRAIN, new ForcedTrain());
-        undoMgr.registerActionType(DROP_TRAIN, new DropTrain());
+        undoMgr.registerActionType(DROP_CGR_TRAIN, new DropCGRTrain());
         undoMgr.registerActionType(RUST, new RustAction());
         undoMgr.registerActionType(BUY_PRIV, new BuyPriv());
         undoMgr.registerActionType(RUST_PRIV, new RustPriv());
@@ -34,7 +34,8 @@ public class TrainActions {
         undoMgr.registerActionType(BUY_TUNNEL, new BuyTunnel());
         undoMgr.registerActionType(CGR_SHELL, new CgrPhaseI());
         undoMgr.registerActionType(CGR_FILL, new CgrPhaseII());
-        undoMgr.registerActionType(START_TRAIN_DROP, new RustDrop());
+        undoMgr.registerActionType(ASK_RUST_DROP, new AskRustDrop());
+        undoMgr.registerActionType(RUST_DROP, new DoRustDrop());
     }
 
     static int getRustSize(int bankTrainCount) {
@@ -178,14 +179,53 @@ public class TrainActions {
         }
         for(Corp c: game.getBoard().corps) {
             if(c.trains.size() > TRAIN_LIMIT[trainCount]) {
-                game.addSub(START_TRAIN_DROP, "", "", 0, game.getBoard().activity);
+                game.addSub(ASK_RUST_DROP, "", "", 0, game.getBoard().activity);
             }
         }
     }
 
-    static class RustDrop extends Action.SubAction {
+    static class DoRustDrop extends Action {
+        @Override public void checkAllowed(Move move, Game game) {
+            assertPhase(game, Game.Era.OP, "DoRustDrop");
+            assertActivity(game, RUST_DROP, "DoRustDrop");
+            Corp c = findCorp(move.getCorp(), game);
+            if (c.trains.size() < trainLimit(c.name, game.getBoard().trains.size())) {
+                throw new IllegalStateException(c.name+" is not over train limit");
+            }
+        }
+
+        @Override public void init(Move move, Game game) {
+            // WARNING UGLY FLOW (aborts if more to ask)
+            for(Corp c: game.getBoard().corps) {
+                if(c.trains.size() > trainLimit(c.name, game.getBoard().trains.size())) {
+                    return;
+                }
+            }
+            Player prez = findPrez(game.getBoard().currentCorp, game);
+            if(prez.cash < 0) {
+                Corp c = findCorp(move.getCorp(), game);
+                game.addSub(PREZ_PAYS, prez.name, c.name, -c.cash, "");
+            } else {
+                game.addSub(CHANGE_ACTIVITY, OP_POST, "", 0, game.getBoard().activity);
+            }
+        }
+
         @Override public void doAction(Move move, Game game) {
-            game.getBoard().activity = TRAIN_DROP;
+            Corp c = findCorp(move.getCorp(), game);
+            c.trains.remove(Integer.valueOf(move.getAmount()));
+            game.getBoard().pool.add(move.getAmount());
+        }
+
+        @Override public void undoAction(Move move, Game game) {
+            Corp c = findCorp(move.getCorp(), game);
+            c.trains.add(0, move.getAmount());
+            game.getBoard().pool.remove(Integer.valueOf(move.getAmount()));
+        }
+    }
+
+    static class AskRustDrop extends Action.SubAction {
+        @Override public void doAction(Move move, Game game) {
+            game.getBoard().activity = RUST_DROP;
         }
 
         @Override
@@ -621,10 +661,10 @@ public class TrainActions {
         }
     }
 
-    static class DropTrain extends Action {
+    static class DropCGRTrain extends Action {
         @Override public void checkAllowed(Move move, Game game) {
-            assertPhase(game, Game.Era.OP, "DropTrain");
-            assertActivity(game, ASK_CGR_TRAINS, "DropTrain");
+            assertPhase(game, Game.Era.OP, "DropCGRTrain");
+            assertActivity(game, ASK_CGR_TRAINS, "DropCGRTrain");
             if(!CGR.equals(move.getCorp())) throw new IllegalStateException("TODO non-CGR drops");
             Corp c = findCorp(move.getCorp(), game);
             if(!c.trains.contains(move.getAmount())) {

@@ -157,10 +157,7 @@ public abstract class Action implements UndoableAction<Move, Game> {
     }
 
 
-    static class ChangeActivityAction extends Action {
-        @Override public void checkAllowed(Move move, Game game) { }
-        @Override public void init(Move move, Game game) { }
-
+    static class ChangeActivityAction extends Action.SubAction {
         @Override public void doAction(Move move, Game game) {
             game.getBoard().activity = move.getPlayer();
         }

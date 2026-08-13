@@ -39,7 +39,7 @@ public class xx1856Controller {
     @PutMapping("/18xx/create/{name}")
     @ResponseBody
     Board create1856(@PathVariable String name) {
-        if(channelRepo.findByNameAndType(name, xx1856_TYPE).isEmpty()) {
+        if (channelRepo.findByNameAndType(name, xx1856_TYPE).isEmpty()) {
             try {
                 channelRepo.save(new Channel(name, xx1856_TYPE));
                 Game game = new Game(name, repo);
@@ -54,8 +54,8 @@ public class xx1856Controller {
     }
 
     synchronized private Game findGame(String name) {
-        if(name2game.containsKey(name)) return name2game.get(name);
-        if(channelRepo.findByNameAndType(name, xx1856_TYPE).isEmpty()) {
+        if (name2game.containsKey(name)) return name2game.get(name);
+        if (channelRepo.findByNameAndType(name, xx1856_TYPE).isEmpty()) {
             throw new IllegalStateException("Game not Found");
         } else {
             Game game = new Game(name, repo);
@@ -216,7 +216,7 @@ public class xx1856Controller {
     Board buyCorpTrain(@PathVariable String game, @PathVariable String buyer,
                        @PathVariable int train, @PathVariable String seller,
                        @PathVariable int price) {
-        return findGame(game).addMove(BUY_CORP_TRAIN, ""+train, buyer, price, seller);
+        return findGame(game).addMove(BUY_CORP_TRAIN, "" + train, buyer, price, seller);
     }
 
     @PutMapping("18xx/buyPoolTrain/{game}/{corp}/{train}")
@@ -305,12 +305,19 @@ public class xx1856Controller {
     @ResponseBody
     Board dropTrain(@PathVariable String game, @PathVariable String corp,
                     @PathVariable int train) {
-        return findGame(game).addMove(DROP_TRAIN, "", corp, train, "");
+        return findGame(game).addMove(DROP_CGR_TRAIN, "", corp, train, "");
     }
 
     @PutMapping("18xx/doneDrop/{game}/CGR")
     @ResponseBody
     Board doneDrop(@PathVariable String game) {
         return findGame(game).addMove(DONE_DROP, "", "CGR", 0, "");
+    }
+
+    @PutMapping("18xx/limitDrop/{game}/{corp}/{train}")
+    @ResponseBody
+    Board limitDrop(@PathVariable String game, @PathVariable String corp,
+                    @PathVariable int train) {
+        return findGame(game).addMove(RUST_DROP, "", corp, train, "");
     }
 }
