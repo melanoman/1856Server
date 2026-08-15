@@ -362,6 +362,7 @@ public class StockActions {
         } else {
             game.addSub(CHANGE_ACTIVITY, "", "", 0, OpActions.OP_POST);
         }
+        game.resetWealth();
         return game.getBoard();
     }
 
@@ -399,6 +400,7 @@ public class StockActions {
         if (!turn.buyFirst) makeBuySubs(game, playerName, turn, corp);
         game.addSub(END_STOCK_TURN, playerName, "", 0, "");
         makePriorityAdvance(game);
+        game.resetWealth();
         return game.getBoard();
     }
 
