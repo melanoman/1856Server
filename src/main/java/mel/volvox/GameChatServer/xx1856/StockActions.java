@@ -26,6 +26,8 @@ public class StockActions {
         undoMgr.registerActionType(STOCK_SALE, new SaleAction());
         undoMgr.registerActionType(BLOCK_SALE, new BlockAction());
         undoMgr.registerActionType(CLEAR_BLOCK, new ClearBlock());
+        undoMgr.registerActionType(FORCED_SALE_HEADER, new ForcedSaleHeader());
+        undoMgr.registerActionType(FORCED_SALE_FOOTER, new ForcedSaleFooter());
         undoMgr.registerActionType(START_STOCK_ROUND, new StartStockRoundAction());
         undoMgr.registerActionType(END_STOCK_ROUND, new EndStockRoundAction());
     }
@@ -317,6 +319,18 @@ public class StockActions {
         }
     }
 
+    public static class ForcedSaleHeader extends Action {
+        @Override public void checkAllowed(Move move, Game game) { }
+        @Override public void init(Move move, Game game) { }
+        @Override public void doAction(Move move, Game game) { updatePort(game, move.getPlayer()); }
+        @Override public void undoAction(Move move, Game game) { }
+    }
+
+    public static class ForcedSaleFooter extends Action.SubAction {
+        @Override public void doAction(Move move, Game game) { }
+        @Override public void undoAction(Move move, Game game) { updatePort(game, move.getPlayer()); }
+    }
+
     // empty umbrella for processStockAction
     public static class StockTurnAction extends Action {
         @Override public void checkAllowed(Move move, Game game) { /* see processStockTurn */ }
@@ -325,15 +339,33 @@ public class StockActions {
         @Override public void undoAction(Move move, Game game) { updatePort(game, move.getPlayer()); }
     }
 
-    public static class EndStockTurn extends Action {
-        @Override public void checkAllowed(Move move, Game game) { /* see processStockTurn */ }
+    public static class EndStockTurn extends Action.SubAction {
         @Override public void init(Move move, Game game) { /* see processStockTurn */ }
         @Override public void doAction(Move move, Game game) { updatePort(game, move.getPlayer()); }
         @Override public void undoAction(Move move, Game game) { }
     }
 
+    public static Board processForcedSale(StockTurn turn, String playerName, Game game) {
+        assertPhase(game, Game.Era.OP, "ForcedSale");
+        Player prez = findPlayer(playerName, game);
+        if(prez.cash >= 0) throw new IllegalStateException("No debt to allow forced sale");
+        for (Stock s: turn.salesList) {
+            validateSale(s, prez, game);
+        }
+        int value = calculateSalesValue(turn.salesList, game);
+        if(prez.cash + value < 0) throw new IllegalStateException("Must sell more to clear debt");
+        game.addMove(FORCED_SALE_HEADER, playerName, "", 0, "");
+        for(Stock s:turn.salesList) if(s.amount > 0) makeSaleSub(game, playerName, s);
+        game.addSub(FORCED_SALE_FOOTER, "", "",0, "");
+        if (TrainActions.checkTrainLimit(game, game.getBoard().trains.size())) {
+            game.addSub(ASK_RUST_DROP, "", "", 0, game.getBoard().activity);
+        } else {
+            game.addSub(CHANGE_ACTIVITY, "", "", 0, OpActions.OP_POST);
+        }
+        return game.getBoard();
+    }
+
     public static Board processStockTurn(StockTurn turn, String playerName, Game game) {
-        //TODO checkAllowed
         assertPhases(game, STOCK_OR_INITIAL, "stockTurn");
         assertPlayerTurn(game, playerName, "stockTurn");
         if(game.getBoard().phase.equals(Game.Era.INITIAL.name()) && !turn.salesList.isEmpty()) {
@@ -355,27 +387,7 @@ public class StockActions {
         }
         int shareCount = 0;
         for (Stock s:turn.salesList) {
-            Stock h = getHolding(s.corpName, p);
-            if(h == null || h.amount < s.amount) throw new IllegalStateException("Cannot sell more shares than you have of "+s.corpName);
-            Corp cc = findCorp(s.corpName, game);
-            if(cc.par <= 0) throw new IllegalStateException("Cannot sell parless shares of "+s.corpName);
-            if(cc.poolShares + s.amount> 5) throw new IllegalStateException("Max 50% in pool: "+s.corpName);
-            if(h.isPrez && h.amount - s.amount < 2) { // if the sale dips into a prez share
-                boolean recipientFound = false;
-                for (Player pp : game.getBoard().getPlayers()) {
-                    for (Stock ss : pp.shares) {
-                        if (pp.name.equals(p.name)) continue; //looking for other players...
-                        if (!ss.corpName.equals(s.corpName)) continue; //with the same stock...
-                        if (ss.amount >= 2) {
-                            recipientFound = true;
-                            break;
-                        }
-                    }
-                }
-                if (!cc.price.willClose(previewDrop(s, game))) {
-                    if (!recipientFound) throw new IllegalStateException("No one to transfer presidency to for " + s.corpName);
-                }
-            }
+            validateSale(s, p, game);
         }
         if (!turn.buyFirst) cost -= calculateSalesValue(turn.salesList, game);
         if (cost > 0) assertPlayerFunds(game, playerName, cost, "stockBuy");
@@ -388,6 +400,30 @@ public class StockActions {
         game.addSub(END_STOCK_TURN, playerName, "", 0, "");
         makePriorityAdvance(game);
         return game.getBoard();
+    }
+
+    private static void validateSale(Stock s, Player p, Game game) {
+        Stock h = getHolding(s.corpName, p);
+        if(h == null || h.amount < s.amount) throw new IllegalStateException("Cannot sell more shares than you have of "+s.corpName);
+        Corp cc = findCorp(s.corpName, game);
+        if(cc.par <= 0) throw new IllegalStateException("Cannot sell parless shares of "+s.corpName);
+        if(cc.poolShares + s.amount> 5) throw new IllegalStateException("Max 50% in pool: "+s.corpName);
+        if(h.isPrez && h.amount - s.amount < 2) { // if the sale dips into a prez share
+            boolean recipientFound = false;
+            for (Player pp : game.getBoard().getPlayers()) {
+                for (Stock ss : pp.shares) {
+                    if (pp.name.equals(p.name)) continue; //looking for other players...
+                    if (!ss.corpName.equals(s.corpName)) continue; //with the same stock...
+                    if (ss.amount >= 2) {
+                        recipientFound = true;
+                        break;
+                    }
+                }
+            }
+            if (!cc.price.willClose(previewDrop(s, game))) {
+                if (!recipientFound) throw new IllegalStateException("No one to transfer presidency to for " + s.corpName);
+            }
+        }
     }
 
     private static void checkPortfolioLimit(Player p, StockTurn turn, Game game) {
@@ -500,7 +536,9 @@ public class StockActions {
 
     private static int calculateSalesValue(List<Stock> sales, Game game) {
         int value = 0;
-        for(Stock s: sales) value += findCorp(s.corpName, game).price.getPrice();
+        for(Stock s: sales) {
+            value += s.amount * findCorp(s.corpName, game).price.getPrice();
+        }
         return value;
     }
 }

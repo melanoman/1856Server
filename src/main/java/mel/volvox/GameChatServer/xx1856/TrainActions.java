@@ -177,11 +177,16 @@ public class TrainActions {
                 }
             }
         }
-        for(Corp c: game.getBoard().corps) {
-            if(c.trains.size() > TRAIN_LIMIT[trainCount]) {
-                game.addSub(ASK_RUST_DROP, "", "", 0, game.getBoard().activity);
-            }
+        if (checkTrainLimit(game, trainCount)) {
+            game.addSub(ASK_RUST_DROP, "", "", 0, game.getBoard().activity);
         }
+    }
+
+    static boolean checkTrainLimit(Game game, int trainCount) {
+        for(Corp c: game.getBoard().corps) {
+            if(c.trains.size() > TRAIN_LIMIT[trainCount]) return true;
+        }
+        return false;
     }
 
     static class DoRustDrop extends Action {

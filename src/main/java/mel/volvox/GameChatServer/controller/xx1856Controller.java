@@ -147,6 +147,13 @@ public class xx1856Controller {
         return StockActions.processStockTurn(turn, player, findGame(game));
     }
 
+    @PutMapping("18xx/doForcedSale/{game}/{prez}")
+    @ResponseBody
+    Board forcedSale(@PathVariable String game, @PathVariable String prez,
+                    @RequestBody StockTurn turn) {
+        return StockActions.processForcedSale(turn, prez, findGame(game));
+    }
+
     @PutMapping("18xx/takeLoan/{game}/{corp}")
     @ResponseBody
     Board takeLoan(@PathVariable String game, @PathVariable String corp) {
