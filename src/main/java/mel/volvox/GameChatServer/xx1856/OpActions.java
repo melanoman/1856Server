@@ -366,7 +366,7 @@ public class OpActions {
     static class DestinationAction extends Action {
         @Override public void checkAllowed(Move move, Game game) {
             assertPhase(game, Game.Era.OP, "DestReached");
-            assertCorpTurn(game, move.getCorp(), "DestReached");
+            if(move.getAmount() == 0) assertCorpTurn(game, move.getCorp(), "DestReached");
             Corp c = findCorp(move.getCorp(), game);
             if(c.destinationSatisfied) throw new IllegalStateException("Dest Already Reached");
         }
