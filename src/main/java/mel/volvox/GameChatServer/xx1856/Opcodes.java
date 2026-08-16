@@ -107,6 +107,7 @@ public class Opcodes {
     //RESET ACTIONS
     public static final String RESET_TOKEN = "resetToken";
     public static final String RESET_LOAN = "resetLoan";
+    public static final String RESET_DRILL = "resetDrill";
     public static final String FLOAT = "float";
     public static final String BANK_BREAK = "bankBreak";
     public static final String GAME_OVER = "gameOver";

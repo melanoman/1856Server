@@ -28,6 +28,7 @@ public class OpActions {
         undoMgr.registerActionType(DISBURSE, new DisburseAction());
         undoMgr.registerActionType(RESET_LOAN, new ResetLoanAction());
         undoMgr.registerActionType(RESET_TOKEN, new ResetTokenAction());
+        undoMgr.registerActionType(RESET_DRILL, new ResetDrillAction());
         undoMgr.registerActionType(FLOAT, new FloatAction());
         undoMgr.registerActionType(DESTINATION_REACHED, new DestinationAction());
         undoMgr.registerActionType(RELEASE_ESCROW, new ReleaseEscrow());
@@ -96,6 +97,7 @@ public class OpActions {
             }
             game.addSub(RESET_TOKEN, "", move.getCorp(), c.tokenLaid?1:0, "");
             game.addSub(RESET_LOAN, "", move.getCorp(), c.loanTaken?1:0, "");
+            game.addSub(RESET_DRILL, "", move.getCorp(), c.tileDrilled?1:0, "");
         }
 
         @Override public void doAction(Move move, Game game) {
@@ -183,17 +185,19 @@ public class OpActions {
             assertCorpTurn(game, move.getCorp(), "DrillTile");
             assertActivity(game, OP_PRE, "DrillTile");
             assertCorpFunds(game, move.getCorp(), 40, "DrillTile");
-            //TODO protect against 2x tile charges same turn
+            if(findCorp(move.getCorp(), game).tileDrilled) throw new IllegalStateException("One tile per turn");
         }
 
         @Override public void init(Move move, Game game) { }
 
         @Override public void doAction(Move move, Game game) {
             game.getBank().debitCorp(move.getCorp(), 40);
+            findCorp(move.getCorp(), game).tileDrilled = true;
         }
 
         @Override public void undoAction(Move move, Game game) {
             game.getBank().payCorp(move.getCorp(), 40);
+            findCorp(move.getCorp(), game).tileDrilled = false;
         }
     }
 
@@ -214,6 +218,16 @@ public class OpActions {
 
         @Override public void undoAction(Move move, Game game) {
             findCorp(move.getCorp(), game).tokenLaid = move.getAmount() == 1;
+        }
+    }
+
+    static class ResetDrillAction extends Action.SubAction {
+        @Override public void doAction(Move move, Game game) {
+            findCorp(move.getCorp(), game).tileDrilled = false;
+        }
+
+        @Override public void undoAction(Move move, Game game) {
+            findCorp(move.getCorp(), game).tileDrilled = move.getAmount() == 1;
         }
     }
 
