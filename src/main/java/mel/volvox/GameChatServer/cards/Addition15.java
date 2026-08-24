@@ -49,6 +49,14 @@ public class Addition15 extends CardGame {
             for(int i=9; i>3; i--) {
                 if(used[i]>0 && findFifteen(used, i, i, 1)) return;
             }
+            int[] suit = new int[4];
+            for(Card c: main.getDeck()) {
+                if(c == null) continue;
+                if(c.rank() > 9) {
+                    if(suit[c.suit()] > 2) return;
+                    suit[c.suit()]++;
+                }
+            }
             table.setResult(Tableau.LOSE);
         }
     }
