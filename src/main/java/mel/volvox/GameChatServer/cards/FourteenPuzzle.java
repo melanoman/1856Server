@@ -24,7 +24,6 @@ public class FourteenPuzzle extends CardGame {
 
     @Override
     public void init() {
-        super.init();
         List<Card> deck = Cards.shuffle(52);
         for(int i=0; i<12; i++) pile[i] = makePile(i, deck);
         checkResult();
@@ -40,7 +39,8 @@ public class FourteenPuzzle extends CardGame {
             if(used[14-rank]) return;
             used[rank] = true;
         }
-        table.setResult(found ? Tableau.LOSE : Tableau.WIN);
+        if (found) lose();
+        else win();
     }
 
     private void clearSelection() {

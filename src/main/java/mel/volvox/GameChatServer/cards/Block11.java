@@ -13,7 +13,6 @@ public class Block11 extends SingleSelectionGame {
 
     @Override
     public void init() {
-        super.init();
         deck = Cards.shuffle(52);
         while(main.getDeck().size() < 12) {
             Card c = deck.remove(0);
@@ -32,7 +31,7 @@ public class Block11 extends SingleSelectionGame {
 
 
     private void checkResult() {
-        if(deck.isEmpty()) table.setResult(Tableau.WIN);
+        if(deck.isEmpty()) win();
         else {
             boolean[] used = new boolean[11];
             for(Card c:main.getDeck()) {

@@ -5,6 +5,8 @@ import mel.volvox.GameChatServer.comm.cards.CardMenuItem;
 import mel.volvox.GameChatServer.comm.cards.Tableau;
 import mel.volvox.GameChatServer.model.cards.CardRules;
 import mel.volvox.GameChatServer.repository.CardRulesRepo;
+import mel.volvox.GameChatServer.repository.CheckoffRepo;
+import mel.volvox.GameChatServer.service.CheckoffService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Controller;
@@ -16,9 +18,10 @@ import java.util.*;
 @Controller
 @Component
 public class CardController {
-    @Autowired
-    CardRulesRepo cardRulesRepo;
+    @Autowired CardRulesRepo cardRulesRepo;
+    @Autowired CheckoffRepo checkoffRepo;
 
+    CheckoffService checkoffService = null;
     Map<String, CardGame> id2game = new HashMap<>();
     static List<CardMenuItem> mainMenu = new ArrayList<>();
     static Map<String, CardMenuItem> name2sub = new HashMap<>();
@@ -81,10 +84,11 @@ public class CardController {
         return mainMenu;
     }
 
-    @PutMapping("cards/new/{game}")
+    @PutMapping("cards/new/{game}/{user}")
     @ResponseBody
-    public Tableau createGame(@PathVariable String game) {
-        return makeGame(game);
+    public Tableau createGame(@PathVariable String game,
+                              @PathVariable String user) {
+        return makeGame(game, user);
     }
 
     @GetMapping("cards/list")
@@ -117,21 +121,24 @@ public class CardController {
         else return t.getLayout();
     }
 
-    @PutMapping("cards/change/{before}/{after}")
+    @PutMapping("cards/change/{before}/{after}/{user}")
     @ResponseBody
     public Tableau startAnother(@PathVariable String before,
-                                @PathVariable String after) {
+                                @PathVariable String after,
+                                @PathVariable String user) {
         CardGame cg = id2game.remove(before);
         //TODO add resignation to stats
-        return makeGame(after);
+        return makeGame(after, user);
     }
 
-    private Tableau makeGame(String game) {
+    private Tableau makeGame(String game, String user) {
         Class<? extends CardGame> clazz = name2class.get(game);
+        if(checkoffService == null) checkoffService = new CheckoffService(checkoffRepo);
         if(clazz==null) throw new IllegalStateException("Unknown game type "+game);
         try {
+            if(user == null || user.equals("undefined") || user.equals("=-=")) user = "";
             CardGame cg = clazz.getConstructor().newInstance();
-            cg.init();
+            cg.init(user, game, checkoffService);
             id2game.put(cg.getLayout().getId(), cg);
             return cg.getLayout();
         } catch (Exception e) {

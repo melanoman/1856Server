@@ -12,7 +12,6 @@ public class Decade extends CardGame {
 
     @Override
     public void init() {
-        super.init();
         main.setId(MAIN);
         main.setDeck(Cards.shuffle(52));
         main.setY(120);
@@ -88,7 +87,7 @@ public class Decade extends CardGame {
 
     private void checkResult() {
         if(main.getDeck().size() == 1) {
-            table.setResult(Tableau.WIN);
+            win();
         } else {
             int tot = valAt(0) + valAt(1) + valAt(2);
             if(tot%10 == 0) return;
@@ -101,7 +100,7 @@ public class Decade extends CardGame {
                 head++;
                 if(tot%10 == 0) return;
             }
-            table.setResult(Tableau.LOSE);
+            lose();
         }
     }
 }

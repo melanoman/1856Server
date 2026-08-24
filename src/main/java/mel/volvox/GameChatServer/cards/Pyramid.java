@@ -28,7 +28,6 @@ public class Pyramid extends CardGame {
     }
 
     @Override public void init() {
-        super.init();
         row = new Placement[7];
         for(int i=0; i<7; i++) makeRow(i);
         drawDeck.getPlacement().setX(300);
@@ -150,7 +149,7 @@ public class Pyramid extends CardGame {
 
     private void checkResult() {
         if (drawDeck.isEmpty() && playPile.isEmpty() && row[0].getDeck().get(0) == null) {
-            table.setResult(Tableau.WIN);
+            win();
         } else {
             if (redeals > 0 || !drawDeck.isEmpty()) return;
             boolean[] used = new boolean[14];

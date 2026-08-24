@@ -15,7 +15,6 @@ public class Addition10 extends CardGame {
 
     @Override
     public void init() {
-        super.init();
         deck = Cards.shuffle(52);
         main = new Placement();
         Cards.deal(deck, main.getDeck(), 13, true);

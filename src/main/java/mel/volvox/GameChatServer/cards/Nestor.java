@@ -28,7 +28,6 @@ public class Nestor extends CardGame {
 
     @Override
     public void init() {
-        super.init();
         for(int i=0; i<12; i++) {
             column[i] = makeColumn(i);
             table.getPlacements().add(column[i]);
@@ -79,7 +78,7 @@ public class Nestor extends CardGame {
         if (found) {
             if(drawDeck.isEmpty()) table.setResult(Tableau.LOSE);
         } else {
-            table.setResult(Tableau.WIN);
+            win();
         }
     }
 

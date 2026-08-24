@@ -1,6 +1,8 @@
 package mel.volvox.GameChatServer.cards;
 
 import mel.volvox.GameChatServer.comm.cards.Tableau;
+import mel.volvox.GameChatServer.repository.CheckoffRepo;
+import mel.volvox.GameChatServer.service.CheckoffService;
 
 import java.util.UUID;
 
@@ -12,12 +14,31 @@ public abstract class CardGame {
     protected static String DRAW = "draw";
     protected static String PLAY = "play";
     protected Tableau table;
+    protected String user;
+    protected String gameName;
+    protected CheckoffService service;
 
-    public void init() {
+    public void init(String user, String gameName, CheckoffService service) {
         String id = UUID.randomUUID().toString();
         table = new Tableau();
         table.setId(id);
+        this.user = user;
+        this.service = service;
+        this.gameName = gameName;
+        init();
     }
+
+    abstract void init();
+
+    protected void win() {
+        if(!user.isEmpty()) service.check(user, gameName);
+        table.setResult(Tableau.WIN);
+    }
+
+    protected void lose() {
+        table.setResult(Tableau.LOSE);
+    }
+
     public Tableau getLayout() {return table; }
     public abstract Tableau select(String id, int gridX, int gridY);
 }

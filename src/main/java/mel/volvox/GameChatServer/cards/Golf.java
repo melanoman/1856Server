@@ -1,6 +1,5 @@
 package mel.volvox.GameChatServer.cards;
 
-import mel.volvox.GameChatServer.comm.cards.Card;
 import mel.volvox.GameChatServer.comm.cards.Placement;
 import mel.volvox.GameChatServer.comm.cards.Tableau;
 
@@ -11,7 +10,6 @@ public class Golf extends CardGame {
 
     @Override
     public void init() {
-        super.init();
         for (int i=0; i<7; i++) {
             column[i] = makeColumn(i);
             for(int j=0; j<5; j++) {
@@ -53,7 +51,7 @@ public class Golf extends CardGame {
     private void checkResult() {
         boolean found = false;
         for(Placement p: column) if(!p.isEmpty()) found = true;
-        if(!found) table.setResult(Tableau.WIN);
+        if(!found) win();
         else {
             if(drawDeck.isEmpty()) {
                 found = false;

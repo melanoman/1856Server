@@ -6,7 +6,6 @@ public abstract class SingleSelectionGame extends CardGame {
     protected Card selection = null;
     protected int selectedIndex = NO_SELECTION;
 
-
     protected void clearSelection() {
         if(selection != null) selection.setHighlight(false);
         selection = null;

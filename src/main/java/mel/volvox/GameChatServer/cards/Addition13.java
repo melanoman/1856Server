@@ -12,7 +12,6 @@ public class Addition13 extends SingleSelectionGame {
 
     @Override
     public void init() {
-        super.init();
         deck = Cards.shuffle(52);
         Cards.deal(deck, main.getDeck(), 10, true);
         main.setGridHeight(2);
@@ -53,7 +52,7 @@ public class Addition13 extends SingleSelectionGame {
 
     private void checkResult() {
         if(deck.isEmpty() && main.isEmpty()) {
-            table.setResult(Tableau.WIN);
+            win();
             return;
         }
 

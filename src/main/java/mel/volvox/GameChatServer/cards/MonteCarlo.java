@@ -16,7 +16,6 @@ public class MonteCarlo extends CardGame {
 
     @Override
     public void init() {
-        super.init();
         main.setId(MAIN);
         main.setX(100);
         main.setY(75);
@@ -81,7 +80,7 @@ public class MonteCarlo extends CardGame {
 
     private void checkResult() {
         if(drawDeck.isEmpty() && main.isEmpty()) {
-            table.setResult(Tableau.WIN);
+            win();
             table.getPlacements().clear();
         } else {
             for (Card c: main.getDeck()) if (c == null) return;

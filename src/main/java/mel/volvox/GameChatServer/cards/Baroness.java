@@ -25,7 +25,6 @@ public class Baroness extends CardGame {
 
     @Override
     public void init() {
-        super.init();
         for (int i=0; i<5; i++) {
             pile[i] = makePile(i, drawDeck.draw());
             table.getPlacements().add(pile[i]);
@@ -93,7 +92,8 @@ public class Baroness extends CardGame {
             if(c.rank()==13 || used[13-c.rank()]) return;
             used[c.rank()] = true;
         }
-        table.setResult(found ? Tableau.LOSE : Tableau.WIN);
+        if (found) lose();
+        else win();
     }
 
     @Override

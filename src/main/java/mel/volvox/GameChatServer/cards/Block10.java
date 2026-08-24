@@ -13,7 +13,6 @@ public class Block10 extends CardGame {
 
     @Override
     public void init() {
-        super.init();
         deck = Cards.shuffle(52);
         Cards.deal(deck, main.getDeck(), 9, true);
         main.setGridHeight(3);
@@ -31,7 +30,7 @@ public class Block10 extends CardGame {
 
     private void checkResult() {
         if(deck.isEmpty()) {
-            table.setResult(Tableau.WIN);
+            win();
         } else {
             boolean[] used = new boolean[11];
             boolean face = false;

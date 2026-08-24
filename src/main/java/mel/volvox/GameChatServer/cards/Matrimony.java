@@ -15,8 +15,6 @@ public class Matrimony extends SingleSelectionGame {
 
     @Override
     public void init() {
-        super.init();
-
         //move QH to head of deck
         deck.removeIf(x -> x.getId() == 37);
         Card qh = new Card(QUEEN_HEARTS, false, false, false);
@@ -59,7 +57,7 @@ public class Matrimony extends SingleSelectionGame {
     }
 
     private void checkResult() {
-        if (deck.size() == 2) table.setResult(Tableau.WIN);
+        if (deck.size() == 2) win();
         else if (deck.size() > 4) {
             List<Card> recent = new ArrayList<>();
             for(Card c:deck) if (matchShift(c, recent)) return;

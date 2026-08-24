@@ -15,7 +15,6 @@ public class Addition15 extends CardGame {
     int saveSuit = Card.NO_SUIT;
 
     public void init() {
-        super.init();
         deck = Cards.shuffle(52);
         Cards.deal(deck, main.getDeck(), 16, true);
         main.setGridHeight(4);
@@ -40,7 +39,7 @@ public class Addition15 extends CardGame {
 
     private void checkResult() {
         if(deck.isEmpty()) {
-            table.setResult(Tableau.WIN);
+            win();
         } else {
             int[] used = new int[14];
             for(Card c: main.getDeck()) {

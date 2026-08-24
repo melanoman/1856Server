@@ -12,7 +12,6 @@ public class Accordian extends SingleSelectionGame {
 
     @Override
     public void init() {
-        super.init();
         main.setId(MAIN);
         main.setDeck(deck);
         main.setY(120);
@@ -51,7 +50,7 @@ public class Accordian extends SingleSelectionGame {
 
     private void checkResult() {
         if (deck.size() == 1) {
-            table.setResult(Tableau.WIN);
+            win();
         } else {
             Card a = deck.get(0);
             Card b = deck.get(1);
