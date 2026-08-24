@@ -26,29 +26,20 @@ public class Addition15 extends CardGame {
         checkResult();
     }
 
-    private boolean findFifteen(int[] used, int sum, int max, int block) {
-        if(sum > 15) return false;
-        if(sum == 15) return true;
-        if(used[max] > block && findFifteen(used, sum+max, max, block+1)) return true;
-        for(int i=max-1; i>0; i--) {
-            if(used[i] == 0) continue;
-            if(findFifteen(used, sum+i, i, 1)) return true;
-        }
-        return false;
+
+    private boolean findSum(List<Card> deck, int offset, int sum) {
+        if(offset >= deck.size()) return false;
+        int rank = deck.get(offset).rank();
+        if(rank > 9) return findSum(deck, offset+1, sum);
+        if(rank > sum) return false;
+        if(rank == sum) return true;
+        return findSum(deck, offset+1, sum-rank) || findSum(deck, offset+1, sum);
     }
 
     private void checkResult() {
         if(deck.isEmpty()) {
             win();
         } else {
-            int[] used = new int[14];
-            for(Card c: main.getDeck()) {
-                if(c == null) continue;
-                used[c.rank()]++;
-            }
-            for(int i=9; i>3; i--) {
-                if(used[i]>0 && findFifteen(used, i, i, 1)) return;
-            }
             int[] suit = new int[4];
             for(Card c: main.getDeck()) {
                 if(c == null) continue;
@@ -57,7 +48,7 @@ public class Addition15 extends CardGame {
                     suit[c.suit()]++;
                 }
             }
-            table.setResult(Tableau.LOSE);
+            if(!findSum(main.getDeck(), 0, 15)) lose();
         }
     }
 
