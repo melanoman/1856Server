@@ -79,7 +79,7 @@ public class Addition11 extends CardGame {
 
     private void checkResult() {
         if (deck.isEmpty()) {
-            if(main.isEmpty()) table.setResult(Tableau.WIN);
+            if(main.isEmpty()) win();
         } else {
             boolean[] sum = new boolean[11];
             boolean jack=false, queen=false, king=false;
