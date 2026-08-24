@@ -41,7 +41,7 @@ public class Addition10 extends CardGame {
 
     private void checkResult() {
         if (deck.isEmpty() && main.isEmpty()) {
-            table.setResult(Tableau.WIN);
+            win();
         } else {
             boolean[] rank = new boolean[11];
             int[] suit = new int[4];
