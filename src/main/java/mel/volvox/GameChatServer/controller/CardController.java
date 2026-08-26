@@ -4,6 +4,7 @@ import mel.volvox.GameChatServer.cards.*;
 import mel.volvox.GameChatServer.comm.cards.CardMenuItem;
 import mel.volvox.GameChatServer.comm.cards.Tableau;
 import mel.volvox.GameChatServer.model.cards.CardRules;
+import mel.volvox.GameChatServer.model.stat.Checkoff;
 import mel.volvox.GameChatServer.repository.CardRulesRepo;
 import mel.volvox.GameChatServer.repository.CheckoffRepo;
 import mel.volvox.GameChatServer.service.CheckoffService;
@@ -129,6 +130,15 @@ public class CardController {
         CardGame cg = id2game.remove(before);
         //TODO add resignation to stats
         return makeGame(after, user);
+    }
+
+    @GetMapping("cards/defeated/{name}")
+    @ResponseBody
+    public List<String> defeated(@PathVariable String name) {
+        List<Checkoff> wins = checkoffRepo.findByName(name);
+        Set<String> set = new HashSet<>();
+        for(Checkoff c: wins) set.add(c.getTask());
+        return set.stream().toList();
     }
 
     private Tableau makeGame(String game, String user) {

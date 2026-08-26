@@ -41,7 +41,7 @@ public class Golf extends CardGame {
         if(p.isEmpty()) return table;
         int rank = p.getDeck().get(0).rank();
         int target = playPile.getDeck().get(0).rank();
-        if (rank == target + 1 || (rank == target - 1 && rank < 12)) {
+        if (rank == target + 1 || rank == target - 1) { // VARIANT: allow Q on K
             playPile.getDeck().add(0, p.getDeck().remove(0));
             checkResult();
         }
