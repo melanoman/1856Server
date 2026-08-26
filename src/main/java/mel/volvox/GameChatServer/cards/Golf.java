@@ -59,7 +59,7 @@ public class Golf extends CardGame {
                 for(Placement p:column) {
                     if(p.isEmpty()) continue;
                     int rank = p.getDeck().get(0).rank();
-                    if(rank == target + 1 || (rank == target - 1 && rank < 12)) found = true;
+                    if(rank == target + 1 || rank == target - 1) found = true;
                 }
                 if (!found) table.setResult(Tableau.LOSE);
             }
