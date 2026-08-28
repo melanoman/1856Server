@@ -63,6 +63,7 @@ public class CardController {
         addGame("accordian", Accordian.class);
         addGame("golf", Golf.class);
         addGame("hit or miss", HitOrMiss.class);
+        addGame("idiot's delight", IdiotsDelight.class);
     }
 
 

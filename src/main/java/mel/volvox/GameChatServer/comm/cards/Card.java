@@ -19,6 +19,14 @@ public class Card {
         return id%13 + 1;
     }
 
+    /**
+     * @return rank ace=high (with Ace = 14 instead of 1)
+     */
+    public int rankAH() {
+        int raw = rank();
+        return raw == 1 ? 14 : raw;
+    }
+
     public boolean isFace() {
         int rank = id%13 + 1;
         return rank > 10;
