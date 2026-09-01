@@ -11,9 +11,8 @@ import java.util.List;
  * when the last card is drawn.
  */
 public class DrawDeck {
-    private final List<Card> deck;
-    @Getter
-    private final Placement placement = new Placement();
+    @Getter private final List<Card> deck;
+    @Getter private final Placement placement = new Placement();
     private boolean redealAllowed = false;
 
     private static final int SPLAY_HEIGHT = 30;
