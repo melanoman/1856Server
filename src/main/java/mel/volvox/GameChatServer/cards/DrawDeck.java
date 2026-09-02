@@ -128,4 +128,10 @@ public class DrawDeck {
     public void add(Card c) {
         deck.add(c);
     }
+
+    public String getDeckString() {
+        StringBuilder sb = new StringBuilder();
+        for(Card c:deck) { sb.append(c.cardString()); }
+        return sb.toString();
+    }
 }

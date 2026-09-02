@@ -35,4 +35,8 @@ public class Card {
     public int suit() {
         return id/13;
     }
+
+    public int cardString() {
+       return (suit() < 2) ? (id+'A') : ((id-26)+'a');
+    }
 }

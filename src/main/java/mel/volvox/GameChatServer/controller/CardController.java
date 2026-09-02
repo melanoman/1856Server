@@ -65,6 +65,7 @@ public class CardController {
         addGame("hit or miss", HitOrMiss.class);
         addGame("idiot's delight", IdiotsDelight.class);
         addGame("royal flush", RoyalFlush.class);
+        addGame("perpetual motion", PerpetualMotion.class);
     }
 
 
