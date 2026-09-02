@@ -40,23 +40,36 @@ public class Clock extends SingleSelectionGame {
         c.setExposed(true);
         discard.getDeck().add(c);
         selection = c;
+        selectedIndex = -1;
     }
 
     @Override public Tableau select(String id, int gridX, int gridY) {
-        if (table.getResult() != Tableau.NONE || DRAW.equals(id)) return table; //ignore discard
-        int rank = selection.rank();
-        int index = Integer.parseInt(id);
-        if(rank-1 != index) {
-            if(rank < 12) throw new IllegalStateException("Choose "+rank+" o'clock instead");
-            else throw new IllegalStateException("Kings play into the center");
-        } else {
-            Card c = pile[rank-1].getDeck().remove(0);
-            c.setExposed(true);
-            discard.getDeck().add(0, c);
-            selection = c;
-            if(pile[c.rank()-1].getDeck().isEmpty()) {
+        if (table.getResult() != Tableau.NONE) return table;
+        if (DRAW.equals(id)) {
+            if(selectedIndex < 0) {
+                throw new IllegalStateException("Select card first");
+            }
+            selection = pile[selectedIndex].getDeck().remove(0);
+            selectedIndex = -1;
+            discard.getDeck().add(0, selection);
+            if(pile[selection.rank()-1].getDeck().isEmpty()) {
                 if(discard.getDeck().size()+pile[12].getDeck().size() == 52) win();
                 else lose();
+            }
+        } else {
+            int rank = selection.rank();
+            int index = Integer.parseInt(id);
+            if (selectedIndex == -1) {
+                if (rank - 1 != index) {
+                    if (rank < 12) throw new IllegalStateException("Choose " + rank + " o'clock instead");
+                    else throw new IllegalStateException("Kings draw from the center deck");
+                }
+                Card c = pile[index].getDeck().get(0);
+                c.setExposed(true);
+                selectedIndex = index;
+                selection = c;
+            } else {
+                throw new IllegalStateException("Discard selected card");
             }
         }
         return table;
