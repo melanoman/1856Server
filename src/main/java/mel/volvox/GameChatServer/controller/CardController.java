@@ -67,6 +67,7 @@ public class CardController {
         addGame("royal flush", RoyalFlush.class);
         addGame("perpetual motion", PerpetualMotion.class);
         addGame("clock", Clock.class);
+        addGame("eight day clock", EightDayClock.class);
     }
 
 

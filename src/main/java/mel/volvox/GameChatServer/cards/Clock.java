@@ -12,12 +12,12 @@ public class Clock extends SingleSelectionGame {
     static final int XC = 375;
     static final int YC = 200;
     static final int[] dx = {
-            50, 100, 120, 100, 50, 0,
-            -50, -100, -120, -100, -50, 0, -30
+            50, 100, 115, 100, 50, 0,
+            -50, -100, -115, -100, -50, 0, -30
     };
     static final int[] dy = {
-            100, 65, 0, -65, -100, -130,
-            -100, -65, 0, 65, 100, 130, 0
+            100, 65, 0, -65, -100, -115,
+            -100, -65, 0, 65, 100, 115, 0
     };
     @Override void init() {
         for(int i=0; i<13; i++) {
