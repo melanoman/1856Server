@@ -57,8 +57,10 @@ public class EightDayClock extends SingleSelectionGame {
         set = false;
         score++;
         if (score == 3) win();
-        setSelection(0);
-        life = calculateLife();
+        else {
+            setSelection(0);
+            life = calculateLife();
+        }
     }
 
     private int calculateLife() {
