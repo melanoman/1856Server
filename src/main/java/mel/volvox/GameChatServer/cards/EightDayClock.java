@@ -82,6 +82,7 @@ public class EightDayClock extends SingleSelectionGame {
         while(true) {
             if(c.rank() - 1 == current) {
                 current = next(current);
+                c = pile[current].getDeck().get(0);
                 if (current == start) return;
             } else {
                 shiftSelection(current, c);
