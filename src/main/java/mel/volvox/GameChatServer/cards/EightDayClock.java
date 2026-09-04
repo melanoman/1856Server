@@ -4,6 +4,8 @@ import mel.volvox.GameChatServer.comm.cards.Card;
 import mel.volvox.GameChatServer.comm.cards.Placement;
 import mel.volvox.GameChatServer.comm.cards.Tableau;
 
+import java.util.List;
+
 import static mel.volvox.GameChatServer.cards.Clock.XC;
 import static mel.volvox.GameChatServer.cards.Clock.YC;
 import static mel.volvox.GameChatServer.cards.Clock.dx;
@@ -42,9 +44,13 @@ public class EightDayClock extends SingleSelectionGame {
         } else {
             int index = Integer.parseInt(id);
             if(index != targetIndex) throw new IllegalStateException("Wrong pile. Check the rules");
-            pile[selectedIndex].getDeck().remove(0);
-            pile[targetIndex].getDeck().add(selection);
-            if(pile[selectedIndex].getDeck().get(0).rank() - 1 == selectedIndex) life = calculateLife();
+            pile[targetIndex].getDeck().add(pile[selectedIndex].getDeck().remove(0));
+            if(
+                    !pile[selectedIndex].getDeck().isEmpty() &&
+                    pile[selectedIndex].getDeck().get(0).rank() - 1 == selectedIndex
+            ) {
+                life = calculateLife();
+            }
             setSelection(targetIndex);
             life--;
             if(!set && life < 0 && score < 3) lose();
@@ -58,7 +64,10 @@ public class EightDayClock extends SingleSelectionGame {
         score++;
         if (score == 3) win();
         else {
-            setSelection(0);
+            List<Card> lastDeck = pile[targetIndex].getDeck();
+            Card hold = lastDeck.get(lastDeck.size() - 1);
+            setSelection(targetIndex);
+            pile[selectedIndex].getDeck().add(hold);
             life = calculateLife();
         }
     }
@@ -66,13 +75,14 @@ public class EightDayClock extends SingleSelectionGame {
     private int calculateLife() {
         int out = 0;
         for(int i=0; i<13; i++) {
-            if(pile[i].getDeck().get(0).rank() - 1 != i) out ++;
+            if(pile[i].getDeck().isEmpty() || pile[i].getDeck().get(0).rank() - 1 != i) out ++;
         }
         return out * out * (4-score);
     }
 
     private void setSelection(int start) {
         int current = start;
+        while(pile[current].getDeck().isEmpty()) current = next(current);
         Card c = pile[current].getDeck().get(0);
         if(c.rank()-1 == start) {
             life = calculateLife();
@@ -81,22 +91,20 @@ public class EightDayClock extends SingleSelectionGame {
                 return;
             }
         }
-        while(true) {
-            if(c.rank() - 1 == current) {
-                current = next(current);
-                c = pile[current].getDeck().get(0);
-                if (current == start) return;
-            } else {
-                shiftSelection(current, c);
-                setTarget();
-                return;
-            }
+        while(c.rank() - 1 == current) {
+            current = next(current);
+            while(pile[current].getDeck().isEmpty()) current = next(current);
+            c = pile[current].getDeck().get(0);
+            if (current == start) return;
         }
+        shiftSelection(current, c);
+        setTarget();
     }
 
     private void setTarget() {
         int current = next(selectedIndex);
         while(true) {
+            while(pile[current].getDeck().isEmpty()) current = next(current);
             Card c = pile[current].getDeck().get(0);
             if(c.rank() - 1 == current) {
                 current = next(current);
