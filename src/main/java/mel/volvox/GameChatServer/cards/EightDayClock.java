@@ -47,7 +47,7 @@ public class EightDayClock extends SingleSelectionGame {
             if(pile[selectedIndex].getDeck().get(0).rank() - 1 == selectedIndex) life = calculateLife();
             setSelection(targetIndex);
             life--;
-            if(life < 0 && score < 3) lose();
+            if(!set && life < 0 && score < 3) lose();
         }
         return table;
     }
@@ -58,6 +58,7 @@ public class EightDayClock extends SingleSelectionGame {
         score++;
         if (score == 3) win();
         setSelection(0);
+        life = calculateLife();
     }
 
     private int calculateLife() {
