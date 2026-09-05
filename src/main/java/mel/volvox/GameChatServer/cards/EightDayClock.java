@@ -67,7 +67,7 @@ public class EightDayClock extends SingleSelectionGame {
         if (score == 3) win();
         else {
             List<Card> lastDeck = pile[targetIndex].getDeck();
-            pile[startIndex].getDeck().add(lastDeck.get(lastDeck.size() - 1));
+            pile[startIndex].getDeck().add(lastDeck.remove(lastDeck.size() - 1));
             setSelection(0);
             startIndex = selectedIndex;
             life = calculateLife();
