@@ -19,6 +19,7 @@ public class EightDayClock extends SingleSelectionGame {
     Card targetCard;
     int score = 0;
     int life = 52;
+    int startIndex;
 
     @Override void init() {
         for (int i=0; i<13; i++) {
@@ -34,6 +35,7 @@ public class EightDayClock extends SingleSelectionGame {
         }
         pile[12].setX(XC);
         setSelection(0);
+        startIndex = selectedIndex;
         life = calculateLife();
     }
 
@@ -65,9 +67,9 @@ public class EightDayClock extends SingleSelectionGame {
         if (score == 3) win();
         else {
             List<Card> lastDeck = pile[targetIndex].getDeck();
-            Card hold = lastDeck.get(lastDeck.size() - 1);
-            setSelection(targetIndex);
-            pile[selectedIndex].getDeck().add(hold);
+            pile[startIndex].getDeck().add(lastDeck.get(lastDeck.size() - 1));
+            setSelection(0);
+            startIndex = selectedIndex;
             life = calculateLife();
         }
     }
